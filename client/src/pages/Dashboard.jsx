@@ -22,13 +22,12 @@ const Dashboard = () => {
   };
 
   const togglePump = () => {
-    let message= motor1Status === "Running" ? "Stopped" : "Running"
-    socket.emit('send_message', { message});
-
+    let message = motor1Status === "Running" ? "Stopped" : "Running";
+    socket.emit("send_message", { message });
   };
   useEffect(() => {
     socket.on("receive_message", (data) => {
-        setMotor1Status(data.message)
+      setMotor1Status(data.message);
     });
 
     return () => {
@@ -36,7 +35,6 @@ const Dashboard = () => {
     };
   }, []);
 
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 p-6 flex items-center justify-center">
       <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-8 transform transition-all hover:shadow-2xl">
@@ -58,7 +56,7 @@ const Dashboard = () => {
           Control Dashboard
         </h2>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-gray-800">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-gray-800">
           <div className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
             <svg
               className="w-6 h-6 mr-3 text-blue-500"
@@ -181,8 +179,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
-            <div className="flex items-center">
+          <div className="flex items-center  p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors sm:col-span-3 ">
+            <div className="flex items-center mr-5 sm:mr-5 ">
               <svg
                 className="w-6 h-6 mr-3 text-purple-500"
                 fill="none"
@@ -203,8 +201,14 @@ const Dashboard = () => {
                   d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                 ></path>
               </svg>
-              <span className="font-semibold">Motor 1 Status:</span>{" "}
-              {motor1Status}
+              <span className="font-semibold">Motor 1 Status :&nbsp;</span>
+              <div
+                className={`${
+                  motor1Status === "Running" ? "text-green-600" : "text-red-500"
+                }`}
+              >
+                {motor1Status}
+              </div>
             </div>
             <button
               onClick={togglePump}
@@ -218,7 +222,7 @@ const Dashboard = () => {
             </button>
           </div>
 
-          <div className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
+          <div className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors sm:col-span-3">
             <svg
               className="w-6 h-6 mr-3 text-purple-500"
               fill="none"
@@ -240,29 +244,8 @@ const Dashboard = () => {
               ></path>
             </svg>
             <div>
-              <span className="font-semibold">Motor 2 Status:</span>{" "}
+              <span className="font-semibold">Motor 2 Status :&nbsp;</span>
               {data.motor2_status}
-            </div>
-          </div>
-
-          <div className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
-            <svg
-              className="w-6 h-6 mr-3 text-yellow-500"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M9 17v-2m0-2v-2m0-2V7m-4 5h8m-8 0a2 2 0 11-4 0 2 2 0 014 0zm12 0h-4m4 0a2 2 0 104 0 2 2 0 00-4 0z"
-              ></path>
-            </svg>
-            <div>
-              <span className="font-semibold">Residual Chlorine:</span>{" "}
-              {data.rcs_value}
             </div>
           </div>
 
@@ -362,6 +345,26 @@ const Dashboard = () => {
             <div>
               <span className="font-semibold">Chlorine Leakage:</span>{" "}
               {data.chlorine_leakage}
+            </div>
+          </div>
+          <div className="flex items-center p-4 bg-gray-50 rounded-lg hover:bg-blue-50 transition-colors">
+            <svg
+              className="w-6 h-6 mr-3 text-yellow-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M9 17v-2m0-2v-2m0-2V7m-4 5h8m-8 0a2 2 0 11-4 0 2 2 0 014 0zm12 0h-4m4 0a2 2 0 104 0 2 2 0 00-4 0z"
+              ></path>
+            </svg>
+            <div>
+              <span className="font-semibold">Residual Chlorine:</span>{" "}
+              {data.rcs_value}
             </div>
           </div>
         </div>
