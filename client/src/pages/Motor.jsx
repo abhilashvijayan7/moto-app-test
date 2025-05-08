@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
-const socket = io("http://localhost:3000");
+const socket = io("https://water-pump-app-1.onrender.com");
 
 let runningImage = "https://static.vecteezy.com/system/resources/previews/042/337/962/non_2x/ai-generated-water-flows-from-the-old-metal-tap-photo.jpg" 
 
