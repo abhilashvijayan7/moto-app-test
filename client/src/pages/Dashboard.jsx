@@ -25,7 +25,6 @@ const Dashboard = () => {
   const togglePump = () => {
     let message = motor1Status === "Running" ? "Stopped" : "Running";
     socket.emit("send_message", { message });
-    alert(`Pump turned ${message}`);
 
   };
 
@@ -41,7 +40,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center p-2 sm:p-6">
-      <div className="w-full max-w-[400px] sm:max-w-4xl bg-white rounded-lg shadow-md p-4 sm:p-8 flex flex-col">
+      <div className="w-full max-w-[500px] sm:max-w-4xl bg-white rounded-lg shadow-md p-4 sm:p-8 flex flex-col">
         <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-6 flex items-center">
           <svg
             className="w-5 h-5 sm:w-8 sm:h-8 mr-1 sm:mr-2 text-blue-600"
