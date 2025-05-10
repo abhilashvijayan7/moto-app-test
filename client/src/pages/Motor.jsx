@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 const socket = io("https://water-pump-app-1.onrender.com");
 
-let runningImage = "https://static.vecteezy.com/system/resources/previews/042/337/962/non_2x/ai-generated-water-flows-from-the-old-metal-tap-photo.jpg" 
 
-let stoppedImage = "https://media.istockphoto.com/id/1282344530/photo/weve-never-needed-water-more-than-we-need-it-now.jpg?s=612x612&w=0&k=20&c=QjJzv-G_lg8HZty0pkdzoNwr_3oGf2wEPjxwAOoPkVk="
 
 function Motor() {
   const [motor1Status, setMotor1Status] = useState("Stopped");
@@ -34,11 +32,7 @@ function Motor() {
       >
         {motor1Status}
       </h1>     
-      <img
-        src={motor1Status === "Running" ? runningImage : stoppedImage}
-        alt={motor1Status}
-        style={{ width: "500px", height: "auto" }} 
-      />
+   
     </div>
   );
 }
