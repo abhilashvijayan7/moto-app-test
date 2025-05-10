@@ -24,6 +24,8 @@ const Dashboard = () => {
   const togglePump = () => {
     let message = motor1Status === "Running" ? "Stopped" : "Running";
     socket.emit("send_message", { message });
+    alert(`Pump turned ${message}`);
+
   };
 
   useEffect(() => {
@@ -94,7 +96,7 @@ const Dashboard = () => {
             </div>
             <button
               onClick={togglePump}
-              className={`px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white ${
+              className={`cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white ${
                 motor1Status === "Running" ? "bg-green-600" : "bg-red-500"
               }`}
             >
