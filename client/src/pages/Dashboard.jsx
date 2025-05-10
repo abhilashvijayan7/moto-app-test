@@ -38,7 +38,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center p-2 sm:p-6">
-      <div className="w-full max-w-[360px] sm:max-w-4xl bg-white rounded-lg shadow-md p-4 sm:p-8 flex flex-col">
+      <div className="w-full max-w-[400px] sm:max-w-4xl bg-white rounded-lg shadow-md p-4 sm:p-8 flex flex-col">
         <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-6 flex items-center">
           <svg
             className="w-5 h-5 sm:w-8 sm:h-8 mr-1 sm:mr-2 text-blue-600"
@@ -59,7 +59,7 @@ const Dashboard = () => {
 
         <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2 sm:gap-6 text-gray-800 text-sm sm:text-base">
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Voltage L1-L3 (Mobile):</span>
+            <span className="font-semibold">Voltage L1-L3 </span>
             <span className="sm:hidden">{data.voltage_l1} | {data.voltage_l2} | {data.voltage_l3}</span>
             <div className="hidden sm:block">
               <div>L1: {data.voltage_l1}</div>
@@ -68,7 +68,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Current L1-L3 (Mobile):</span>
+            <span className="font-semibold">Current L1-L3 </span>
             <span className="sm:hidden">{data.current_l1} | {data.current_l2} | {data.current_l3}</span>
             <div className="hidden sm:block">
               <div>L1: {data.current_l1}</div>
@@ -77,7 +77,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Valves 1-3 (Mobile):</span>
+            <span className="font-semibold">Valves 1-3 </span>
             <span className="sm:hidden">{data.valve1} | {data.valve2} | {data.valve3}</span>
             <div className="hidden sm:block">
               <div>Valve 1: {data.valve1}</div>
