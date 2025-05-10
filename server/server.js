@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://water-app-pumping.vercel.app/",
+    origin: ["https://water-app-pumping.vercel.app", "http://localhost:3000"],
     methods: ["GET", "POST"],
   },
 });
