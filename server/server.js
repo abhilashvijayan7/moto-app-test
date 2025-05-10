@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "https://water-pump-app.vercel.app/",
+    origin: "https://water-app-pumping.vercel.app/",
     methods: ["GET", "POST"],
   },
 });
@@ -29,5 +29,5 @@ io.on("connection", (socket) => {
     console.log("🔴 User disconnected:", socket.id);
   });
 });
-// kkkdkd
+
 server.listen(3000);
