@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
-const socket = io("https://water-pump-app-1.onrender.com");
+const socket = io("https://water-app-pumping.onrender.com");
 
 const Dashboard = () => {
   const [motor1Status, setMotor1Status] = useState("Stopped");
