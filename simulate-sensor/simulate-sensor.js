@@ -1,7 +1,17 @@
 const mqtt = require("mqtt");
+const express = require("express");
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.get("/", (req, res) => {
+  res.send("MQTT Sensor Service is running.");
+});
+
+app.listen(PORT, () => {
+  console.log(`HTTP server listening on port ${PORT}`);
+});
 
 const client = mqtt.connect("mqtt://broker.hivemq.com");
-
 const SENSOR_TOPIC = "sensors/data";
 
 client.on("connect", () => {
