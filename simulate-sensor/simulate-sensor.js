@@ -25,7 +25,7 @@ client.on("connect", () => {
       current_l1: `${(Math.random() * 0.1 + 0.03).toFixed(2)}A`,
       current_l2: `${(Math.random() * 0.1 + 0.03).toFixed(2)}A`,
       current_l3: `${(Math.random() * 0.1 + 0.03).toFixed(2)}A`,
-      motor2_status: Math.random() > 0.5 ? "Running" : "Stopped",
+      motor2_status: "Running",
       rcs_value: `${(Math.random() * 0.5 + 0.8).toFixed(2)} PPM`,
       valve1: Math.random() > 0.5 ? "Open" : "Closed",
       valve2: Math.random() > 0.5 ? "Open" : "Closed",
