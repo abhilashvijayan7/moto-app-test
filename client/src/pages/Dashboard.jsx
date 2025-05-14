@@ -1,40 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 const socket = io("https://water-app-pumping.onrender.com", {
-    transports: ['websocket'],
-  });
+  transports: ["websocket"],
+});
 const Dashboard = () => {
-  const [motor1Status, setMotor1Status] = useState("Stopped");
+  const [sensor, setSensor] = useState({});
 
-  const data = {
-    voltage_l1: "230V",
-    voltage_l2: "231V",
-    voltage_l3: "229V",
-    current_l1: "0.06A",
-    current_l2: "0.07A",
-    current_l3: "0.05A",
-    motor2_status: "Stopped",
-    rcs_value: "1.19 PPM",
-    valve1: "Open",
-    valve2: "Closed",
-    valve3: "Closed",
-    water_level: "WL3",
-    chlorine_leakage: "No Leak",
-  };
+  const [motorStatus, setMotorStatus] = useState("Stopped");
 
   const togglePump = () => {
-    let message = motor1Status === "Running" ? "Stopped" : "Running";
-    socket.emit("send_message", { message });
-
+    const newStatus = motorStatus === "Running" ? "Stopped" : "Running";
+    socket.emit("motor_control", { command: newStatus });
   };
 
   useEffect(() => {
-    socket.on("receive_message", (data) => {
-      setMotor1Status(data.message);
+    socket.on("sensor_data", (data) => {
+      setSensor(data);
+    });
+
+    socket.on("motor_status_update", (status) => {
+      setMotorStatus(status);
     });
 
     return () => {
-      socket.off("receive_message");
+      socket.off("sensor_data");
+      socket.off("motor_status_update");
     };
   }, []);
 
@@ -62,62 +52,72 @@ const Dashboard = () => {
         <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2 sm:gap-6 text-gray-800 text-sm sm:text-base">
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
             <span className="font-semibold">Voltage L1-L3 </span>
-            <span className="sm:hidden">{data.voltage_l1} | {data.voltage_l2} | {data.voltage_l3}</span>
+            <span className="sm:hidden">
+              {sensor.voltage_l1} | {sensor.voltage_l2} | {sensor.voltage_l3}
+            </span>
             <div className="hidden sm:block">
-              <div>L1: {data.voltage_l1}</div>
-              <div>L2: {data.voltage_l2}</div>
-              <div>L3: {data.voltage_l3}</div>
+              <div>L1: {sensor.voltage_l1}</div>
+              <div>L2: {sensor.voltage_l2}</div>
+              <div>L3: {sensor.voltage_l3}</div>
             </div>
           </div>
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
             <span className="font-semibold">Current L1-L3 </span>
-            <span className="sm:hidden">{data.current_l1} | {data.current_l2} | {data.current_l3}</span>
+            <span className="sm:hidden">
+              {sensor.current_l1} | {sensor.current_l2} | {sensor.current_l3}
+            </span>
             <div className="hidden sm:block">
-              <div>L1: {data.current_l1}</div>
-              <div>L2: {data.current_l2}</div>
-              <div>L3: {data.current_l3}</div>
+              <div>L1: {sensor.current_l1}</div>
+              <div>L2: {sensor.current_l2}</div>
+              <div>L3: {sensor.current_l3}</div>
             </div>
           </div>
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
             <span className="font-semibold">Valves 1-3 </span>
-            <span className="sm:hidden">{data.valve1} | {data.valve2} | {data.valve3}</span>
+            <span className="sm:hidden">
+              {sensor.valve1} | {sensor.valve2} | {sensor.valve3}
+            </span>
             <div className="hidden sm:block">
-              <div>Valve 1: {data.valve1}</div>
-              <div>Valve 2: {data.valve2}</div>
-              <div>Valve 3: {data.valve3}</div>
+              <div>Valve 1: {sensor.valve1}</div>
+              <div>Valve 2: {sensor.valve2}</div>
+              <div>Valve 3: {sensor.valve3}</div>
             </div>
           </div>
           <div className="flex justify-between items-center p-2 sm:p-4 bg-gray-50 rounded sm:col-span-3">
             <div className="flex items-center">
               <span className="font-semibold">Motor 1:</span>
-              <span className={`ml-1 sm:ml-2 ${motor1Status === "Running" ? "text-green-600" : "text-red-500"}`}>
-                {motor1Status}
+              <span
+                className={`ml-1 sm:ml-2 ${
+                  motorStatus === "Running" ? "text-green-600" : "text-red-500"
+                }`}
+              >
+                {motorStatus}
               </span>
             </div>
             <button
               onClick={togglePump}
               className={`cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white ${
-                motor1Status === "Running" ? "bg-green-600" : "bg-red-500"
+                motorStatus === "Running" ? "bg-green-600" : "bg-red-500"
               }`}
             >
-              {motor1Status === "Running" ? "Off" : "On"}
+              {motorStatus === "Running" ? "Off" : "On"}
             </button>
           </div>
           <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
             <span className="font-semibold">Motor 2:</span>
-            <span>{data.motor2_status}</span>
+            <span>{sensor.motor2_status}</span>
           </div>
           <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
             <span className="font-semibold">Water Level:</span>
-            <span>{data.water_level}</span>
+            <span>{sensor.water_level}</span>
           </div>
           <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
             <span className="font-semibold">Chlorine Leak:</span>
-            <span>{data.chlorine_leakage}</span>
+            <span>{sensor.chlorine_leakage}</span>
           </div>
           <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
             <span className="font-semibold">Residual Cl:</span>
-            <span>{data.rcs_value}</span>
+            <span>{sensor.rcs_value}</span>
           </div>
         </div>
       </div>
