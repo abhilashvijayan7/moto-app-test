@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon simulate-sensor.js"
+    "start": "node simulate-sensor.js"
 
   },
   "keywords": [],
