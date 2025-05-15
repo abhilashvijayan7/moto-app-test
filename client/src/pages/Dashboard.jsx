@@ -15,6 +15,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     socket.on("sensor_data", (data) => {
+      console.log(data)
       setSensor(data);
     });
 

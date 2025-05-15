@@ -20,6 +20,7 @@ const SENSOR_TOPIC = "sensors/data";
 const MOTOR_TOPIC = "motor/control";
 
 let latestSensorData = {};
+console.log(latestSensorData)
 
 mqttClient.on("connect", () => {
   console.log("Connected to MQTT broker");
@@ -27,6 +28,8 @@ mqttClient.on("connect", () => {
 });
 
 mqttClient.on("message", (topic, message) => {
+    console.log(`MQTT message received on ${topic}: ${message.toString()}`);
+
   if (topic === SENSOR_TOPIC) {
     try {
       const data = JSON.parse(message.toString());
