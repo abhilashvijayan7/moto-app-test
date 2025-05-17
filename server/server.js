@@ -33,6 +33,7 @@ mqttClient.on("message", (topic, message) => {
   if (topic === SENSOR_TOPIC) {
     try {
       const data = JSON.parse(message.toString());
+      console.log(data)
       latestSensorData = data;
 
       io.emit("sensor_data", latestSensorData);

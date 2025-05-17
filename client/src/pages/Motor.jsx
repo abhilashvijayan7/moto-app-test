@@ -5,7 +5,7 @@ const socket = io("https://water-app-pumping.onrender.com", {
 });
 
 function Motor() {
-  const [motorStatus, setMotorStatus] = useState("Stopped");
+  const [motorStatus, setMotorStatus] = useState("OFF");
 
   useEffect(() => {
     socket.on("motor_status_update", (status) => {
@@ -22,7 +22,7 @@ function Motor() {
     <div className="flex items-center justify-center h-screen flex-col">
       <h1
         style={{
-          color: motorStatus === "Running" ? "green" : "red",
+          color: motorStatus === "ON" ? "green" : "red",
           fontSize: "2.5rem",
           fontWeight: "bold",
           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",

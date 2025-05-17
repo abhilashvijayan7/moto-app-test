@@ -6,10 +6,10 @@ const socket = io("https://water-app-pumping.onrender.com", {
 const Dashboard = () => {
   const [sensor, setSensor] = useState({});
 
-  const [motorStatus, setMotorStatus] = useState("Stopped");
+  const [motorStatus, setMotorStatus] = useState("OFF");
 
   const togglePump = () => {
-    const newStatus = motorStatus === "Running" ? "Stopped" : "Running";
+    const newStatus = motorStatus === "ON" ? "OFF" : "ON";
     socket.emit("motor_control", { command: newStatus });
   };
 
@@ -17,7 +17,7 @@ const Dashboard = () => {
     socket.on("sensor_data", (data) => {
       console.log(data)
       setSensor(data);
-    });
+    });œ
 
     socket.on("motor_status_update", (status) => {
       setMotorStatus(status);
@@ -89,7 +89,7 @@ const Dashboard = () => {
               <span className="font-semibold">Motor 1:</span>
               <span
                 className={`ml-1 sm:ml-2 ${
-                  motorStatus === "Running" ? "text-green-600" : "text-red-500"
+                  motorStatus === "ON" ? "text-green-600" : "text-red-500"
                 }`}
               >
                 {motorStatus}
@@ -98,10 +98,10 @@ const Dashboard = () => {
             <button
               onClick={togglePump}
               className={`cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white ${
-                motorStatus === "Running" ? "bg-green-600" : "bg-red-500"
+                motorStatus === "ON" ? "bg-green-600" : "bg-red-500"
               }`}
             >
-              {motorStatus === "Running" ? "Off" : "On"}
+              {motorStatus === "ON" ? "ON" : "OFF"}
             </button>
           </div>
           <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
