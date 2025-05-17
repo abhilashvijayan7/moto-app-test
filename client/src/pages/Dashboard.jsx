@@ -17,7 +17,7 @@ const Dashboard = () => {
     socket.on("sensor_data", (data) => {
       console.log(data)
       setSensor(data);
-    });œ
+    });
 
     socket.on("motor_status_update", (status) => {
       setMotorStatus(status);
