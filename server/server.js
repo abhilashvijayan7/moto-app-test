@@ -14,7 +14,7 @@ const io = new Server(server, {
   },
 });
 
-const mqttClient = mqtt.connect("mqtt://broker.hivemq.com");
+const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 
 const SENSOR_TOPIC = "sensors/data";
 const MOTOR_TOPIC = "motor/control";
