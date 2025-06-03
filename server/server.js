@@ -5,6 +5,7 @@ const cors = require("cors");
 const mqtt = require("mqtt");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
+require('dotenv').config(); // Load environment variables
 
 const app = express();
 const server = http.createServer(app);
@@ -15,12 +16,11 @@ const io = new Server(server, {
   },
 });
 
- 
 app.use(cors());
 app.use(bodyParser.json());
 
 // ✅ Firebase Admin SDK initialization
-const serviceAccount = require("./firebase-adminsdk.json");
+const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
@@ -39,7 +39,7 @@ app.post("/save-token", (req, res) => {
 });
 
 // ✅ Send notification manually via GET
-app.get("/send-notification", async (req, res) => {
+app.get("/send-notification", async (req, as) => {
   if (!savedTokens || savedTokens.length === 0) {
     return res.status(400).json({ success: false, message: "No device tokens saved." });
   }
@@ -49,7 +49,7 @@ app.get("/send-notification", async (req, res) => {
       title: "Test Notification",
       body: "🚀 This is a test notification from backend!",
     },
-    tokens: savedTokens, // still use `tokens` here, required by multicast format
+    tokens: savedTokens,
   };
 
   try {
@@ -61,7 +61,6 @@ app.get("/send-notification", async (req, res) => {
     res.status(500).json({ success: false, error });
   }
 });
-
 
 // 🔌 MQTT & Socket.IO setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
@@ -100,7 +99,6 @@ mqttClient.on("message", async (topic, message) => {
         await admin.messaging().sendEachForMulticast(message);
         console.log("Sensor alert notification sent.");
       }
-
     } catch (e) {
       console.error("Error parsing MQTT message", e);
     }
@@ -127,7 +125,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = 4000;
+const PORT = process.env.PORT || 4000; // Use Render's PORT or fallback to 4000
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
