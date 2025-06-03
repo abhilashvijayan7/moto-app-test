@@ -1,5 +1,4 @@
 server/firebase-adminsdk.json
-# Node.js
 node_modules/
 dist/
 build/

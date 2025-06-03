@@ -15,6 +15,8 @@ const io = new Server(server, {
   },
 });
 
+// this is the update
+ 
 app.use(cors());
 app.use(bodyParser.json());
 
