@@ -1,4 +1,4 @@
-require('dotenv').config(); // Load .env variables
+require('dotenv').config(); 
 
 const express = require("express");
 const http = require("http");
@@ -20,17 +20,14 @@ const io = new Server(server, {
 app.use(cors());
 app.use(bodyParser.json());
 
-// Parse Firebase Admin SDK JSON from environment variable
 const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 
-// Replace escaped newlines in private_key
 serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-// FCM Token Storage
 let savedTokens = [];
 
 app.post("/save-token", (req, res) => {
@@ -65,11 +62,10 @@ app.get("/send-notification", async (req, res) => {
   }
 });
 
-// MQTT & Socket.IO setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 
-const SENSOR_TOPIC = "sensors/data";
-const MOTOR_TOPIC = "motor/control";
+const SENSOR_TOPIC = "watertreatment/plant1/data";
+const MOTOR_TOPIC = "watertreatment/plant1/command";
 
 let latestSensorData = {};
 

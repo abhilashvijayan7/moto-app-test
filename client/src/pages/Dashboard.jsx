@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
+
 const socket = io("https://moto-app-test.onrender.com", {
   transports: ["websocket"],
 });
+
 const Dashboard = () => {
   const [sensor, setSensor] = useState({});
 
   const [motorStatus, setMotorStatus] = useState("OFF");
+
+  const [motorNumber, setMotorNumber] = useState(1);
 
   const togglePump = () => {
     const newStatus = motorStatus === "ON" ? "OFF" : "ON";
@@ -15,8 +19,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     socket.on("sensor_data", (data) => {
-      console.log(data)
+      console.log(data);
       setSensor(data);
+
+      const motorStatusKey = `motor${motorNumber}_status`;
+      if (data[motorStatusKey]) {
+        setMotorStatus(data[motorStatusKey]);
+      }
     });
 
     socket.on("motor_status_update", (status) => {
@@ -27,7 +36,19 @@ const Dashboard = () => {
       socket.off("sensor_data");
       socket.off("motor_status_update");
     };
-  }, []);
+  }, [motorNumber]);
+
+  const motorStatusKey = `motor${motorNumber}_status`;
+  const motorSessionRunTimeKey = `motor${motorNumber}_session_run_time_sec`;
+  const motorRunTimeKey = `motor${motorNumber}_run_time_sec`;
+  const motorVoltageL1Key = `motor${motorNumber}_voltage_l1`;
+  const motorVoltageL2Key = `motor${motorNumber}_voltage_l2`;
+  const motorVoltageL3Key = `motor${motorNumber}_voltage_l3`;
+  const motorCurrentL1Key = `motor${motorNumber}_current_l1`;
+  const motorCurrentL2Key = `motor${motorNumber}_current_l2`;
+  const motorCurrentL3Key = `motor${motorNumber}_current_l3`;
+
+  const manualMode = sensor.manual_mode_active === 1 ? "MANUAL" : "AUTO";
 
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center p-2 sm:p-6">
@@ -50,75 +71,168 @@ const Dashboard = () => {
           Control Dashboard
         </h2>
 
-        <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2 sm:gap-6 text-gray-800 text-sm sm:text-base">
-          <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Voltage L1-L3 </span>
-            <span className="sm:hidden">
-              {sensor.voltage_l1} | {sensor.voltage_l2} | {sensor.voltage_l3}
-            </span>
-            <div className="hidden sm:block">
-              <div>L1: {sensor.voltage_l1}</div>
-              <div>L2: {sensor.voltage_l2}</div>
-              <div>L3: {sensor.voltage_l3}</div>
-            </div>
-          </div>
-          <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Current L1-L3 </span>
-            <span className="sm:hidden">
-              {sensor.current_l1} | {sensor.current_l2} | {sensor.current_l3}
-            </span>
-            <div className="hidden sm:block">
-              <div>L1: {sensor.current_l1}</div>
-              <div>L2: {sensor.current_l2}</div>
-              <div>L3: {sensor.current_l3}</div>
-            </div>
-          </div>
-          <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Valves 1-3 </span>
-            <span className="sm:hidden">
-              {sensor.valve1} | {sensor.valve2} | {sensor.valve3}
-            </span>
-            <div className="hidden sm:block">
-              <div>Valve 1: {sensor.valve1}</div>
-              <div>Valve 2: {sensor.valve2}</div>
-              <div>Valve 3: {sensor.valve3}</div>
-            </div>
-          </div>
-          <div className="flex justify-between items-center p-2 sm:p-4 bg-gray-50 rounded sm:col-span-3">
-            <div className="flex items-center">
-              <span className="font-semibold">Motor 1:</span>
+        <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-gray-50 rounded-lg">
+          <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
+            Plant Status
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-gray-800 text-sm sm:text-base">
+            <div className="flex justify-between p-2 bg-white rounded shadow-sm">
+              <span className="font-semibold">Plant Status:</span>
               <span
-                className={`ml-1 sm:ml-2 ${
-                  motorStatus === "ON" ? "text-green-600" : "text-red-500"
-                }`}
+                className={
+                  sensor.plant_status === "RUNNING"
+                    ? "text-green-600"
+                    : "text-red-500"
+                }
               >
-                {motorStatus}
+                {sensor.plant_status || "N/A"}
               </span>
+            </div>
+            <div className="flex justify-between p-2 bg-white rounded shadow-sm">
+              <span className="font-semibold">Operational Mode:</span>
+              <span>{manualMode}</span>
+            </div>
+            <div className="flex justify-between p-2 bg-white rounded shadow-sm">
+              <span className="font-semibold">Last Fault Message:</span>
+              <span>{sensor.last_fault_message || "None"}</span>
+            </div>
+            <div className="flex justify-between p-2 bg-white rounded shadow-sm">
+              <span className="font-semibold">Active Motor:</span>
+              <span>
+                {sensor.active_motor === 1
+                  ? "Motor 1"
+                  : sensor.active_motor === 2
+                  ? "Motor 2"
+                  : "N/A"}
+              </span>
+            </div>
+            <div className="flex justify-between p-2 bg-white rounded shadow-sm">
+              <span className="font-semibold">Preferred Next Motor:</span>
+              <span>
+                {sensor.preferred_next_motor === 1
+                  ? "Motor 1"
+                  : sensor.preferred_next_motor === 2
+                  ? "Motor 2"
+                  : "N/A"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2 sm:gap-6 text-gray-800 text-sm sm:text-base">
+          <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
+            <span className="font-semibold">Voltage L1-L3</span>
+            <span className="sm:hidden">
+              {sensor[motorVoltageL1Key] || "N/A"} |{" "}
+              {sensor[motorVoltageL2Key] || "N/A"} |{" "}
+              {sensor[motorVoltageL3Key] || "N/A"}
+            </span>
+            <div className="hidden sm:block">
+              <div>L1: {sensor[motorVoltageL1Key] || "N/A"}</div>
+              <div>L2: {sensor[motorVoltageL2Key] || "N/A"}</div>
+              <div>L3: {sensor[motorVoltageL3Key] || "N/A"}</div>
+            </div>
+          </div>
+
+          <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
+            <span className="font-semibold">Current L1-L3</span>
+            <span className="sm:hidden">
+              {sensor[motorCurrentL1Key] || "N/A"} |{" "}
+              {sensor[motorCurrentL2Key] || "N/A"} |{" "}
+              {sensor[motorCurrentL3Key] || "N/A"}
+            </span>
+            <div className="hidden sm:block">
+              <div>L1: {sensor[motorCurrentL1Key] || "N/A"}</div>
+              <div>L2: {sensor[motorCurrentL2Key] || "N/A"}</div>
+              <div>L3: {sensor[motorCurrentL3Key] || "N/A"}</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
+            <span className="font-semibold mb-2">Valve Statuses</span>
+            <div>Water Inflow Valve: {sensor.inflow_valve_status || "N/A"}</div>
+            <div>HOCL/Drainage Valve: {sensor.drain_valve_status || "N/A"}</div>
+            <div>
+              Chlorine Gas Valve: {sensor.chlorine_gas_valve_status || "N/A"}
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-2 sm:p-4 bg-gray-50 rounded shadow-sm sm:col-span-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6">
+              <div className="flex items-center">
+                <span className="font-semibold">Motor:</span>
+                <span
+                  className={`ml-1 ${
+                    motorStatus === "ON" ? "text-green-600" : "text-red-500"
+                  }`}
+                >
+                  {motorStatus}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold">Current Session:</span>
+                <span className="ml-1">
+                  {sensor[motorSessionRunTimeKey] !== undefined
+                    ? new Date(sensor[motorSessionRunTimeKey] * 1000)
+                        .toISOString()
+                        .substr(11, 8)
+                    : "N/A"}
+                </span>
+              </div>
+              <div className="flex items-center">
+                <span className="font-semibold">Runtime:</span>
+                <span className="ml-1">
+                  {sensor[motorRunTimeKey] !== undefined
+                    ? new Date(sensor[motorRunTimeKey] * 1000)
+                        .toISOString()
+                        .substr(11, 8)
+                    : "N/A"}
+                </span>
+              </div>
             </div>
             <button
               onClick={togglePump}
-              className={`cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white ${
+              className={`mt-2 sm:mt-0 cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white hover:opacity-90 transition-opacity ${
                 motorStatus === "ON" ? "bg-green-600" : "bg-red-500"
               }`}
             >
-              {motorStatus === "ON" ? "ON" : "OFF"}
+              {motorStatus === "ON" ? "Turn OFF" : "Turn ON"}
             </button>
           </div>
-          <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Motor 2:</span>
-            <span>{sensor.motor2_status}</span>
+
+          <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
+            <span className="font-semibold mb-2">Water Levels</span>
+            <div>GLR (%): {sensor.water_level_glr || "N/A"}</div>
+            <div>OHT (%): {sensor.water_level_oht || "N/A"}</div>
+            <div>
+              Vacuum Switch: {sensor.vacuum_switch_ok === 1 ? "OK" : "NOT OK"}
+            </div>
           </div>
-          <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Water Level:</span>
-            <span>{sensor.water_level}</span>
-          </div>
-          <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Chlorine Leak:</span>
-            <span>{sensor.chlorine_leakage}</span>
-          </div>
-          <div className="flex justify-between p-2 sm:p-4 bg-gray-50 rounded">
-            <span className="font-semibold">Residual Cl:</span>
-            <span>{sensor.rcs_value}</span>
+
+          <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
+            <span className="font-semibold mb-2">Chlorine Details</span>
+            <div>
+              Chlorine Leakage Detected:{" "}
+              <span
+                className={
+                  sensor.chlorine_leakage_detected === 1
+                    ? "text-green-600"
+                    : "text-red-500"
+                }
+              >
+                {sensor.chlorine_leakage_detected === 1 ? "YES" : "NO"}
+              </span>
+            </div>
+            <div>
+              Residual Cl (Plant): {sensor.residual_chlorine_plant || "N/A"} ppm
+            </div>
+            <div>
+              Residual Cl (Farthest):{" "}
+              {sensor.residual_chlorine_farthest || "N/A"} ppm
+            </div>
+            <div>
+              Cylinder Weight: {sensor.chlorine_cylinder_weight || "N/A"} kg
+            </div>
           </div>
         </div>
       </div>
