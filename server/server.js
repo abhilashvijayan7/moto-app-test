@@ -39,7 +39,7 @@ app.post("/save-token", (req, res) => {
 });
 
 // ✅ Send notification manually via GET
-app.get("/send-notification", async (req, as) => {
+app.get("/send-notification", async (req, res) => {
   if (!savedTokens || savedTokens.length === 0) {
     return res.status(400).json({ success: false, message: "No device tokens saved." });
   }
