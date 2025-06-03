@@ -13,7 +13,7 @@ function usePushNotifications() {
           requestForToken().then((token) => {
             if (token) {
               // Send token to backend
-              fetch("https://moto-app-test-1.onrender.com/save-token", {
+              fetch("https://moto-app-test-2.onrender.com/save-token", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token }),

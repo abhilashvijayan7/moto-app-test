@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
-const socket = io("https://moto-app-test-1.onrender.com", {
+const socket = io("https://moto-app-test-2.onrender.com", {
   transports: ["websocket"],
 });
 const Dashboard = () => {
