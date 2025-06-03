@@ -1,3 +1,5 @@
+require('dotenv').config(); // Load .env variables
+
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -5,7 +7,6 @@ const cors = require("cors");
 const mqtt = require("mqtt");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
-require('dotenv').config(); // Load environment variables
 
 const app = express();
 const server = http.createServer(app);
@@ -19,16 +20,16 @@ const io = new Server(server, {
 app.use(cors());
 app.use(bodyParser.json());
 
-// ✅ Firebase Admin SDK initialization
+// Parse Firebase Admin SDK JSON from environment variable
 const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
-// ✅ FCM Token Storage
+// FCM Token Storage
 let savedTokens = [];
 
-// ✅ Save token from client
 app.post("/save-token", (req, res) => {
   const { token } = req.body;
   if (token && !savedTokens.includes(token)) {
@@ -38,9 +39,8 @@ app.post("/save-token", (req, res) => {
   res.sendStatus(200);
 });
 
-// ✅ Send notification manually via GET
 app.get("/send-notification", async (req, res) => {
-  if (!savedTokens || savedTokens.length === 0) {
+  if (!savedTokens.length) {
     return res.status(400).json({ success: false, message: "No device tokens saved." });
   }
 
@@ -62,7 +62,7 @@ app.get("/send-notification", async (req, res) => {
   }
 });
 
-// 🔌 MQTT & Socket.IO setup
+// MQTT & Socket.IO setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 
 const SENSOR_TOPIC = "sensors/data";
@@ -76,17 +76,13 @@ mqttClient.on("connect", () => {
 });
 
 mqttClient.on("message", async (topic, message) => {
-  console.log(`MQTT message received on ${topic}: ${message.toString()}`);
-
   if (topic === SENSOR_TOPIC) {
     try {
       const data = JSON.parse(message.toString());
       latestSensorData = data;
 
-      // Send to all connected clients
       io.emit("sensor_data", latestSensorData);
 
-      // Optionally trigger FCM notification for sensor alerts
       const message = {
         notification: {
           title: "Sensor Alert",
@@ -115,7 +111,6 @@ io.on("connection", (socket) => {
 
     mqttClient.publish(MOTOR_TOPIC, command, () => {
       console.log("Published motor command:", command);
-
       io.emit("motor_status_update", command);
     });
   });
@@ -125,7 +120,7 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 4000; // Use Render's PORT or fallback to 4000
+const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
