@@ -5,7 +5,7 @@ const socket = io("https://moto-app-test.onrender.com", {
 });
 
 function Motor() {
-  const [motorStatus, setMotorStatus] = useState("OFF");
+  const [motorStatus, setMotorStatus] = useState("STOP_PLANT");
 
   useEffect(() => {
     socket.on("motor_status_update", (status) => {
@@ -22,7 +22,7 @@ function Motor() {
     <div className="flex items-center justify-center h-screen flex-col">
       <h1
         style={{
-          color: motorStatus === "ON" ? "green" : "red",
+          color: motorStatus === "START_PLANT" ? "green" : "red",
           fontSize: "2.5rem",
           fontWeight: "bold",
           textShadow: "2px 2px 4px rgba(0, 0, 0, 0.3)",

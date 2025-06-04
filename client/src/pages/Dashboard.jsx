@@ -7,11 +7,11 @@ const socket = io("https://moto-app-test.onrender.com", {
 
 const Dashboard = () => {
   const [sensor, setSensor] = useState({});
-  const [motorStatus, setMotorStatus] = useState("OFF");
+  const [motorStatus, setMotorStatus] = useState("STOP_PLANT");
   const [motorNumber, setMotorNumber] = useState(1);
 
   const togglePump = () => {
-    const newStatus = motorStatus === "ON" ? "OFF" : "ON";
+    const newStatus = motorStatus === "START_PLANT" ? "STOP_PLANT" : "START_PLANT";
     socket.emit("motor_control", { command: newStatus });
   };
 
@@ -166,7 +166,7 @@ const Dashboard = () => {
                 <span className="font-semibold">Motor:</span>
                 <span
                   className={`ml-1 ${
-                    motorStatus === "ON" ? "text-green-600" : "text-red-500"
+                    motorStatus === "START_PLANT" ? "text-green-600" : "text-red-500"
                   }`}
                 >
                   {motorStatus}
@@ -196,10 +196,10 @@ const Dashboard = () => {
             <button
               onClick={togglePump}
               className={`mt-2 sm:mt-0 cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white hover:opacity-90 transition-opacity ${
-                motorStatus === "ON" ? "bg-green-600" : "bg-red-500"
+                motorStatus === "START_PLANT" ? "bg-green-600" : "bg-red-500"
               }`}
             >
-              {motorStatus === "ON" ? "Turn OFF" : "Turn ON"}
+              {motorStatus === "START_PLANT" ? "Turn OFF" : "Turn ON"}
             </button>
           </div>
 
