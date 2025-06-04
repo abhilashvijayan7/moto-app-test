@@ -1,4 +1,4 @@
-require('dotenv').config(); 
+require('dotenv').config();
 
 const express = require("express");
 const http = require("http");
@@ -20,14 +20,15 @@ const io = new Server(server, {
 app.use(cors());
 app.use(bodyParser.json());
 
+// Firebase Admin Setup
 const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
-
 serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
+// FCM Token Storage
 let savedTokens = [];
 
 app.post("/save-token", (req, res) => {
@@ -62,6 +63,7 @@ app.get("/send-notification", async (req, res) => {
   }
 });
 
+// MQTT Setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 
 const SENSOR_TOPIC = "watertreatment/plant1/data";
@@ -71,7 +73,13 @@ let latestSensorData = {};
 
 mqttClient.on("connect", () => {
   console.log("Connected to MQTT broker");
-  mqttClient.subscribe(SENSOR_TOPIC);
+  mqttClient.subscribe(SENSOR_TOPIC, (err) => {
+    if (err) {
+      console.error("Error subscribing to topic:", err.message);
+    } else {
+      console.log("Subscribed to:", SENSOR_TOPIC);
+    }
+  });
 });
 
 mqttClient.on("message", async (topic, message) => {
@@ -82,7 +90,7 @@ mqttClient.on("message", async (topic, message) => {
 
       io.emit("sensor_data", latestSensorData);
 
-      const message = {
+      const msg = {
         notification: {
           title: "Sensor Alert",
           body: `Temperature: ${data.temperature}, Humidity: ${data.humidity}`,
@@ -91,7 +99,7 @@ mqttClient.on("message", async (topic, message) => {
       };
 
       if (savedTokens.length > 0) {
-        await admin.messaging().sendEachForMulticast(message);
+        await admin.messaging().sendEachForMulticast(msg);
         console.log("Sensor alert notification sent.");
       }
     } catch (e) {
@@ -100,6 +108,7 @@ mqttClient.on("message", async (topic, message) => {
   }
 });
 
+// Socket.IO Connection
 io.on("connection", (socket) => {
   console.log("Frontend connected:", socket.id);
 
@@ -108,9 +117,20 @@ io.on("connection", (socket) => {
   socket.on("motor_control", (data) => {
     const command = data.command;
 
-    mqttClient.publish(MOTOR_TOPIC, command, () => {
-      console.log("Published motor command:", command);
-      io.emit("motor_status_update", command);
+    if (!mqttClient.connected) {
+      console.warn("MQTT client not connected, cannot publish.");
+      return;
+    }
+
+    const payload = typeof command === "object" ? JSON.stringify(command) : String(command);
+
+    mqttClient.publish(MOTOR_TOPIC, payload, (err) => {
+      if (err) {
+        console.error("Error publishing motor command:", err.message);
+      } else {
+        console.log("Published motor command:", payload);
+        io.emit("motor_status_update", payload);
+      }
     });
   });
 
@@ -119,6 +139,7 @@ io.on("connection", (socket) => {
   });
 });
 
+// Start Server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
