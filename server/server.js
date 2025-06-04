@@ -90,18 +90,21 @@ mqttClient.on("message", async (topic, message) => {
 
       io.emit("sensor_data", latestSensorData);
 
-      const msg = {
-        notification: {
-          title: "Sensor Alert",
-          body: `Temperature: ${data.temperature}, Humidity: ${data.humidity}`,
-        },
-        tokens: savedTokens,
-      };
+      // ✅ Check Residual Chlorine Level
+      const residualCl = parseFloat(data.residual_chlorine_plant);
+      if (!isNaN(residualCl) && residualCl > 5 && savedTokens.length > 0) {
+        const chlorineAlert = {
+          notification: {
+            title: "⚠️ High Chlorine Level Detected",
+            body: `Residual Cl (Plant): ${residualCl} ppm`,
+          },
+          tokens: savedTokens,
+        };
 
-      if (savedTokens.length > 0) {
-        await admin.messaging().sendEachForMulticast(msg);
-        console.log("Sensor alert notification sent.");
+        await admin.messaging().sendEachForMulticast(chlorineAlert);
+        console.log("🚨 Chlorine alert notification sent.");
       }
+
     } catch (e) {
       console.error("Error parsing MQTT message", e);
     }
