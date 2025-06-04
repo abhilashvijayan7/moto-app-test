@@ -9,10 +9,16 @@ const Dashboard = () => {
   const [sensor, setSensor] = useState({});
   const [motorStatus, setMotorStatus] = useState("OFF");
   const [motorNumber, setMotorNumber] = useState(1);
+  const [isButtonDisabled, setIsButtonDisabled] = useState(false);
 
   const togglePump = () => {
+    if (isButtonDisabled) return;
     const newStatus = motorStatus === "ON" ? "OFF" : "ON";
     socket.emit("motor_control", { command: newStatus });
+    setIsButtonDisabled(true);
+    setTimeout(() => {
+      setIsButtonDisabled(false);
+    }, 10000); // 10 seconds delay
   };
 
   useEffect(() => {
@@ -166,10 +172,10 @@ const Dashboard = () => {
                 <span className="font-semibold">Motor:</span>
                 <span
                   className={`ml-1 ${
-                    motorStatus === "ON" ? "text-green-600" : "text-red-500"
+                    sensor[motorStatusKey] === "ON" ? "text-green-600" : "text-red-500"
                   }`}
                 >
-                  {motorStatus}
+                  {sensor[motorStatusKey] != null ? sensor[motorStatusKey] : "N/A"}
                 </span>
               </div>
               <div className="flex items-center">
@@ -195,8 +201,13 @@ const Dashboard = () => {
             </div>
             <button
               onClick={togglePump}
-              className={`mt-2 sm:mt-0 cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white hover:opacity-90 transition-opacity ${
-                motorStatus === "ON" ? "bg-green-600" : "bg-red-500"
+              disabled={isButtonDisabled}
+              className={`mt-2 sm:mt-0 cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white transition-opacity ${
+                isButtonDisabled
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : motorStatus === "ON"
+                  ? "bg-green-600 hover:opacity-90"
+                  : "bg-red-500 hover:opacity-90"
               }`}
             >
               {motorStatus === "ON" ? "Turn OFF" : "Turn ON"}
