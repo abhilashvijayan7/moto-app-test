@@ -52,6 +52,7 @@ const Dashboard = () => {
   const motorCurrentL3Key = `motor${motorNumber}_current_l3`;
 
   const manualMode = sensor.manual_mode_active === 1 ? "MANUAL" : "AUTO";
+  const displayMotorStatus = motorStatus === "START_PLANT" ? "ON" : motorStatus === "STOP_PLANT" ? "OFF" : motorStatus;
 
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center p-2 sm:p-6">
@@ -166,10 +167,10 @@ const Dashboard = () => {
                 <span className="font-semibold">Motor:</span>
                 <span
                   className={`ml-1 ${
-                    motorStatus === "START_PLANT" ? "text-green-600" : "text-red-500"
+                    displayMotorStatus === "ON" ? "text-green-600" : "text-red-500"
                   }`}
                 >
-                  {motorStatus}
+                  {displayMotorStatus}
                 </span>
               </div>
               <div className="flex items-center">
