@@ -200,7 +200,7 @@ const Dashboard = () => {
 
           <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold mb-2">Water Levels</span>
-            <div>GLR (%): {sensor.water_level_glr != null ? sensor.water_level_glr : "N/A"}</div>
+            <div>GLR (%): {sensor.water_level != null ? sensor.water_level : "N/A"}</div>
             <div>OHT (%): {sensor.water_level_oht != null ? sensor.water_level_oht : "N/A"}</div>
             <div>
               Vacuum Switch: {sensor.vacuum_switch_ok === 1 ? "OK" : "NOT OK"}
