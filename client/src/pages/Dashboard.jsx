@@ -7,12 +7,12 @@ const socket = io("https://moto-app-test.onrender.com", {
 
 const Dashboard = () => {
   const [sensor, setSensor] = useState({});
-  const [motorStatus, setMotorStatus] = useState("STOP_PLANT");
+  const [motorStatus, setMotorStatus] = useState("OFF");
   const [motorNumber, setMotorNumber] = useState(1);
 
   const togglePump = () => {
-    const newCommand = motorStatus === "START_PLANT" ? "STOP_PLANT" : "START_PLANT";
-    socket.emit("motor_control", JSON.stringify({ command: newCommand }));
+    const newStatus = motorStatus === "ON" ? "OFF" : "ON";
+    socket.emit("motor_control", { command: newStatus });
   };
 
   useEffect(() => {
@@ -26,15 +26,13 @@ const Dashboard = () => {
       }
 
       const motorStatusKey = `motor${motorNumber}_status`;
-      if (data[motorStatusKey] === "START_PLANT" || data[motorStatusKey] === "STOP_PLANT") {
+      if (data[motorStatusKey]) {
         setMotorStatus(data[motorStatusKey]);
       }
     });
 
     socket.on("motor_status_update", (status) => {
-      if (status === "START_PLANT" || status === "STOP_PLANT") {
-        setMotorStatus(status);
-      }
+      setMotorStatus(status);
     });
 
     return () => {
@@ -168,10 +166,10 @@ const Dashboard = () => {
                 <span className="font-semibold">Motor:</span>
                 <span
                   className={`ml-1 ${
-                    motorStatus === "START_PLANT" ? "text-green-600" : "text-red-500"
+                    motorStatus === "ON" ? "text-green-600" : "text-red-500"
                   }`}
                 >
-                  {motorStatus === "START_PLANT" ? "ON" : motorStatus === "STOP_PLANT" ? "OFF" : "N/A"}
+                  {motorStatus}
                 </span>
               </div>
               <div className="flex items-center">
@@ -198,16 +196,16 @@ const Dashboard = () => {
             <button
               onClick={togglePump}
               className={`mt-2 sm:mt-0 cursor-pointer px-2 sm:px-4 py-1 sm:py-2 rounded text-xs sm:text-base font-medium text-white hover:opacity-90 transition-opacity ${
-                motorStatus === "START_PLANT" ? "bg-green-600" : "bg-red-500"
+                motorStatus === "ON" ? "bg-green-600" : "bg-red-500"
               }`}
             >
-              {motorStatus === "START_PLANT" ? "Turn OFF" : "Turn ON"}
+              {motorStatus === "ON" ? "Turn OFF" : "Turn ON"}
             </button>
           </div>
 
           <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold mb-2">Water Levels</span>
-            <div>GLR (%): {sensor.water_level != null ? sensor.water_level : "N/A"}</div>
+            <div>GLR (%): {sensor.water_level_glr != null ? sensor.water_level_glr : "N/A"}</div>
             <div>OHT (%): {sensor.water_level_oht != null ? sensor.water_level_oht : "N/A"}</div>
             <div>
               Vacuum Switch: {sensor.vacuum_switch_ok === 1 ? "OK" : "NOT OK"}
