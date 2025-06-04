@@ -20,6 +20,11 @@ const Dashboard = () => {
       console.log(data);
       setSensor(data);
 
+      // Set motorNumber based on active_motor
+      if (data.active_motor === 1 || data.active_motor === 2) {
+        setMotorNumber(data.active_motor);
+      }
+
       const motorStatusKey = `motor${motorNumber}_status`;
       if (data[motorStatusKey]) {
         setMotorStatus(data[motorStatusKey]);
