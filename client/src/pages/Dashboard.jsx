@@ -91,14 +91,10 @@ const Dashboard = () => {
                 className={
                   sensor.plant_status === "RUNNING"
                     ? "text-green-600"
-                    : sensor.plant_status === "IDLE"
-                    ? "text-yellow-500"
                     : "text-red-500"
                 }
               >
-                {sensor.plant_status != null
-                  ? sensor.plant_status
-                  : "POWER-OFF"}
+                {sensor.plant_status != null ? sensor.plant_status : "POWER-OFF"}
               </span>
             </div>
             <div className="flex justify-between p-2 bg-white rounded shadow-sm">
@@ -107,11 +103,7 @@ const Dashboard = () => {
             </div>
             <div className="flex justify-between p-2 bg-white rounded shadow-sm">
               <span className="font-semibold">Last Fault Message:</span>
-              <span>
-                {sensor.last_fault_message != null
-                  ? sensor.last_fault_message
-                  : "None"}
-              </span>
+              <span>{sensor.last_fault_message != null ? sensor.last_fault_message : "None"}</span>
             </div>
             <div className="flex justify-between p-2 bg-white rounded shadow-sm">
               <span className="font-semibold">Active Motor:</span>
@@ -140,96 +132,37 @@ const Dashboard = () => {
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold">Voltage L1-L3</span>
             <span className="sm:hidden">
-              {sensor[motorVoltageL1Key] != null
-                ? sensor[motorVoltageL1Key]
-                : "N/A"}{" "}
-              |{" "}
-              {sensor[motorVoltageL2Key] != null
-                ? sensor[motorVoltageL2Key]
-                : "N/A"}{" "}
-              |{" "}
-              {sensor[motorVoltageL3Key] != null
-                ? sensor[motorVoltageL3Key]
-                : "N/A"}
+              {sensor[motorVoltageL1Key] != null ? sensor[motorVoltageL1Key] : "N/A"} |{" "}
+              {sensor[motorVoltageL2Key] != null ? sensor[motorVoltageL2Key] : "N/A"} |{" "}
+              {sensor[motorVoltageL3Key] != null ? sensor[motorVoltageL3Key] : "N/A"}
             </span>
             <div className="hidden sm:block">
-              <div>
-                L1:{" "}
-                {sensor[motorVoltageL1Key] != null
-                  ? sensor[motorVoltageL1Key]
-                  : "N/A"}
-              </div>
-              <div>
-                L2:{" "}
-                {sensor[motorVoltageL2Key] != null
-                  ? sensor[motorVoltageL2Key]
-                  : "N/A"}
-              </div>
-              <div>
-                L3:{" "}
-                {sensor[motorVoltageL3Key] != null
-                  ? sensor[motorVoltageL3Key]
-                  : "N/A"}
-              </div>
+              <div>L1: {sensor[motorVoltageL1Key] != null ? sensor[motorVoltageL1Key] : "N/A"}</div>
+              <div>L2: {sensor[motorVoltageL2Key] != null ? sensor[motorVoltageL2Key] : "N/A"}</div>
+              <div>L3: {sensor[motorVoltageL3Key] != null ? sensor[motorVoltageL3Key] : "N/A"}</div>
             </div>
           </div>
 
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold">Current L1-L3</span>
             <span className="sm:hidden">
-              {sensor[motorCurrentL1Key] != null
-                ? sensor[motorCurrentL1Key]
-                : "N/A"}{" "}
-              |{" "}
-              {sensor[motorCurrentL2Key] != null
-                ? sensor[motorCurrentL2Key]
-                : "N/A"}{" "}
-              |{" "}
-              {sensor[motorCurrentL3Key] != null
-                ? sensor[motorCurrentL3Key]
-                : "N/A"}
+              {sensor[motorCurrentL1Key] != null ? sensor[motorCurrentL1Key] : "N/A"} |{" "}
+              {sensor[motorCurrentL2Key] != null ? sensor[motorCurrentL2Key] : "N/A"} |{" "}
+              {sensor[motorCurrentL3Key] != null ? sensor[motorCurrentL3Key] : "N/A"}
             </span>
             <div className="hidden sm:block">
-              <div>
-                L1:{" "}
-                {sensor[motorCurrentL1Key] != null
-                  ? sensor[motorCurrentL1Key]
-                  : "N/A"}
-              </div>
-              <div>
-                L2:{" "}
-                {sensor[motorCurrentL2Key] != null
-                  ? sensor[motorCurrentL2Key]
-                  : "N/A"}
-              </div>
-              <div>
-                L3:{" "}
-                {sensor[motorCurrentL3Key] != null
-                  ? sensor[motorCurrentL3Key]
-                  : "N/A"}
-              </div>
+              <div>L1: {sensor[motorCurrentL1Key] != null ? sensor[motorCurrentL1Key] : "N/A"}</div>
+              <div>L2: {sensor[motorCurrentL2Key] != null ? sensor[motorCurrentL2Key] : "N/A"}</div>
+              <div>L3: {sensor[motorCurrentL3Key] != null ? sensor[motorCurrentL3Key] : "N/A"}</div>
             </div>
           </div>
 
           <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold mb-2">Valve Statuses</span>
+            <div>Water Inflow Valve: {sensor.inflow_valve_status != null ? sensor.inflow_valve_status : "N/A"}</div>
+            <div>HOCL/Drainage Valve: {sensor.drain_valve_status != null ? sensor.drain_valve_status : "N/A"}</div>
             <div>
-              Water Inflow Valve:{" "}
-              {sensor.inflow_valve_status != null
-                ? sensor.inflow_valve_status
-                : "N/A"}
-            </div>
-            <div>
-              HOCL/Drainage Valve:{" "}
-              {sensor.drain_valve_status != null
-                ? sensor.drain_valve_status
-                : "N/A"}
-            </div>
-            <div>
-              Chlorine Gas Valve:{" "}
-              {sensor.chlorine_gas_valve_status != null
-                ? sensor.chlorine_gas_valve_status
-                : "N/A"}
+              Chlorine Gas Valve: {sensor.chlorine_gas_valve_status != null ? sensor.chlorine_gas_valve_status : "N/A"}
             </div>
           </div>
 
@@ -239,14 +172,10 @@ const Dashboard = () => {
                 <span className="font-semibold">Motor:</span>
                 <span
                   className={`ml-1 ${
-                    sensor[motorStatusKey] === "ON"
-                      ? "text-green-600"
-                      : "text-red-500"
+                    sensor[motorStatusKey] === "ON" ? "text-green-600" : "text-red-500"
                   }`}
                 >
-                  {sensor[motorStatusKey] != null
-                    ? sensor[motorStatusKey]
-                    : "N/A"}
+                  {sensor[motorStatusKey] != null ? sensor[motorStatusKey] : "N/A"}
                 </span>
               </div>
               <div className="flex items-center">
@@ -287,13 +216,8 @@ const Dashboard = () => {
 
           <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold mb-2">Water Levels</span>
-            <div>
-              GLR (%): {sensor.water_level != null ? sensor.water_level : "N/A"}
-            </div>
-            <div>
-              OHT (%):{" "}
-              {sensor.water_level_oht != null ? sensor.water_level_oht : "N/A"}
-            </div>
+            <div>GLR (%): {sensor.water_level != null ? sensor.water_level : "N/A"}</div>
+            <div>OHT (%): {sensor.water_level_oht != null ? sensor.water_level_oht : "N/A"}</div>
             <div>
               Vacuum Switch: {sensor.vacuum_switch_ok === 1 ? "OK" : "NOT OK"}
             </div>
@@ -314,25 +238,13 @@ const Dashboard = () => {
               </span>
             </div>
             <div>
-              Residual Cl (Plant):{" "}
-              {sensor.residual_chlorine_plant != null
-                ? sensor.residual_chlorine_plant
-                : "N/A"}{" "}
-              ppm
+              Residual Cl (Plant): {sensor.residual_chlorine_plant != null ? sensor.residual_chlorine_plant : "N/A"} ppm
             </div>
             <div>
-              Residual Cl (Farthest):{" "}
-              {sensor.residual_chlorine_farthest != null
-                ? sensor.residual_chlorine_farthest
-                : "N/A"}{" "}
-              ppm
+              Residual Cl (Farthest): {sensor.residual_chlorine_farthest != null ? sensor.residual_chlorine_farthest : "N/A"} ppm
             </div>
             <div>
-              Cylinder Weight:{" "}
-              {sensor.chlorine_cylinder_weight != null
-                ? sensor.chlorine_cylinder_weight
-                : "N/A"}{" "}
-              kg
+              Cylinder Weight: {sensor.chlorine_cylinder_weight != null ? sensor.chlorine_cylinder_weight : "N/A"} kg
             </div>
           </div>
         </div>
