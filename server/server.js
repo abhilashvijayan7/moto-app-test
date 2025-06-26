@@ -90,6 +90,8 @@ mqttClient.on("message", async (topic, message) => {
 
       io.emit("sensor_data", latestSensorData);
 
+      console.log(latestSensorData)
+
       // ✅ Check Residual Chlorine Level
       const residualCl = parseFloat(data.residual_chlorine_plant);
       if (!isNaN(residualCl) && residualCl > 5 && savedTokens.length > 0) {
@@ -116,6 +118,8 @@ io.on("connection", (socket) => {
   console.log("Frontend connected:", socket.id);
 
   socket.emit("sensor_data", latestSensorData);
+        console.log(latestSensorData)
+
 
   socket.on("motor_control", (data) => {
     const command = data.command;
