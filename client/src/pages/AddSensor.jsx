@@ -364,7 +364,7 @@ function AddSensorAndMotor() {
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900 mb-8">
-                Sensor Type
+               Add Sensor Type
               </h1>
 
               {submitTypeSuccess && (
