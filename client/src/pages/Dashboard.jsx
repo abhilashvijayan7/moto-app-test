@@ -447,7 +447,7 @@ const Dashboard = () => {
   const manualMode = sensor.manual_mode_active === 1 ? "MANUAL" : "AUTO";
 
   return (
-    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-2 sm:p-6">
+    <div className="min-h-screen flex items-center justify-center p-2 sm:p-6">
       <div className="w-full max-w-[500px] sm:max-w-4xl bg-white rounded-lg shadow-md p-4 sm:p-8 flex flex-col">
         <h2 className="text-lg sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-6 flex items-center">
           <svg
