@@ -15,37 +15,6 @@ const PlantDashboard = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connected');
   const [plantStatus, setPlantStatus] = useState(false);
-  const [sensorNames, setSensorNames] = useState([]); // Store unique sensor names and keys
-
-  // Fetch sensor names from API and deduplicate
-  useEffect(() => {
-    const fetchSensorNames = async () => {
-      try {
-        const response = await fetch('/api/plantsensors/details');
-        const data = await response.json();
-        // Deduplicate sensors based on sensor_key or sensor_name
-        const uniqueSensors = [];
-        const seenKeys = new Set();
-        data
-          .filter(sensor => sensor.is_sensor_enabled)
-          .forEach(sensor => {
-            const key = sensor.sensor_key || sensor.sensor_name.toLowerCase().replace(/\s+/g, '_');
-            if (!seenKeys.has(key)) {
-              seenKeys.add(key);
-              uniqueSensors.push({
-                name: sensor.sensor_name,
-                key: key,
-              });
-            }
-          });
-        setSensorNames(uniqueSensors);
-      } catch (error) {
-        console.error('Error fetching sensor names:', error);
-      }
-    };
-
-    fetchSensorNames();
-  }, []);
 
   useEffect(() => {
     let timeout;
@@ -54,8 +23,8 @@ const PlantDashboard = () => {
       if (timeout) clearTimeout(timeout);
       setConnectionStatus('connected');
 
-      if (sensor.plant_status === 'IDLE' && isButtonDisabled)
-        setIsButtonDisabled(false);
+      if(sensor.plant_status =='IDLE' && isButtonDisabled)
+              setIsButtonDisabled(false);
 
       timeout = setTimeout(() => {
         setConnectionStatus('Disconnected');
@@ -68,9 +37,11 @@ const PlantDashboard = () => {
       setSensor(data);
       resetTimeout();
 
+      // Update motorNumber if provided
       if (data.active_motor === 1 || data.active_motor === 2) {
         setMotorNumber(data.active_motor);
       }
+      // Note: motorStatus is not updated to prevent backend-driven changes
     });
 
     socket.on('connect', () => {
@@ -90,14 +61,14 @@ const PlantDashboard = () => {
       socket.off('disconnect');
       if (timeout) clearTimeout(timeout);
     };
-  }, [sensor.plant_status, isButtonDisabled]);
+  }, []);
 
   const togglePump = () => {
     if (isButtonDisabled || connectionStatus === 'Disconnected') return;
     const newStatus = motorStatus === 'ON' ? 'OFF' : 'ON';
     socket.emit('motor_control', { command: newStatus });
-    console.log(newStatus);
-    setMotorStatus(newStatus);
+    console.log(newStatus)
+    setMotorStatus(newStatus); // Update motorStatus locally
     setIsButtonDisabled(true);
     setTimeout(() => {
       setIsButtonDisabled(false);
@@ -118,40 +89,6 @@ const PlantDashboard = () => {
   const displayedPlantStatus = connectionStatus === 'Disconnected'
     ? 'Disconnected'
     : sensor.plant_status;
-
-  // Define sensor display configuration with hardcoded keys
-  const sensorDisplayConfig = [
-    { key: 'water_inlet_valve_status', label: 'Water Inflow', type: 'status' },
-    { key: 'hocl_valve_status', label: 'HOCL/Drainage', type: 'status' },
-    { key: 'chlorine_gas_valve_status', label: 'Chlorine Gas', type: 'status' },
-    { key: 'active_motor', label: 'Active Motor', type: 'value', format: (val) => val ? `Motor ${val}` : 'N/A' },
-    { key: 'water_level', label: 'Water Level', type: 'value', format: (val) => val ? `${val}%` : 'N/A' },
-    { key: 'water_level_oht', label: 'OHT Level', type: 'value', format: (val) => val ? `${val}%` : 'N/A' },
-    { key: 'vacuum_switch_ok', label: 'Vacuum Switch', type: 'status', format: (val) => val === 1 ? 'OK' : 'NOT OK' },
-    { key: 'chlorine_cylinder_weight', label: 'Cylinder wt', type: 'value', format: (val) => val ? `${val} kg` : 'N/A' },
-    { key: 'residual_chlorine_plant', label: 'Res.cl (plant)', type: 'value', format: (val) => val ? `${val} ppm` : 'N/A' },
-    { key: 'residual_chlorine_farthest', label: 'Res.cl (farthest)', type: 'value', format: (val) => val ? `${val} ppm` : 'N/A' },
-    { key: 'chlorine_leakage_detected', label: 'Leakage', type: 'status', format: (val) => val === 1 ? 'YES' : 'NO' },
-    { key: 'last_fault_message', label: 'Last Fault', type: 'value', format: (val) => val ?? 'None' },
-  ];
-
-  // Map API sensor names to sensorDisplayConfig, ensuring no duplicates
-  const updatedSensorDisplayConfig = sensorDisplayConfig.map(config => {
-    const apiSensor = sensorNames.find(s => s.key === config.key);
-    return {
-      ...config,
-      label: apiSensor ? apiSensor.name : config.label, // Use API sensor name if available
-    };
-  }).filter((config, index, self) => 
-    // Remove duplicates based on key
-    index === self.findIndex(c => c.key === config.key)
-  );
-
-  // Group sensors into rows of three
-  const sensorRows = [];
-  for (let i = 0; i < updatedSensorDisplayConfig.length; i += 3) {
-    sensorRows.push(updatedSensorDisplayConfig.slice(i, i + 3));
-  }
 
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
@@ -266,38 +203,86 @@ const PlantDashboard = () => {
                 Sensors & Actuators
               </p>
               <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
-                {sensorRows.map((row, rowIndex) => (
-                  <div
-                    key={`row-${rowIndex}`}
-                    className={`flex ${rowIndex < sensorRows.length - 1 ? 'border-b border-b-[#DADADA]' : ''} py-[6px] gap-9 lg:gap-15`}
-                  >
-                    {row.map((item) => (
-                      <div key={item.key} className="w-[33%]">
-                        <p>{item.label}</p>
-                        <p
-                          className={`text-[16px] font-[600] ${
-                            item.type === 'status'
-                              ? sensor[item.key] === 'ON' || sensor[item.key] === 1
-                                ? 'text-[#4CAF50]'
-                                : 'text-[#EF5350]'
-                              : 'text-[#208CD4]'
-                          }`}
-                        >
-                          {connectionStatus === 'Disconnected'
-                            ? 'N/A'
-                            : item.format
-                            ? item.format(sensor[item.key])
-                            : sensor[item.key] ?? 'N/A'}
-                        </p>
-                      </div>
-                    ))}
-                    {/* Fill empty slots if less than 3 sensors in the row */}
-                    {row.length < 3 &&
-                      Array.from({ length: 3 - row.length }).map((_, i) => (
-                        <div key={`empty-${rowIndex}-${i}`} className="w-[33%]" />
-                      ))}
+                <div className="flex border-b border-b-[#DADADA] pb-[6px] gap-9 lg:gap-15">
+                  <div className="w-[33%]">
+                    <p>Water Inflow</p>
+                    <p className={`text-[16px] font-[700] ${sensor.water_inlet_valve_status === 'ON' ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.water_inlet_valve_status ?? 'N/A'}
+                    </p>
                   </div>
-                ))}
+                  <div className="w-[33%]">
+                    <p>HOCL/Drainage</p>
+                    <p className={`text-[16px] font-[700] ${sensor.hocl_valve_status === 'ON' ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.hocl_valve_status ?? 'N/A'}
+                    </p>
+                  </div>
+                  <div className="w-[33%]">
+                    <p>Chlorine Gas</p>
+                    <p className={`text-[16px] font-[700] ${sensor.chlorine_gas_valve_status === 'ON' ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.chlorine_gas_valve_status ?? 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex border-b border-b-[#DADADA] py-[6px] gap-9 lg:gap-15">
+                  <div className="w-[33%]">
+                    <p>Active Motor</p>
+                    <p className="text-[16px] font-[600] text-[#208CD4]">
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.active_motor ? `Motor ${sensor.active_motor}` : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="w-[33%]">
+                    <p>Water Level</p>
+                    <p className="text-[16px] font-[600] text-[#208CD4]">
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.water_level ? `${sensor.water_level}%` : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="w-[33%]">
+                    <p>OHT Level</p>
+                    <p className="text-[16px] font-[600] text-[#208CD4]">
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.water_level_oht ? `${sensor.water_level_oht}%` : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex border-b border-b-[#DADADA] py-[6px] gap-9 lg:gap-15">
+                  <div className="w-[33%]">
+                    <p>Vacuum Switch</p>
+                    <p className={`text-[16px] font-[600] ${sensor.vacuum_switch_ok === 1 ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.vacuum_switch_ok === 1 ? 'OK' : 'NOT OK'}
+                    </p>
+                  </div>
+                  <div className="w-[33%]">
+                    <p>Cylinder wt</p>
+                    <p className="text-[16px] font-[600] text-[#208CD4]">
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.chlorine_cylinder_weight ? `${sensor.chlorine_cylinder_weight} kg` : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="w-[33%]">
+                    <p>Res.cl (plant)</p>
+                    <p className="text-[16px] font-[600] text-[#208CD4]">
+                      {connectionStatus === 'Disconnected' ? 'N/A' : `${sensor.residual_chlorine_plant} ppm`}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex border-b border-b-[#DADADA] py-[6px] gap-9 lg:gap-15">
+                  <div className="w-[33%]">
+                    <p>Res.cl (farthest)</p>
+                    <p className="text-[16px] font-[600] text-[#208CD4]">
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.residual_chlorine_farthest ? `${sensor.residual_chlorine_farthest} ppm` : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="w-[33%]">
+                    <p>Leakage</p>
+                    <p className={`text-[16px] font-[600] ${sensor.chlorine_leakage_detected === 1 ? 'text-[#EF5350]' : 'text-[#4CAF50]'}`}>
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.chlorine_leakage_detected === 1 ? 'YES' : 'NO'}
+                    </p>
+                  </div>
+                  <div className="w-[33%]">
+                    <p>Last Fault</p>
+                    <p className="text-[16px] font-[600] text-[#208CD4]">
+                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.last_fault_message ?? 'None'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
