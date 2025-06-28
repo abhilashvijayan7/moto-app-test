@@ -34,15 +34,6 @@ const PlantDashboard = () => {
       if (data.active_motor === 1 || data.active_motor === 2) {
         setMotorNumber(data.active_motor);
       }
-      const motorStatusKey = `motor${motorNumber}_status`;
-      if (data[motorStatusKey]) {
-        setMotorStatus(data[motorStatusKey]);
-      }
-    });
-
-    socket.on('motor_status_update', (status) => {
-      setMotorStatus(status);
-      resetTimeout();
     });
 
     socket.on('connect', () => {
@@ -58,7 +49,6 @@ const PlantDashboard = () => {
 
     return () => {
       socket.off('sensor_data');
-      socket.off('motor_status_update');
       socket.off('connect');
       socket.off('disconnect');
       if (timeout) clearTimeout(timeout);
@@ -69,6 +59,7 @@ const PlantDashboard = () => {
     if (isButtonDisabled || connectionStatus === 'Disconnected') return;
     const newStatus = motorStatus === 'ON' ? 'OFF' : 'ON';
     socket.emit('motor_control', { command: newStatus });
+    setMotorStatus(newStatus);
     setIsButtonDisabled(true);
     setTimeout(() => {
       setIsButtonDisabled(false);
