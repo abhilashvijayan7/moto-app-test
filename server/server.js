@@ -131,7 +131,7 @@ io.on("connection", (socket) => {
 
     const payload = typeof command === "object" ? JSON.stringify(command) : String(command);
     console.log(payload)
-console,log(MOTOR_TOPIC)
+console.log(MOTOR_TOPIC)
     mqttClient.publish(MOTOR_TOPIC, payload, (err) => {
       if (err) {
         console.error("Error publishing motor command:", err.message);
