@@ -14,6 +14,7 @@ const PlantDashboard = () => {
   const [motorNumber, setMotorNumber] = useState(1);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connected');
+  const [plantStatus, setPlantStatus] = useState(false);
 
   useEffect(() => {
     let timeout;
@@ -21,19 +22,26 @@ const PlantDashboard = () => {
     const resetTimeout = () => {
       if (timeout) clearTimeout(timeout);
       setConnectionStatus('connected');
+
+      if(sensor.plant_status =='IDLE' && isButtonDisabled)
+              setIsButtonDisabled(false);
+
       timeout = setTimeout(() => {
         setConnectionStatus('Disconnected');
         setIsButtonDisabled(true);
-      }, 5000);
+      }, 10000);
     };
 
     socket.on('sensor_data', (data) => {
       console.log(data);
       setSensor(data);
       resetTimeout();
+
+      // Update motorNumber if provided
       if (data.active_motor === 1 || data.active_motor === 2) {
         setMotorNumber(data.active_motor);
       }
+      // Note: motorStatus is not updated to prevent backend-driven changes
     });
 
     socket.on('connect', () => {
@@ -53,13 +61,13 @@ const PlantDashboard = () => {
       socket.off('disconnect');
       if (timeout) clearTimeout(timeout);
     };
-  }, [motorNumber]);
+  }, []);
 
   const togglePump = () => {
     if (isButtonDisabled || connectionStatus === 'Disconnected') return;
     const newStatus = motorStatus === 'ON' ? 'OFF' : 'ON';
     socket.emit('motor_control', { command: newStatus });
-    setMotorStatus(newStatus);
+    setMotorStatus(newStatus); // Update motorStatus locally
     setIsButtonDisabled(true);
     setTimeout(() => {
       setIsButtonDisabled(false);
@@ -77,8 +85,8 @@ const PlantDashboard = () => {
   const motorCurrentL3Key = `motor${motorNumber}_current_l3`;
 
   const manualMode = sensor.manual_mode_active === 1 ? 'Manual' : 'Auto';
-  const displayedPlantStatus = connectionStatus === 'Disconnected' 
-    ? 'Disconnected' 
+  const displayedPlantStatus = connectionStatus === 'Disconnected'
+    ? 'Disconnected'
     : sensor.plant_status;
 
   return (
