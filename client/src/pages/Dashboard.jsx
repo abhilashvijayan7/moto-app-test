@@ -11,11 +11,11 @@ const Dashboard = () => {
   const [motorNumber, setMotorNumber] = useState(1);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("CONNECTED");
-  
-  // Timeout for detecting disconnection
+
+  // Timeout for detecting disconnection after 5 seconds
   useEffect(() => {
     let timeout;
-    
+
     const resetTimeout = () => {
       if (timeout) clearTimeout(timeout);
       setConnectionStatus("CONNECTED");
@@ -28,7 +28,7 @@ const Dashboard = () => {
     socket.on("sensor_data", (data) => {
       console.log(data);
       setSensor(data);
-      
+
       // Reset timeout when data is received
       resetTimeout();
 
@@ -128,10 +128,10 @@ const Dashboard = () => {
                     : "text-red-500"
                 }
               >
-                {connectionStatus === "DISCONNECTED" 
+                {connectionStatus === "DISCONNECTED"
                   ? "DISCONNECTED"
-                  : sensor.plant_status != null 
-                  ? sensor.plant_status 
+                  : sensor.plant_status != null
+                  ? sensor.plant_status
                   : "POWER-OFF"}
               </span>
             </div>
@@ -141,7 +141,13 @@ const Dashboard = () => {
             </div>
             <div className="flex justify-between p-2 bg-white rounded shadow-sm">
               <span className="font-semibold">Last Fault Message:</span>
-              <span>{connectionStatus === "DISCONNECTED" ? "N/A" : sensor.last_fault_message != null ? sensor.last_fault_message : "None"}</span>
+              <span>
+                {connectionStatus === "DISCONNECTED"
+                  ? "N/A"
+                  : sensor.last_fault_message != null
+                  ? sensor.last_fault_message
+                  : "None"}
+              </span>
             </div>
             <div className="flex justify-between p-2 bg-white rounded shadow-sm">
               <span className="font-semibold">Active Motor:</span>
@@ -218,14 +224,10 @@ const Dashboard = () => {
                 <span className="font-semibold">Motor:</span>
                 <span
                   className={`ml-1 ${
-                    connectionStatus === "DISCONNECTED"
-                      ? "text-red-500"
-                      : sensor[motorStatusKey] === "ON"
-                      ? "text-green-600"
-                      : "text-red-500"
+                    sensor[motorStatusKey] === "ON" ? "text-green-600" : "text-red-500"
                   }`}
                 >
-                  {connectionStatus === "DISCONNECTED" ? "DISCONNECTED" : sensor[motorStatusKey] != null ? sensor[motorStatusKey] : "N/A"}
+                  {sensor[motorStatusKey] != null ? sensor[motorStatusKey] : "N/A"}
                 </span>
               </div>
               <div className="flex items-center">
@@ -264,7 +266,7 @@ const Dashboard = () => {
                   : "bg-red-500 hover:opacity-90"
               }`}
             >
-              {connectionStatus === "DISCONNECTED" ? "DISCONNECTED" : motorStatus === "ON" ? "Turn OFF" : "Turn ON"}
+              {motorStatus === "ON" ? "Turn OFF" : "Turn ON"}
             </button>
           </div>
 
@@ -294,7 +296,7 @@ const Dashboard = () => {
               </span>
             </div>
             <div>
-             Residual Cl (Plant): {connectionStatus === "DISCONNECTED" ? "N/A" : sensor.residual_chlorine_plant != null ? sensor.residual_chlorine_plant : "N/A"} ppm
+              Residual Cl (Plant): {connectionStatus === "DISCONNECTED" ? "N/A" : sensor.residual_chlorine_plant != null ? sensor.residual_chlorine_plant : "N/A"} ppm
             </div>
             <div>
               Residual Cl (Farthest): {connectionStatus === "DISCONNECTED" ? "N/A" : sensor.residual_chlorine_farthest != null ? sensor.residual_chlorine_farthest : "N/A"} ppm
