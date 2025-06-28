@@ -12,7 +12,7 @@ const Dashboard = () => {
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState("CONNECTED");
 
-  // Timeout for detecting disconnection after 5 seconds
+  // Timeout for detecting WebSocket disconnection after 5 seconds
   useEffect(() => {
     let timeout;
 
@@ -91,6 +91,11 @@ const Dashboard = () => {
 
   const manualMode = sensor.manual_mode_active === 1 ? "MANUAL" : "AUTO";
 
+  // Determine the displayed plant status
+  const displayedPlantStatus = connectionStatus === "DISCONNECTED" 
+    ? "DISCONNECTED" 
+    : sensor.plant_status;
+
   return (
     <div className="min-h-screen flex items-center justify-center p-2 sm:p-6">
       <div className="w-full max-w-[500px] sm:max-w-4xl bg-white rounded-lg shadow-md p-4 sm:p-8 flex flex-col">
@@ -121,18 +126,14 @@ const Dashboard = () => {
               <span className="font-semibold">Plant Status:</span>
               <span
                 className={
-                  connectionStatus === "DISCONNECTED"
+                  displayedPlantStatus === "DISCONNECTED" || displayedPlantStatus === "POWER-OFF"
                     ? "text-red-500"
-                    : sensor.plant_status === "RUNNING"
+                    : displayedPlantStatus === "RUNNING"
                     ? "text-green-600"
-                    : "text-red-500"
+                    : "text-yellow-500" // Use yellow for IDLE to distinguish it
                 }
               >
-                {connectionStatus === "DISCONNECTED"
-                  ? "DISCONNECTED"
-                  : sensor.plant_status != null
-                  ? sensor.plant_status
-                  : "POWER-OFF"}
+                {displayedPlantStatus}
               </span>
             </div>
             <div className="flex justify-between p-2 bg-white rounded shadow-sm">
@@ -176,7 +177,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2 sm:gap-6 text-gray-800 text-sm sm:text-base">
+        <div className="flex flex-col sm:grid sm:grid-cols-3 gap-2 sm:gap-5 text-gray-800 text-sm sm:text-base">
           <div className="flex justify-between sm:flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold">Voltage L1-L3</span>
             <span className="sm:hidden">
