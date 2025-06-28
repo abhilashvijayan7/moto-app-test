@@ -255,7 +255,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
             </div>
           )}
 
- Bread crumb navigation
           <div className="space-y-6">
             {motors.map((motor) => (
               <div key={motor.id} className="grid grid-cols-12 gap-6 items-center">

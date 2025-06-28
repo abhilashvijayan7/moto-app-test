@@ -546,8 +546,8 @@ const Dashboard = () => {
 
           <div className="flex flex-col p-2 sm:p-4 bg-gray-50 rounded shadow-sm">
             <span className="font-semibold mb-2">Valve Statuses</span>
-            <div>Water Inflow Valve: {sensor.inflow_valve_status != null ? sensor.inflow_valve_status : "N/A"}</div>
-            <div>HOCL/Drainage Valve: {sensor.drain_valve_status != null ? sensor.drain_valve_status : "N/A"}</div>
+            <div>Water Inflow Valve: {sensor.water_inlet_valve_status != null ? sensor.water_inlet_valve_status : "N/A"}</div>
+            <div>HOCL/Drainage Valve: {sensor.hocl_valve_status != null ? sensor.hocl_valve_status : "N/A"}</div>
             <div>
               Chlorine Gas Valve: {sensor.chlorine_gas_valve_status != null ? sensor.chlorine_gas_valve_status : "N/A"}
             </div>

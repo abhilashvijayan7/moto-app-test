@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
 import axios from "axios";
@@ -14,6 +15,8 @@ export default function ApplySensorModal({
     maxValue: "",
     serialNumber: "",
     notes: "",
+    is_sensor_enabled: true, // Changed from is_sensor_enabled to is_sensor_enabled
+    sensor_key: "", // Field for key
   });
   const [sensorTypes, setSensorTypes] = useState([]);
   const [plantSensors, setPlantSensors] = useState([]);
@@ -23,6 +26,8 @@ export default function ApplySensorModal({
   const [currentPage, setCurrentPage] = useState(1);
   const [sensorsPerPage, setSensorsPerPage] = useState(10);
   const [sensorsError, setSensorsError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingSensorId, setEditingSensorId] = useState(null);
 
   // Fetch sensor relations and plant sensors when modal opens
   useEffect(() => {
@@ -73,7 +78,7 @@ export default function ApplySensorModal({
     }
   }, [isOpen, plantId]);
 
-  // Handle input changes for the single sensor
+  // Handle input changes for the sensor form
   const handleInputChange = (field, value) => {
     if (field === "minValue" || field === "maxValue") {
       if (value === "" || !isNaN(value)) {
@@ -86,6 +91,8 @@ export default function ApplySensorModal({
         sensorType: value,
         sensorTypeRelationId: selected ? selected.id : null,
       }));
+    } else if (field === "is_sensor_enabled") {
+      setSensor((prev) => ({ ...prev, is_sensor_enabled: value }));
     } else {
       setSensor((prev) => ({ ...prev, [field]: value }));
     }
@@ -97,12 +104,47 @@ export default function ApplySensorModal({
   );
   const isMinMaxSensor = selectedSensor?.sensor_type_name === "min-max";
 
-  //For fetching sensor name and type name for sensor relations to display in table
+  // Map for sensor type relations
   const sensorTypeMap = new Map(
     sensorTypes.map((type) => [`${type.id}`, type])
   );
 
-  // Handle save action for the single sensor
+  // Handle edit action
+  const handleEdit = (sensor) => {
+    const matchedSensor = sensorTypeMap.get(
+      String(sensor.sensor_type_relation_id)
+    );
+    setSensor({
+      sensorType: matchedSensor?.sensor_name || "",
+      sensorTypeRelationId: sensor.sensor_type_relation_id || null,
+      minValue: sensor.min_value !== null ? String(sensor.min_value) : "",
+      maxValue: sensor.max_value !== null ? String(sensor.max_value) : "",
+      serialNumber: sensor.serial_number || "",
+      notes: sensor.notes || "",
+      is_sensor_enabled: sensor.is_sensor_enabled,
+      sensor_key: sensor.sensor_key || "",
+    });
+    setIsEditing(true);
+    setEditingSensorId(sensor.plant_sensor_id);
+  };
+
+  // Reset form and edit state
+  const resetForm = () => {
+    setSensor({
+      sensorType: "",
+      sensorTypeRelationId: null,
+      minValue: "",
+      maxValue: "",
+      serialNumber: "",
+      notes: "",
+      is_sensor_enabled: true,
+      sensor_key: "",
+    });
+    setIsEditing(false);
+    setEditingSensorId(null);
+  };
+
+  // Handle save action for adding or updating sensors
   const handleSave = async () => {
     if (
       !plantId ||
@@ -130,6 +172,7 @@ export default function ApplySensorModal({
       sensor.sensorType === "" ||
       !sensor.sensorTypeRelationId ||
       sensor.serialNumber === "" ||
+      sensor.sensor_key === "" ||
       (isMinMaxSensor &&
         (sensor.minValue === "" ||
           isNaN(sensor.minValue) ||
@@ -137,7 +180,7 @@ export default function ApplySensorModal({
           isNaN(sensor.maxValue)))
     ) {
       setSensorsError(
-        "Please ensure all required fields are filled: Select a sensor, provide a serial number, and for min-max sensors, provide numeric Min and Max Values."
+        "Please ensure all required fields are filled: Select a sensor, provide a serial number, key field, and for min-max sensors, provide numeric Min and Max Values."
       );
       return;
     }
@@ -152,6 +195,8 @@ export default function ApplySensorModal({
         min_value: isMinMaxSensor ? parseInt(sensor.minValue, 10) : null,
         max_value: isMinMaxSensor ? parseInt(sensor.maxValue, 10) : null,
         notes: sensor.notes || "",
+        is_sensor_enabled: sensor.is_sensor_enabled,
+        sensor_key: sensor.sensor_key,
       };
 
       console.log("Payload being sent:", payload);
@@ -161,6 +206,7 @@ export default function ApplySensorModal({
         isNaN(payload.plant_id) ||
         !payload.sensor_type_relation_id ||
         !payload.serial_number ||
+        !payload.sensor_key ||
         (isMinMaxSensor &&
           (!payload.min_value ||
             isNaN(payload.min_value) ||
@@ -172,11 +218,31 @@ export default function ApplySensorModal({
         return;
       }
 
-      await axios.post(
-        "https://water-pump.onrender.com/api/plantsensors",
-        payload
-      );
-      await axios.get("https://water-pump.onrender.com/api/plants");
+      if (isEditing) {
+        // Update existing sensor
+        console.log(payload)
+         console.log(editingSensorId)
+        await axios.put(
+          `https://water-pump.onrender.com/api/plantsensors/${editingSensorId}`,
+          {
+            installation_date: payload.installation_date,
+            serial_number: payload.serial_number,
+            min_value: payload.min_value,
+            max_value: payload.max_value,
+            notes: payload.notes,
+            is_sensor_enabled: payload.is_sensor_enabled,
+            sensor_key: payload.sensor_key,
+          }
+        );
+      } else {
+        // Add new sensor
+        await axios.post(
+          "https://water-pump.onrender.com/api/plantsensors",
+          payload
+        );
+      }
+
+      // Refresh plant sensors
       const plantSensorsResponse = await axios.get(
         "https://water-pump.onrender.com/api/plantsensors"
       );
@@ -191,14 +257,7 @@ export default function ApplySensorModal({
             new Date(b.installation_date) - new Date(a.installation_date)
         )
       );
-      setSensor({
-        sensorType: "",
-        sensorTypeRelationId: null,
-        minValue: "",
-        maxValue: "",
-        serialNumber: "",
-        notes: "",
-      }); // Reset form
+      resetForm();
       onClose();
     } catch (error) {
       console.error("Error submitting sensor:", error);
@@ -216,7 +275,10 @@ export default function ApplySensorModal({
   // Close modal on Escape key
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        resetForm();
+        onClose();
+      }
     };
 
     if (isOpen) {
@@ -237,7 +299,9 @@ export default function ApplySensorModal({
       String(sensor.min_value || "").includes(searchQuery) ||
       String(sensor.max_value || "").includes(searchQuery) ||
       sensor.serial_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sensor.notes?.toLowerCase().includes(searchQuery.toLowerCase())
+      sensor.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(sensor.is_sensor_enabled || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sensor.key_field?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredPlantSensors.length / sensorsPerPage);
@@ -268,14 +332,17 @@ export default function ApplySensorModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">
-              Apply Sensor
+              {isEditing ? "Edit Sensor" : "Apply Sensor"}
             </h2>
             <p className="text-sm text-gray-500 mt-1">
               Plant ID: {plantId || "Not provided"}
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={() => {
+              resetForm();
+              onClose();
+            }}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close modal"
           >
@@ -314,6 +381,7 @@ export default function ApplySensorModal({
                     onChange={(e) =>
                       handleInputChange("sensorType", e.target.value)
                     }
+                    disabled={isEditing}
                   >
                     <option value="" disabled>
                       Select Sensor
@@ -350,6 +418,42 @@ export default function ApplySensorModal({
                     handleInputChange("serialNumber", e.target.value)
                   }
                   placeholder="Enter serial number"
+                />
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  Sensor Status
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_sensor_enabled"
+                    checked={sensor.is_sensor_enabled}
+                    onChange={(e) =>
+                      handleInputChange("is_sensor_enabled", e.target.checked)
+                    }
+                    className="h-5 w-5 text-blue-500 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label
+                    htmlFor="is_sensor_enabled"
+                    className="ml-2 text-sm text-gray-700"
+                  >
+                    Active
+                  </label>
+                </div>
+              </div>
+              <div className="col-span-3">
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  Key Field
+                </label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={sensor.sensor_key}
+                  onChange={(e) =>
+                    handleInputChange("sensor_key", e.target.value)
+                  }
+                  placeholder="Enter key field"
                 />
               </div>
               {isMinMaxSensor && (
@@ -403,7 +507,10 @@ export default function ApplySensorModal({
         {/* Modal Footer */}
         <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
           <button
-            onClick={onClose}
+            onClick={() => {
+              resetForm();
+              onClose();
+            }}
             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
           >
             Cancel
@@ -415,6 +522,7 @@ export default function ApplySensorModal({
               sensor.sensorType === "" ||
               !sensor.sensorTypeRelationId ||
               sensor.serialNumber === "" ||
+              sensor.sensor_key === "" ||
               (isMinMaxSensor &&
                 (!sensor.minValue ||
                   !sensor.maxValue ||
@@ -422,17 +530,13 @@ export default function ApplySensorModal({
                   isNaN(sensor.maxValue)))
             }
           >
-            Save Changes
+            {isEditing ? "Update Sensor" : "Save Changes"}
           </button>
         </div>
 
         {/* Plant Sensors Table Section */}
         <div className="p-6">
-          <div
-            className="max-w-full bg
-
--white rounded-2xl shadow-sm border border-gray-200"
-          >
+          <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
             <div className="py-6 px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
                 <h2 className="text-2xl font-semibold text-gray-900">
@@ -538,10 +642,19 @@ export default function ApplySensorModal({
                             Max Value
                           </th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                            Status
+                          </th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                            Key Field
+                          </th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
                             Notes
                           </th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
                             Installation Date
+                          </th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                            Actions
                           </th>
                         </tr>
                       </thead>
@@ -549,7 +662,7 @@ export default function ApplySensorModal({
                         {paginatedPlantSensors.length === 0 ? (
                           <tr>
                             <td
-                              colSpan="7"
+                              colSpan="11"
                               className="border border-gray-300 px-4 py-8 text-center text-gray-500"
                             >
                               {searchQuery
@@ -560,17 +673,7 @@ export default function ApplySensorModal({
                         ) : (
                           paginatedPlantSensors.map((sensor, index) => {
                             const key = String(sensor.sensor_type_relation_id);
-
-                            // console.log('sensorTypes:', sensorTypes);
-                            // console.log('sensor:', sensor);
-                            // console.log('sensorTypeMap:', sensorTypeMap);
-                            // console.log('key:', key);
                             const matchedSensor = sensorTypeMap.get(key);
-                            // console.log('matched:', matchedSensor);
-                            console.log(
-                              "sensorName:",
-                              matchedSensor?.sensor_name
-                            );
                             return (
                               <tr
                                 key={sensor.plant_sensor_id}
@@ -595,6 +698,12 @@ export default function ApplySensorModal({
                                   {sensor.max_value ?? "-"}
                                 </td>
                                 <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                                  {sensor.is_sensor_enabled ? "Active" : "Inactive"}
+                                </td>
+                                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                                  {sensor.sensor_key || "-"}
+                                </td>
+                                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                                   {sensor.notes || "-"}
                                 </td>
                                 <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
@@ -603,6 +712,14 @@ export default function ApplySensorModal({
                                         sensor.installation_date
                                       ).toLocaleDateString()
                                     : "-"}
+                                </td>
+                                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                                  <button
+                                    onClick={() => handleEdit(sensor)}
+                                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                  >
+                                    Edit
+                                  </button>
                                 </td>
                               </tr>
                             );
@@ -623,15 +740,7 @@ export default function ApplySensorModal({
                     ) : (
                       paginatedPlantSensors.map((sensor, index) => {
                         const key = String(sensor.sensor_type_relation_id);
-
-                        // console.log('sensorTypes:', sensorTypes);
-                        // console.log('sensor:', sensor);
-                        // console.log('sensorTypeMap:', sensorTypeMap);
-                        // console.log('key:', key);
                         const matchedSensor = sensorTypeMap.get(key);
-                        // console.log('matched:', matchedSensor);
-                        console.log("sensorName:", matchedSensor?.sensor_name);
-
                         return (
                           <div
                             key={sensor.plant_sensor_id}
@@ -646,6 +755,12 @@ export default function ApplySensorModal({
                                   {matchedSensor?.sensor_name || "Unknown"}
                                 </h3>
                               </div>
+                              <button
+                                onClick={() => handleEdit(sensor)}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                              >
+                                Edit
+                              </button>
                             </div>
                             <div className="grid grid-cols-2 gap-4 text-sm">
                               <div className="flex flex-col">
@@ -678,6 +793,22 @@ export default function ApplySensorModal({
                                 </span>
                                 <span className="text-gray-900">
                                   {sensor.max_value ?? "-"}
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 font-medium">
+                                  Status:
+                                </span>
+                                <span className="text-gray-900">
+                                  {sensor.is_sensor_enabled ? "Active" : "Inactive"}
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 font-medium">
+                                  Key Field:
+                                </span>
+                                <span className="text-gray-900">
+                                  {sensor.key_field || "-"}
                                 </span>
                               </div>
                               <div className="flex flex-col col-span-2">
