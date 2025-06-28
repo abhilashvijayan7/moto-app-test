@@ -67,6 +67,7 @@ const PlantDashboard = () => {
     if (isButtonDisabled || connectionStatus === 'Disconnected') return;
     const newStatus = motorStatus === 'ON' ? 'OFF' : 'ON';
     socket.emit('motor_control', { command: newStatus });
+    console.log(newStatus)
     setMotorStatus(newStatus); // Update motorStatus locally
     setIsButtonDisabled(true);
     setTimeout(() => {
