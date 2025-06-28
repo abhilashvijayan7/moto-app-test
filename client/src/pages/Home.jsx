@@ -259,7 +259,7 @@ const PlantDashboard = () => {
                   <div className="w-[33%]">
                     <p>Res.cl (plant)</p>
                     <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.residual_chlorine_plant ? `${sensor.residual_chlorine_plant} ppm` : 'N/A'}
+                      {connectionStatus === 'Disconnected' ? 'N/A' : `${sensor.residual_chlorine_plant} ppm`}
                     </p>
                   </div>
                 </div>
