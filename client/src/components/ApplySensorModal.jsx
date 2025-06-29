@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
 import axios from "axios";
@@ -8,14 +9,14 @@ export default function ApplySensorModal({
   plantId = "",
 }) {
   const [sensor, setSensor] = useState({
-    sensorType: "",
-    sensorTypeRelationId: null,
+    sensorType: "", // Stores sensor_name
+    sensorTypeRelationId: null, // Stores id from sensor relations
     minValue: "",
     maxValue: "",
     serialNumber: "",
     notes: "",
-    is_sensor_enabled: true,
-    sensor_key: "",
+    is_sensor_enabled: true, // Changed from is_sensor_enabled to is_sensor_enabled
+    sensor_key: "", // Field for key
   });
   const [sensorTypes, setSensorTypes] = useState([]);
   const [plantSensors, setPlantSensors] = useState([]);
@@ -219,8 +220,8 @@ export default function ApplySensorModal({
 
       if (isEditing) {
         // Update existing sensor
-        console.log(payload);
-        console.log(editingSensorId);
+        console.log(payload)
+         console.log(editingSensorId)
         await axios.put(
           `https://water-pump.onrender.com/api/plantsensors/${editingSensorId}`,
           {
@@ -257,7 +258,7 @@ export default function ApplySensorModal({
         )
       );
       resetForm();
-      {/* Removed onClose() to keep modal open after save */}
+      onClose();
     } catch (error) {
       console.error("Error submitting sensor:", error);
       console.error("Server response:", error.response?.data);
@@ -807,7 +808,7 @@ export default function ApplySensorModal({
                                   Key Field:
                                 </span>
                                 <span className="text-gray-900">
-                                  {sensor.sensor_key || "-"}
+                                  {sensor.key_field || "-"}
                                 </span>
                               </div>
                               <div className="flex flex-col col-span-2">
