@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 
 function AddSensorAndMotor() {
@@ -27,6 +27,7 @@ function AddSensorAndMotor() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sensorsPerPage, setSensorsPerPage] = useState(10);
   const [editingSensorId, setEditingSensorId] = useState(null);
+  const sensorNameInputRef = useRef(null);
 
   // Helper function for API calls
   const apiCall = async (url, options = {}) => {
@@ -77,6 +78,13 @@ function AddSensorAndMotor() {
     }
   }, [submitSensorError]);
 
+  // Focus sensor name input when editing
+  useEffect(() => {
+    if (editingSensorId && sensorNameInputRef.current) {
+      sensorNameInputRef.current.focus();
+    }
+  }, [editingSensorId]);
+
   // Fetch sensors and sensor types on mount
   useEffect(() => {
     fetchSensors();
@@ -88,6 +96,7 @@ function AddSensorAndMotor() {
       const data = await apiCall(
         "https://water-pump.onrender.com/api/sensors/sensor-types"
       );
+      console.log("Fetched sensor types:", data);
       setSensorTypes(data);
       setHasSensorType(data.length > 0);
     } catch (error) {
@@ -218,7 +227,7 @@ function AddSensorAndMotor() {
       if (editingSensorId) {
         const editSensorData = {
           sensor_name: sensorForm.sensorName.trim(),
-          sensor_type_id: sensorTypeId, // Use the ID corresponding to the selected sensor type
+          sensor_type_id: sensorTypeId,
         };
 
         try {
@@ -311,6 +320,14 @@ function AddSensorAndMotor() {
     });
   };
 
+  const handleCancelEdit = () => {
+    setSensorForm({ sensorName: "", sensorType: "" });
+    setEditingSensorId(null);
+    if (sensorNameInputRef.current) {
+      sensorNameInputRef.current.blur();
+    }
+  };
+
   // Filter and paginate sensors
   const filteredSensors = sensors.filter(
     (sensor) =>
@@ -364,7 +381,7 @@ function AddSensorAndMotor() {
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900 mb-8">
-               Add Sensor Type
+                Add Sensor Type
               </h1>
 
               {submitTypeSuccess && (
@@ -453,8 +470,6 @@ function AddSensorAndMotor() {
 
               {submitSensorSuccess && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 relative">
-
-                    
                   <div className="flex justify-between items-start">
                     <div className="text-green-800">
                       <p className="text-sm font-medium">
@@ -506,6 +521,7 @@ function AddSensorAndMotor() {
                       onChange={handleSensorChange}
                       placeholder="Name of Sensor"
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      ref={sensorNameInputRef}
                     />
                   </div>
 
@@ -525,8 +541,11 @@ function AddSensorAndMotor() {
                       disabled={!hasSensorType}
                     >
                       <option value="">Select Sensor Type</option>
-                      {sensorTypes.map((type) => (
-                        <option key={type.id} value={type.sensor_type_name}>
+                      {sensorTypes.map((type, index) => (
+                        <option
+                          key={type.id || type.sensor_type_id || `type-${index}`}
+                          value={type.sensor_type_name}
+                        >
                           {type.sensor_type_name}
                         </option>
                       ))}
@@ -538,11 +557,7 @@ function AddSensorAndMotor() {
                   {editingSensorId && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setSensorForm({ sensorName: "", sensorType: "" });
-                        setEditingSensorId(null);
-                        setEditingSensorTypeId(null);
-                      }}
+                      onClick={handleCancelEdit}
                       className="font-medium py-3 px-8 rounded-md bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                     >
                       Cancel
@@ -658,7 +673,7 @@ function AddSensorAndMotor() {
                       ) : (
                         paginatedSensors.map((sensor, index) => (
                           <tr
-                            key={sensor.id || `sensor-${index}`}
+                            key={sensor.id || sensor.sensor_id || `sensor-${index}`}
                             className="hover:bg-gray-50"
                           >
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
@@ -696,7 +711,7 @@ function AddSensorAndMotor() {
                   ) : (
                     paginatedSensors.map((sensor, index) => (
                       <div
-                        key={sensor.id || `sensor-${index}`}
+                        key={sensor.id || sensor.sensor_id || `sensor-${index}`}
                         className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
                       >
                         <div className="flex justify-between items-start mb-3">

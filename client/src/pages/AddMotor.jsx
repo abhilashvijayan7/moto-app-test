@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 
 function AddMotor() {
@@ -20,6 +20,7 @@ function AddMotor() {
   const [searchQuery, setSearchQuery] = useState('');
   const [motorsPerPage, setMotorsPerPage] = useState(10);
   const [editingMotorId, setEditingMotorId] = useState(null);
+  const motorNameInputRef = useRef(null);
 
   useEffect(() => {
     if (submitSuccess) {
@@ -42,6 +43,13 @@ function AddMotor() {
   useEffect(() => {
     fetchMotors();
   }, []);
+
+  // Focus motor name input when editing
+  useEffect(() => {
+    if (editingMotorId && motorNameInputRef.current) {
+      motorNameInputRef.current.focus();
+    }
+  }, [editingMotorId]);
 
   const fetchMotors = async () => {
     try {
@@ -125,7 +133,7 @@ function AddMotor() {
         ? `https://water-pump.onrender.com/api/motors/${editingMotorId}`
         : 'https://water-pump.onrender.com/api/motors';
 
-        console.log(url)
+      console.log(url);
       
       const method = editingMotorId ? 'PUT' : 'POST';
 
@@ -166,24 +174,24 @@ function AddMotor() {
     }
   };
 
- const handleEdit = (motor) => {
-  console.log('Motor object:', motor);
-  const formattedInstallationDate = motor.installation_date
-    ? new Date(motor.installation_date).toISOString().split('T')[0]
-    : new Date().toISOString().split('T')[0];
+  const handleEdit = (motor) => {
+    console.log('Motor object:', motor);
+    const formattedInstallationDate = motor.installation_date
+      ? new Date(motor.installation_date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0];
 
-  setFormData({
-    motorName: motor.motor_name || '',
-    motorType: motor.motor_type || '',
-    manufacturer: motor.manufacturer || '',
-    modelNumber: motor.model_number || '',
-    installationDate: formattedInstallationDate
-  });
-  setEditingMotorId(motor.motor_id); 
-  setSubmitError('');
-  setSubmitSuccess(false);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-};
+    setFormData({
+      motorName: motor.motor_name || '',
+      motorType: motor.motor_type || '',
+      manufacturer: motor.manufacturer || '',
+      modelNumber: motor.model_number || '',
+      installationDate: formattedInstallationDate
+    });
+    setEditingMotorId(motor.motor_id); 
+    setSubmitError('');
+    setSubmitSuccess(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleCancelEdit = () => {
     setFormData({
@@ -196,6 +204,9 @@ function AddMotor() {
     setEditingMotorId(null);
     setSubmitError('');
     setSubmitSuccess(false);
+    if (motorNameInputRef.current) {
+      motorNameInputRef.current.blur();
+    }
   };
 
   const filteredMotors = motors.filter(motor =>
@@ -297,6 +308,7 @@ function AddMotor() {
                       placeholder="Enter Motor Name"
                       required
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      ref={motorNameInputRef}
                     />
                   </div>
                   
@@ -351,7 +363,7 @@ function AddMotor() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lp:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div>
                     <label htmlFor="installationDate" className="block text-sm font-medium text-gray-700 mb-2">
                       Installation Date *

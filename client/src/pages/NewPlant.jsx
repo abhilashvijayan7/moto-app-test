@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ChevronRight } from "lucide-react";
 import ApplyMotorModal from "../components/ApplyMotorModal";
 import ApplySensorModal from "../components/ApplySensorModal";
@@ -29,6 +29,7 @@ function NewPlant() {
   const [isMotorModalOpen, setIsMotorModalOpen] = useState(false);
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [isSensorModalOpen, setIsSensorModalOpen] = useState(false);
+  const plantNameInputRef = useRef(null);
 
   useEffect(() => {
     if (submitSuccess) {
@@ -49,6 +50,12 @@ function NewPlant() {
   }, [submitError]);
 
   useEffect(() => {
+    if (editingPlantId && plantNameInputRef.current) {
+      plantNameInputRef.current.focus();
+    }
+  }, [editingPlantId]);
+
+  useEffect(() => {
     fetchLocations();
     fetchPlants();
   }, []);
@@ -62,6 +69,7 @@ function NewPlant() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log("Fetched plants:", data); // Debug log
       const sortedPlants = data.sort((a, b) => {
         if (a.created_at && b.created_at) {
           return new Date(b.created_at) - new Date(a.created_at);
@@ -86,6 +94,7 @@ function NewPlant() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log("Fetched locations:", data); // Debug log
       setLocations(data);
     } catch (error) {
       console.error("Error fetching locations:", error);
@@ -132,6 +141,9 @@ function NewPlant() {
     });
     setIsEditing(false);
     setEditingPlantId(null);
+    if (plantNameInputRef.current) {
+      plantNameInputRef.current.blur();
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -276,7 +288,7 @@ function NewPlant() {
   const handleCloseMotorModal = async () => {
     setIsMotorModalOpen(false);
     setSelectedPlant(null);
-    await fetchPlants(); // Refresh plant list after modal closes
+    await fetchPlants();
   };
 
   const handleApplySensor = (plant) => {
@@ -478,6 +490,7 @@ function NewPlant() {
                     placeholder="Name of Plant"
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                    ref={plantNameInputRef}
                   />
                 </div>
                 <div>
@@ -497,7 +510,7 @@ function NewPlant() {
                       {isLoadingLocations ? "Loading locations..." : "Select Location"}
                     </option>
                     {locations.map((location) => (
-                      <option key={location.id} value={location.address}>
+                      <option key={location.id || `location-${location.address}`} value={location.address}>
                         {location.address}
                       </option>
                     ))}
@@ -660,7 +673,7 @@ function NewPlant() {
                         </tr>
                       ) : (
                         paginatedPlants.map((plant, index) => (
-                          <tr key={plant.plant_id} className="hover:bg-gray-50">
+                          <tr key={plant.plant_id || `plant-${index}`} className="hover:bg-gray-50">
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{startIndex + index + 1}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.plant_name}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
@@ -704,7 +717,7 @@ function NewPlant() {
                     </p>
                   ) : (
                     paginatedPlants.map((plant, index) => (
-                      <div key={plant.plant_id} className="border border-gray-300 rounded-lg p-4">
+                      <div key={plant.plant_id || `plant-${index}`} className="border border-gray-300 rounded-lg p-4">
                         <p className="text-sm font-medium text-gray-900">#{startIndex + index + 1}</p>
                         <p className="text-sm text-gray-700">
                           <span className="font-medium">Name:</span> {plant.plant_name}
