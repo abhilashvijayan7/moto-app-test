@@ -192,7 +192,7 @@ const Dashboard3 = () => {
   const getMotorByWorkingOrder = (plantId, workingOrder) => {
     const motors = plantMotorData[plantId] || [];
     return motors.find((motor) => motor.motor_working_order === workingOrder) || null;
-  };
+    };
 
   // Helper function to get label based on working order
   const getMotorLabel = (workingOrder) => {
@@ -358,24 +358,26 @@ const Dashboard3 = () => {
                   <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
                     <div className="grid grid-cols-3 gap-4 border-b border-b-[#DADADA] pb-[6px]">
                       {groupedSensors[plant.plant_id]?.length > 0 ? (
-                        groupedSensors[plant.plant_id].map((apidata) => (
-                          <div key={apidata.sensor_key}>
-                            <p>{apidata.sensor_name || "Sensor"}</p>
-                            <p
-                              className={`text-[16px] font-[700] ${
-                                sensor[apidata.sensor_key] === "ON"
-                                  ? "text-[#4CAF50]"
-                                  : sensor[apidata.sensor_key] === "OFF" || sensor[apidata.sensor_key] == null
-                                  ? "text-[#EF5350]"
-                                  : "text-[#208CD4]"
-                              }`}
-                            >
-                              {connectionStatus === "Disconnected" ? "N/A" : sensor[apidata.sensor_key] ?? "N/A"}
-                            </p>
-                          </div>
-                        ))
+                        groupedSensors[plant.plant_id]
+                          .filter((apidata) => apidata.is_sensor_enabled === true) // Filter sensors where is_sensor_enabled is true
+                          .map((apidata) => (
+                            <div key={apidata.sensor_key}>
+                              <p>{apidata.sensor_name || "Sensor"}</p>
+                              <p
+                                className={`text-[16px] font-[700] ${
+                                  sensor[apidata.sensor_key] === "ON"
+                                    ? "text-[#4CAF50]"
+                                    : sensor[apidata.sensor_key] === "OFF" || sensor[apidata.sensor_key] == null
+                                    ? "text-[#EF5350]"
+                                    : "text-[#208CD4]"
+                                }`}
+                              >
+                                {connectionStatus === "Disconnected" ? "N/A" : sensor[apidata.sensor_key] ?? "N/A"}
+                              </p>
+                            </div>
+                          ))
                       ) : (
-                        <div className="col-span-3">No sensor data available</div>
+                        <div className="col-span-3">No enabled sensor data available</div>
                       )}
                       {groupedSensors[plant.plant_id]?.length > 0 && sensor.vacuum_switch_ok != null && (
                         <div>
