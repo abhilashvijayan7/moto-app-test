@@ -313,11 +313,11 @@ const Dashboard3 = () => {
                                 sensor[motorSessionRunTimeKey]
                                   ? new Date(sensor[motorSessionRunTimeKey] * 1000).toISOString().substr(11, 8)
                                   : "N/A"
-                              }/${
+                              }${
                                 sensor[motorRunTimeKey]
                                   ? new Date(sensor[motorRunTimeKey] * 1000).toISOString().substr(11, 8)
                                   : "N/A"
-                              }`}
+                              } S`}
                         </p>
                       </div>
                     </div>
