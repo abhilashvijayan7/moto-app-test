@@ -17,17 +17,14 @@ const Dashboard3 = () => {
   const [connectionStatus, setConnectionStatus] = useState("connected");
   const [plantData, setPlantData] = useState([]);
   const [plantSensorData, setPlantSensorData] = useState([]);
-  const [simplifiedPlantData2, setSimplifiedPlantData2] = useState([]);
   const [plantMotorData, setPlantMotorData] = useState({});
+  const [simplifiedPlantData2, setSimplifiedPlantData2] = useState([]);
 
   useEffect(() => {
-    fetchSensorData();
-    fetchMotorData();
-
     axios
       .get("https://water-pump.onrender.com/api/plants")
       .then((response) => {
-        console.log("plant API Response:", response.data);
+        console.log("Plant API Response:", response.data);
         const plants = Array.isArray(response.data) ? response.data : [];
         setPlantData(plants);
         const simplified = plants.map((plant) => ({
@@ -35,14 +32,13 @@ const Dashboard3 = () => {
           plant_name: plant.plant_name,
         }));
         setSimplifiedPlantData2(simplified);
+        fetchSensorData();
+        fetchPlantMotorData();
       })
       .catch((error) => {
-        if (error.response?.status === 404) {
-          console.error("API endpoint not found. Please check the server configuration.");
-        } else {
-          console.error("Error fetching plant data:", error.message);
-        }
+        console.error("Error fetching plant data:", error.message);
         setPlantData([]);
+        setSimplifiedPlantData2([]);
       });
 
     let timeout;
@@ -50,9 +46,9 @@ const Dashboard3 = () => {
     const resetTimeout = () => {
       if (timeout) clearTimeout(timeout);
       setConnectionStatus("connected");
-
-      if (sensor.plant_status === "IDLE" && isButtonDisabled) setIsButtonDisabled(false);
-
+      if (sensor.plant_status === "IDLE" && isButtonDisabled) {
+        setIsButtonDisabled(false);
+      }
       timeout = setTimeout(() => {
         setConnectionStatus("Disconnected");
         setIsButtonDisabled(true);
@@ -63,7 +59,6 @@ const Dashboard3 = () => {
       console.log("Received sensor_data:", JSON.stringify(data, null, 2));
       setSensor(data);
       resetTimeout();
-
       if (data.active_motor === 1 || data.active_motor === 2) {
         setMotorNumber(data.active_motor);
       }
@@ -88,6 +83,74 @@ const Dashboard3 = () => {
     };
   }, [sensor, isButtonDisabled]);
 
+  const fetchSensorData = async () => {
+    try {
+      const apiPromises = simplifiedPlantData2.map((plant) =>
+        axios.get(`https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`)
+      );
+      const responses = await Promise.all(
+        apiPromises.map((promise) =>
+          promise.catch((error) => {
+            console.error(`Error fetching sensor data for ${promise.url}:`, error.message);
+            return null;
+          })
+        )
+      );
+      const sensorData = responses
+        .filter((response) => response !== null)
+        .map((response) => (Array.isArray(response.data) ? response.data : []))
+        .flat();
+      setPlantSensorData(sensorData);
+    } catch (error) {
+      console.error("Unexpected error during sensor API calls:", error.message);
+      setPlantSensorData([]);
+    }
+  };
+
+  const fetchPlantMotorData = async () => {
+    try {
+      const motorApiPromises = simplifiedPlantData2.map((plant) =>
+        axios.get(`https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`)
+      );
+      const motorResponses = await Promise.all(
+        motorApiPromises.map((promise) =>
+          promise.catch((error) => {
+            console.error(`Error fetching motor data for ${promise.url}:`, error.message);
+            return null;
+          })
+        )
+      );
+      const motorData = motorResponses
+        .filter((response) => response !== null)
+        .map((response) => (Array.isArray(response.data) ? response.data : []))
+        .flat();
+
+      // Filter motors with motor_working_order 1 to 3, max 3 per plant, and include motor_id
+      const filteredMotors = motorData.reduce((acc, motor) => {
+        const plantId = motor.plant_id;
+        if (motor.motor_working_order >= 1 && motor.motor_working_order <= 3) {
+          if (!acc[plantId]) {
+            acc[plantId] = [];
+          }
+          if (acc[plantId].length < 3) {
+            acc[plantId].push({
+              plant_id: motor.plant_id,
+              motor_id: motor.motor_id,
+              motor_name: motor.motor_name,
+              motor_working_order: motor.motor_working_order,
+            });
+          }
+        }
+        return acc;
+      }, {});
+      setPlantMotorData(filteredMotors);
+      console.log("Filtered Plant Motor Data (working order 1 to 3, max 3 per plant):", JSON.stringify(filteredMotors, null, 2));
+    } catch (error) {
+      console.error("Unexpected error during motor API calls:", error.message);
+      setPlantMotorData({});
+    }
+  };
+
   const groupedSensors = plantSensorData.reduce((acc, sensor) => {
     const plantId = sensor.plant_id;
     if (!acc[plantId]) {
@@ -96,71 +159,6 @@ const Dashboard3 = () => {
     acc[plantId].push(sensor);
     return acc;
   }, {});
-
-  const fetchSensorData = async () => {
-    try {
-      const apiPromises = simplifiedPlantData2.map((plant) =>
-        axios.get(`https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`)
-      );
-
-      const responses = await Promise.all(
-        apiPromises.map((promise) =>
-          promise.catch((error) => {
-            if (error.response?.status === 404) {
-              console.error(`API endpoint not found for plant_id: ${promise.url}. Please check the server configuration.`);
-            } else {
-              console.error(`Error fetching sensor data for ${promise.url}:`, error.message);
-            }
-            return null;
-          })
-        )
-      );
-
-      const sensorData = responses
-        .filter((response) => response !== null)
-        .map((response) => (Array.isArray(response.data) ? response.data : []))
-        .flat();
-
-      setPlantSensorData(sensorData);
-    } catch (error) {
-      console.error("Unexpected error during sensor API calls:", error.message);
-      setPlantSensorData([]);
-    }
-  };
-
-  const fetchMotorData = async () => {
-    try {
-      const apiPromises = simplifiedPlantData2.map((plant) =>
-        axios.get(`https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`)
-      );
-
-      const responses = await Promise.all(
-        apiPromises.map((promise) =>
-          promise.catch((error) => {
-            if (error.response?.status === 404) {
-              console.error(`API endpoint not found for plant_id: ${promise.url}. Please check the server configuration.`);
-            } else {
-              console.error(`Error fetching motor data for ${promise.url}:`, error.message);
-            }
-            return null;
-          })
-        )
-      );
-
-      const motorData = responses
-        .filter((response) => response !== null)
-        .reduce((acc, response, index) => {
-          const plantId = simplifiedPlantData2[index].plant_id;
-          acc[plantId] = Array.isArray(response.data) ? response.data : [];
-          return acc;
-        }, {});
-
-      setPlantMotorData(motorData);
-    } catch (error) {
-      console.error("Unexpected error during motor API calls:", error.message);
-      setPlantMotorData({});
-    }
-  };
 
   const togglePump = () => {
     if (isButtonDisabled || connectionStatus === "Disconnected") return;
@@ -172,10 +170,6 @@ const Dashboard3 = () => {
     setTimeout(() => {
       setIsButtonDisabled(false);
     }, 10000);
-  };
-
-  const getMotorByOrder = (plantId, order) => {
-    return plantMotorData[plantId]?.find((motor) => motor.motor_working_order === order);
   };
 
   const motorStatusKey = `motor${motorNumber}_status`;
@@ -192,6 +186,12 @@ const Dashboard3 = () => {
   const displayedPlantStatus =
     connectionStatus === "Disconnected" ? "Disconnected" : sensor.plant_status;
 
+  // Helper function to get motor by working order for a plant
+  const getMotorByWorkingOrder = (plantId, workingOrder) => {
+    const motors = plantMotorData[plantId] || [];
+    return motors.find((motor) => motor.motor_working_order === workingOrder) || null;
+  };
+
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
@@ -201,9 +201,11 @@ const Dashboard3 = () => {
         </div>
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:py-[110px]">
           {plantData.map((plant) => {
-            const mainMotor = getMotorByOrder(plant.plant_id, 1);
-            const standbyMotor = getMotorByOrder(plant.plant_id, 2);
-            const preferredNext = getMotorByOrder(plant.plant_id, 3);
+            const motor1 = getMotorByWorkingOrder(plant.plant_id, 1);
+            const motor2 = getMotorByWorkingOrder(plant.plant_id, 2);
+            const motor3 = getMotorByWorkingOrder(plant.plant_id, 3);
+
+            console.log(motor1)
 
             return (
               <div
@@ -214,7 +216,7 @@ const Dashboard3 = () => {
                   <p className="text-[#4E4D4D] text-[19px] font-[700] max-w-[60%] overflow-wrap-break-word">
                     {plant.plant_name || "Unknown Plant"}
                   </p>
-                  <button
+                <button
                     onClick={togglePump}
                     disabled={isButtonDisabled || connectionStatus === "Disconnected"}
                     className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
@@ -230,7 +232,7 @@ const Dashboard3 = () => {
                   </button>
                 </div>
                 <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
-                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%]">
+                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
                     <p>Connection</p>
                     <p
                       className={`text-[18px] font-[600] ${
@@ -240,7 +242,7 @@ const Dashboard3 = () => {
                       {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1).toLowerCase()}
                     </p>
                   </div>
-                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%]">
+                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
                     <p>Status</p>
                     <p
                       className={`text-[18px] font-[600] ${
@@ -256,7 +258,7 @@ const Dashboard3 = () => {
                         : "N/A"}
                     </p>
                   </div>
-                  <div className="max-w-[33%] lg:max-w-[30%]">
+                  <div className="max-w-[33%] lg:max-w-[30%] text-center">
                     <p>Mode</p>
                     <p className="text-[18px] text-[#4CAF50] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
                       {connectionStatus === "Disconnected" ? "N/A" : manualMode}
@@ -264,15 +266,16 @@ const Dashboard3 = () => {
                   </div>
                 </div>
                 <div className="mb-[6px]">
-                  <p className="text-[18px] text-[#4E4D4D] pb-[6px] border-b border-b-[#208CD4] mb-[12px] font-[700]">
+                  <p className="text-[18px] text-[#4E4D4D] pb-[6px] mb-[12px] font-[700]">
                     Motor & Power
                   </p>
                   <div className="lg:flex gap-3">
-                    <div className="border border-[#DADADA] rounded-[8px] py-[12px] px-[8px] mb-[10px] text-[14px] font-[400] text-[#6B6B6B] lg:w-[485px]">
+                    <div className="border border-[#DADADA] rounded-[8px] py-[12px] px-[8px] mb-[10px] text-[14px] font-[400] text-[#6B6B6B] Ligon w-[485px]">
                       <div className="flex items-center justify-between border-b border-b-[#DADADA] pb-[12px] font-[700] text-[#4E4D4D]">
-                        <p className="text-[18px]">
-                          Main Motor {mainMotor ? `(${mainMotor.motor_brand})` : ""}
-                        </p>
+                        <div className="text-center">
+                          <p className="text-[18px]">{motor1 ? motor1.motor_name : "No Motor"}</p>
+                          <p className="text-[16px] text-[#6B6B6B]">(main)</p>
+                        </div>
                         <p
                           className={`text-[16px] ${
                             sensor[motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
@@ -311,8 +314,8 @@ const Dashboard3 = () => {
                                   ? new Date(sensor[motorSessionRunTimeKey] * 1000).toISOString().substr(11, 8)
                                   : "N/A"
                               }/${
-                                mainMotor?.motor_running_time
-                                  ? new Date(Number(mainMotor.motor_running_time) * 1000).toISOString().substr(11, 8)
+                                sensor[motorRunTimeKey]
+                                  ? new Date(sensor[motorRunTimeKey] * 1000).toISOString().substr(11, 8)
                                   : "N/A"
                               }`}
                         </p>
@@ -321,23 +324,29 @@ const Dashboard3 = () => {
                   </div>
                   <div className="flex justify-between">
                     <div className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D]">
-                      <p className="text-[18px] mr-2">
-                        Standby Motor {standbyMotor ? `(${standbyMotor.motor_brand})` : ""}
-                      </p>
-                      <p className="text-[16px] text-[#66BB6A]">
-                        {connectionStatus === "Disconnected"
-                          ? "N/A"
-                          : sensor[`motor${motorNumber === 1 ? 2 : 1}_status`] || "STAND BY"}
+                      <div className="mr-5 text-center">
+                        <p className="text-[18px]">{motor2 ? motor2.motor_name : "No Motor"}</p>
+                        <p className="text-[16px] text-[#6B6B6B]">(standby)</p>
+                      </div>
+                      <p
+                        className={`text-[16px] ${
+                          sensor[motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
+                        }`}
+                      >
+                        {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKey] ?? "N/A"}
                       </p>
                     </div>
                     <div className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D]">
-                      <p className="text-[18px] mr-2">Preferred Next</p>
-                      <p className="text-[16px] text-[#66BB6A]">
-                        {connectionStatus === "Disconnected"
-                          ? "N/A"
-                          : preferredNext
-                          ? `Motor ${preferredNext.motor_working_order} (${preferredNext.motor_brand})`
-                          : "N/A"}
+                      <div className="mr-5 text-center">
+                        <p className="text-[18px]">{motor3 ? motor3.motor_name : "No Motor"}</p>
+                        <p className="text-[16px] text-[#6B6B6B]">(next)</p>
+                      </div>
+                      <p
+                        className={`text-[16px] ${
+                          sensor[motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
+                        }`}
+                      >
+                        {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKey] ?? "N/A"}
                       </p>
                     </div>
                   </div>
