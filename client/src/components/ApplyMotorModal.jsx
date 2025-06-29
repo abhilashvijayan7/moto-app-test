@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, Minus, X } from 'lucide-react';
 import axios from 'axios';
 
@@ -12,6 +12,9 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
   const [plantMotors, setPlantMotors] = useState([]);
   const [isLoadingPlantMotors, setIsLoadingPlantMotors] = useState(false);
   const [plantMotorsError, setPlantMotorsError] = useState('');
+  const [plantName, setPlantName] = useState('');
+  const [isLoadingPlantName, setIsLoadingPlantName] = useState(false);
+  const [plantNameError, setPlantNameError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [motorsPerPage, setMotorsPerPage] = useState(10);
@@ -36,7 +39,34 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
     }
   }, [isOpen]);
 
-  // Fetch plant motors when modal opens
+  // Fetch plant name when modal opens
+  useEffect(() => {
+    if (isOpen && plant_id) {
+      const fetchPlantName = async () => {
+        try {
+          setIsLoadingPlantName(true);
+          setPlantNameError('');
+          const response = await axios.get('https://water-pump.onrender.com/api/plants');
+          const plant = response.data.find(p => p.plant_id === parseInt(plant_id, 10));
+          if (plant) {
+            setPlantName(plant.plant_name || `Plant ${plant_id}`);
+          } else {
+            setPlantName(`Plant ${plant_id}`);
+            setPlantNameError('Plant not found.');
+          }
+        } catch (error) {
+          console.error('Error fetching plant name:', error);
+          setPlantName(`Plant ${plant_id}`);
+          setPlantNameError('Failed to load plant name.');
+        } finally {
+          setIsLoadingPlantName(false);
+        }
+      };
+      fetchPlantName();
+    }
+  }, [isOpen, plant_id]);
+
+  // Fetch plant motors and log motor names when modal opens
   useEffect(() => {
     if (isOpen && plant_id) {
       const fetchPlantMotors = async () => {
@@ -49,6 +79,17 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
             new Date(b.installation_date) - new Date(a.installation_date)
           );
           setPlantMotors(sortedMotors);
+
+          // Create a map of motor_id to motor_name for logging
+          const loggingMotorMap = new Map(
+            availableMotors.map(motor => [String(motor.motor_id), motor.motor_name || `Motor ${motor.motor_id}`])
+          );
+
+          // Log motor_name for each plant motor
+          sortedMotors.forEach(motor => {
+            const motorName = loggingMotorMap.get(String(motor.motor_id)) || 'Unknown';
+            console.log(`Plant Motor ID: ${motor.plant_motor_id}, Motor Name: ${motorName}`);
+          });
         } catch (error) {
           console.error('Error fetching plant motors:', error);
           setPlantMotorsError('Failed to load plant motors. Please try again.');
@@ -58,7 +99,14 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
       };
       fetchPlantMotors();
     }
-  }, [isOpen, plant_id]);
+  }, [isOpen, plant_id, availableMotors]);
+
+  // Create motor map for UI rendering
+  const motorMap = useMemo(() => {
+    return new Map(
+      availableMotors.map(motor => [String(motor.motor_id), motor.motor_name || `Motor ${motor.motor_id}`])
+    );
+  }, [availableMotors]);
 
   const removeMotor = (id) => {
     if (motors.length > 1) {
@@ -198,7 +246,8 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
     motor.motor_brand?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     String(motor.motor_id).includes(searchQuery) ||
     String(motor.motor_running_time).includes(searchQuery) ||
-    String(motor.motor_working_order).includes(searchQuery)
+    String(motor.motor_working_order).includes(searchQuery) ||
+    (motorMap.get(String(motor.motor_id)) || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredPlantMotors.length / motorsPerPage);
@@ -228,7 +277,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">Apply Motor</h2>
-            <p className="text-sm text-gray-500 mt-1">Plant ID: {plant_id || 'Not provided'} </p>
+            <p className="text-sm text-gray-500 mt-1">Plant ID: {plant_id || 'Not provided'}</p>
           </div>
           <button
             onClick={onClose}
@@ -358,7 +407,9 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
           <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
             <div className="py-6 px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-                <h2 className="text-2xl font-semibold text-gray-900">Applied Motors for Plant {plant_id}</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {isLoadingPlantName ? 'Loading plant name...' : `Applied Motors for ${plantName}`}
+                </h2>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="relative">
                     <input
@@ -381,6 +432,39 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                   </select>
                 </div>
               </div>
+
+              {plantNameError && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                  <div className="flex justify-between items-start">
+                    <div className="text-yellow-800">
+                      <p className="text-sm font-medium">{plantNameError}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setPlantNameError('');
+                        const fetchPlantName = async () => {
+                          try {
+                            setIsLoadingPlantName(true);
+                            const response = await axios.get('https://water-pump.onrender.com/api/plants');
+                            const plant = response.data.find(p => p.plant_id === parseInt(plant_id, 10));
+                            setPlantName(plant ? plant.plant_name || `Plant ${plant_id}` : `Plant ${plant_id}`);
+                          } catch (error) {
+                            console.error('Error retrying plant name fetch:', error);
+                            setPlantName(`Plant ${plant_id}`);
+                            setPlantNameError('Failed to load plant name.');
+                          } finally {
+                            setIsLoadingPlantName(false);
+                          }
+                        };
+                        fetchPlantName();
+                      }}
+                      className="text-sm underline hover:no-underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {plantMotorsError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -429,6 +513,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                         <tr className="bg-gray-50">
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">S/No</th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Motor ID</th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Motor Name</th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Motor Brand</th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Max Running Time (Hours)</th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Working Order</th>
@@ -438,7 +523,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                       <tbody className="bg-white">
                         {paginatedPlantMotors.length === 0 ? (
                           <tr>
-                            <td colSpan="6" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                            <td colSpan="7" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
                               {searchQuery ? 'No motors found matching your search.' : 'No motors applied to this plant yet.'}
                             </td>
                           </tr>
@@ -450,6 +535,9 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                               </td>
                               <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                                 {motor.motor_id}
+                              </td>
+                              <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                                {motorMap.get(String(motor.motor_id)) || '-'}
                               </td>
                               <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                                 {motor.motor_brand}
@@ -484,10 +572,20 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                               <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
                                 #{startIndex + index + 1}
                               </span>
-                              <h3 className="font-semibold text-gray-900 text-lg">Motor {motor.motor_id}</h3>
+                              <h3 className="font-semibold text-gray-900 text-lg">
+                                {motorMap.get(String(motor.motor_id)) || 'Unknown'}
+                              </h3>
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="flex flex-col">
+                              <span className="text-gray-500 font-medium">Motor ID:</span>
+                              <span className="text-gray-900">{motor.motor_id}</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-gray-500 font-medium">Motor Name:</span>
+                              <span className="text-gray-900">{motorMap.get(String(motor.motor_id)) || '-'}</span>
+                            </div>
                             <div className="flex flex-col">
                               <span className="text-gray-500 font-medium">Motor Brand:</span>
                               <span className="text-gray-900">{motor.motor_brand}</span>

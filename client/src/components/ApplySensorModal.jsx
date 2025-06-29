@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ChevronDown, X } from "lucide-react";
 import axios from "axios";
 
@@ -9,19 +8,22 @@ export default function ApplySensorModal({
   plantId = "",
 }) {
   const [sensor, setSensor] = useState({
-    sensorType: "", // Stores sensor_name
-    sensorTypeRelationId: null, // Stores id from sensor relations
+    sensorType: "",
+    sensorTypeRelationId: null,
     minValue: "",
     maxValue: "",
     serialNumber: "",
     notes: "",
-    is_sensor_enabled: true, // Changed from is_sensor_enabled to is_sensor_enabled
-    sensor_key: "", // Field for key
+    is_sensor_enabled: true,
+    sensor_key: "",
   });
   const [sensorTypes, setSensorTypes] = useState([]);
   const [plantSensors, setPlantSensors] = useState([]);
   const [isLoadingPlantSensors, setIsLoadingPlantSensors] = useState(false);
   const [plantSensorsError, setPlantSensorsError] = useState("");
+  const [plantName, setPlantName] = useState("");
+  const [isLoadingPlantName, setIsLoadingPlantName] = useState(false);
+  const [plantNameError, setPlantNameError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sensorsPerPage, setSensorsPerPage] = useState(10);
@@ -29,15 +31,22 @@ export default function ApplySensorModal({
   const [isEditing, setIsEditing] = useState(false);
   const [editingSensorId, setEditingSensorId] = useState(null);
 
-  // Fetch sensor relations and plant sensors when modal opens
+  // Map for sensor type relations
+  const sensorTypeMap = useMemo(() => {
+    return new Map(sensorTypes.map((type) => [String(type.id), type]));
+  }, [sensorTypes]);
+
+  // Fetch sensor types when modal opens
   useEffect(() => {
     if (!isOpen) return;
 
     const fetchSensorTypes = async () => {
       try {
         const response = await axios.get(
-          "https://water-pump.onrender.com/api/sensors/relations"
+          "https://water-pump.onrender.com/api/sensors/relations",
+          { timeout: 10000 } // 10-second timeout
         );
+        console.log("Sensor Types API response:", response.data);
         setSensorTypes(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
         console.error("Error fetching sensor relations:", error);
@@ -45,13 +54,56 @@ export default function ApplySensorModal({
       }
     };
 
+    fetchSensorTypes();
+  }, [isOpen]);
+
+  // Fetch plant name when modal opens and plantId is valid
+  useEffect(() => {
+    if (!isOpen || !plantId || isNaN(parseInt(plantId, 10))) {
+      setPlantName("Unknown");
+      setPlantNameError("Invalid plant ID provided.");
+      return;
+    }
+
+    const fetchPlantName = async () => {
+      try {
+        setIsLoadingPlantName(true);
+        setPlantNameError("");
+        const response = await axios.get(
+          `https://water-pump.onrender.com/api/plants/${plantId}`,
+          { timeout: 10000 } // 10-second timeout
+        );
+        console.log("Plant API response:", response.data);
+        setPlantName(response.data.plant_name || "Unknown");
+      } catch (error) {
+        console.error("Error fetching plant name:", error);
+        setPlantNameError("Failed to load plant name. Please try again.");
+        setPlantName("Unknown");
+      } finally {
+        setIsLoadingPlantName(false);
+        console.log("isLoadingPlantName set to false");
+      }
+    };
+
+    fetchPlantName();
+  }, [isOpen, plantId]);
+
+  // Fetch plant sensors when modal opens and plantId is valid
+  useEffect(() => {
+    if (!isOpen || !plantId || isNaN(parseInt(plantId, 10))) {
+      setPlantSensorsError("Invalid plant ID provided.");
+      return;
+    }
+
     const fetchPlantSensors = async () => {
       try {
         setIsLoadingPlantSensors(true);
         setPlantSensorsError("");
         const response = await axios.get(
-          "https://water-pump.onrender.com/api/plantsensors"
+          "https://water-pump.onrender.com/api/plantsensors",
+          { timeout: 10000 } // 10-second timeout
         );
+        console.log("Plant Sensors API response:", response.data);
         const filteredSensors = Array.isArray(response.data)
           ? response.data.filter(
               (sensor) => sensor.plant_id === parseInt(plantId, 10)
@@ -62,21 +114,30 @@ export default function ApplySensorModal({
             new Date(b.installation_date) - new Date(a.installation_date)
         );
         setPlantSensors(sortedSensors);
+
+        // Log sensor_name for each plant sensor
+        const loggingSensorTypeMap = new Map(
+          sensorTypes.map((type) => [String(type.id), type.sensor_name])
+        );
+        sortedSensors.forEach((sensor) => {
+          const sensorName =
+            loggingSensorTypeMap.get(String(sensor.sensor_type_relation_id)) ||
+            "Unknown";
+          console.log(
+            `Plant Sensor ID: ${sensor.plant_sensor_id}, Sensor Name: ${sensorName}`
+          );
+        });
       } catch (error) {
         console.error("Error fetching plant sensors:", error);
         setPlantSensorsError("Failed to load plant sensors. Please try again.");
       } finally {
         setIsLoadingPlantSensors(false);
+        console.log("isLoadingPlantSensors set to false");
       }
     };
 
-    fetchSensorTypes();
-    if (plantId && !isNaN(parseInt(plantId, 10))) {
-      fetchPlantSensors();
-    } else {
-      setPlantSensorsError("Invalid plant ID provided.");
-    }
-  }, [isOpen, plantId]);
+    fetchPlantSensors();
+  }, [isOpen, plantId, sensorTypes]);
 
   // Handle input changes for the sensor form
   const handleInputChange = (field, value) => {
@@ -103,11 +164,6 @@ export default function ApplySensorModal({
     (type) => type.sensor_name === sensor.sensorType
   );
   const isMinMaxSensor = selectedSensor?.sensor_type_name === "min-max";
-
-  // Map for sensor type relations
-  const sensorTypeMap = new Map(
-    sensorTypes.map((type) => [`${type.id}`, type])
-  );
 
   // Handle edit action
   const handleEdit = (sensor) => {
@@ -219,9 +275,6 @@ export default function ApplySensorModal({
       }
 
       if (isEditing) {
-        // Update existing sensor
-        console.log(payload)
-         console.log(editingSensorId)
         await axios.put(
           `https://water-pump.onrender.com/api/plantsensors/${editingSensorId}`,
           {
@@ -232,20 +285,23 @@ export default function ApplySensorModal({
             notes: payload.notes,
             is_sensor_enabled: payload.is_sensor_enabled,
             sensor_key: payload.sensor_key,
-          }
+          },
+          { timeout: 10000 } // 10-second timeout
         );
       } else {
-        // Add new sensor
         await axios.post(
           "https://water-pump.onrender.com/api/plantsensors",
-          payload
+          payload,
+          { timeout: 10000 } // 10-second timeout
         );
       }
 
       // Refresh plant sensors
       const plantSensorsResponse = await axios.get(
-        "https://water-pump.onrender.com/api/plantsensors"
+        "https://water-pump.onrender.com/api/plantsensors",
+        { timeout: 10000 } // 10-second timeout
       );
+      console.log("Plant Sensors refresh response:", plantSensorsResponse.data);
       const filteredSensors = Array.isArray(plantSensorsResponse.data)
         ? plantSensorsResponse.data.filter(
             (sensor) => sensor.plant_id === plantIdNum
@@ -295,13 +351,18 @@ export default function ApplySensorModal({
   // Search and pagination for plant sensors
   const filteredPlantSensors = plantSensors.filter(
     (sensor) =>
-      sensor.sensor_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sensorTypeMap
+        .get(String(sensor.sensor_type_relation_id))
+        ?.sensor_name?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       String(sensor.min_value || "").includes(searchQuery) ||
       String(sensor.max_value || "").includes(searchQuery) ||
       sensor.serial_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sensor.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(sensor.is_sensor_enabled || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sensor.key_field?.toLowerCase().includes(searchQuery.toLowerCase())
+      String(sensor.is_sensor_enabled || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      sensor.sensor_key?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredPlantSensors.length / sensorsPerPage);
@@ -540,7 +601,7 @@ export default function ApplySensorModal({
             <div className="py-6 px-4 sm:px-6 lg:px-8">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
                 <h2 className="text-2xl font-semibold text-gray-900">
-                  Applied Sensors for Plant {plantId || "Unknown"}
+                  Applied Sensors for {plantName || "Unknown"}
                 </h2>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <div className="relative">
@@ -565,6 +626,42 @@ export default function ApplySensorModal({
                 </div>
               </div>
 
+              {plantNameError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                  <div className="flex justify-between items-start">
+                    <p className="text-sm font-medium text-red-800">
+                      {plantNameError}
+                    </p>
+                    <button
+                      onClick={async () => {
+                        setPlantNameError("");
+                        try {
+                          setIsLoadingPlantName(true);
+                          const response = await axios.get(
+                            `https://water-pump.onrender.com/api/plants/${plantId}`,
+                            { timeout: 10000 }
+                          );
+                          console.log("Retry Plant API response:", response.data);
+                          setPlantName(response.data.plant_name || "Unknown");
+                        } catch (error) {
+                          console.error("Error retrying plant name fetch:", error);
+                          setPlantNameError(
+                            "Failed to load plant name. Please try again."
+                          );
+                          setPlantName("Unknown");
+                        } finally {
+                          setIsLoadingPlantName(false);
+                          console.log("isLoadingPlantName set to false (retry)");
+                        }
+                      }}
+                      className="text-sm underline hover:no-underline"
+                    >
+                      Retry
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {plantSensorsError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                   <div className="flex justify-between items-start">
@@ -577,7 +674,12 @@ export default function ApplySensorModal({
                         try {
                           setIsLoadingPlantSensors(true);
                           const response = await axios.get(
-                            "https://water-pump.onrender.com/api/plantsensors"
+                            "https://water-pump.onrender.com/api/plantsensors",
+                            { timeout: 10000 }
+                          );
+                          console.log(
+                            "Retry Plant Sensors response:",
+                            response.data
                           );
                           const filteredSensors = Array.isArray(response.data)
                             ? response.data.filter(
@@ -602,6 +704,7 @@ export default function ApplySensorModal({
                           );
                         } finally {
                           setIsLoadingPlantSensors(false);
+                          console.log("isLoadingPlantSensors set to false (retry)");
                         }
                       }}
                       className="text-sm underline hover:no-underline"
@@ -612,7 +715,7 @@ export default function ApplySensorModal({
                 </div>
               )}
 
-              {isLoadingPlantSensors ? (
+              {isLoadingPlantSensors || isLoadingPlantName ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Loading applied sensors...</p>
                 </div>
@@ -808,7 +911,7 @@ export default function ApplySensorModal({
                                   Key Field:
                                 </span>
                                 <span className="text-gray-900">
-                                  {sensor.key_field || "-"}
+                                  {sensor.sensor_key || "-"}
                                 </span>
                               </div>
                               <div className="flex flex-col col-span-2">
