@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { ChevronDown, X } from "lucide-react";
 import axios from "axios";
 
@@ -30,6 +30,7 @@ export default function ApplySensorModal({
   const [sensorsError, setSensorsError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [editingSensorId, setEditingSensorId] = useState(null);
+  const serialNumberInputRef = useRef(null);
 
   // Map for sensor type relations
   const sensorTypeMap = useMemo(() => {
@@ -139,6 +140,13 @@ export default function ApplySensorModal({
     fetchPlantSensors();
   }, [isOpen, plantId, sensorTypes]);
 
+  // Focus serial number input when editing
+  useEffect(() => {
+    if (isEditing && serialNumberInputRef.current) {
+      serialNumberInputRef.current.focus();
+    }
+  }, [isEditing, editingSensorId]);
+
   // Handle input changes for the sensor form
   const handleInputChange = (field, value) => {
     if (field === "minValue" || field === "maxValue") {
@@ -198,6 +206,9 @@ export default function ApplySensorModal({
     });
     setIsEditing(false);
     setEditingSensorId(null);
+    if (serialNumberInputRef.current) {
+      serialNumberInputRef.current.blur();
+    }
   };
 
   // Handle save action for adding or updating sensors
@@ -421,7 +432,7 @@ export default function ApplySensorModal({
                 </p>
                 <button
                   onClick={() => setSensorsError("")}
-                  className="text-red-600 hover:text-red-800 text-lg font-bold"
+                  className="text-red-600 hover:text-red-800 text-lg font-medium"
                 >
                   ×
                 </button>
@@ -479,6 +490,7 @@ export default function ApplySensorModal({
                     handleInputChange("serialNumber", e.target.value)
                   }
                   placeholder="Enter serial number"
+                  ref={serialNumberInputRef}
                 />
               </div>
               <div className="col-span-3">

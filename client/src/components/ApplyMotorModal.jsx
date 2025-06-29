@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ChevronDown, Minus, X } from 'lucide-react';
 import axios from 'axios';
 
@@ -19,6 +19,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [motorsPerPage, setMotorsPerPage] = useState(10);
   const [editingMotor, setEditingMotor] = useState(null);
+  const motorBrandInputRef = useRef(null);
 
   // Fetch available motors
   useEffect(() => {
@@ -109,8 +110,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
 
   const removeMotor = (id) => {
     if (motors.length > 1) {
-      const updatedMotors = motors.filter(motor => motor.id !== id);
-      setMotors(updatedMotors);
+      setMotors(motors.filter(motor => motor.id !== id));
     }
   };
 
@@ -195,9 +195,9 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
 
       console.log('Payload being sent:', payload);
 
-      const [singlepayload] = payload;
+      const [singlePayload] = payload;
 
-      console.log('Single payload being sent:', singlepayload);
+      console.log('Single payload being sent:', singlePayload);
       
       const invalidPayload = payload.some(item => 
         !item.plant_id || isNaN(item.plant_id) || 
@@ -212,7 +212,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         return;
       }
 
-      await axios.post('https://water-pump.onrender.com/api/plantmotors', singlepayload);
+      await axios.post('https://water-pump.onrender.com/api/plantmotors', singlePayload);
       await axios.get('https://water-pump.onrender.com/api/plants');
       const plantMotorsResponse = await axios.get('https://water-pump.onrender.com/api/plantmotors');
       const filteredMotors = plantMotorsResponse.data.filter(motor => motor.plant_id === plantIdNum);
@@ -314,6 +314,13 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
       document.body.style.overflow = 'unset';
     };
   }, [isOpen, onClose, editingMotor]);
+
+  // Focus motor brand input when editingMotor changes
+  useEffect(() => {
+    if (editingMotor && motorBrandInputRef.current) {
+      motorBrandInputRef.current.focus();
+    }
+  }, [editingMotor]);
 
   // Search and pagination for plant motors
   const filteredPlantMotors = plantMotors.filter(motor =>
@@ -486,6 +493,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     value={editingMotor.motor_brand}
                     onChange={(e) => handleEditChange('motor_brand', e.target.value)}
                     placeholder="Enter brand"
+                    ref={motorBrandInputRef}
                   />
                 </div>
 
