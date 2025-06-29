@@ -125,26 +125,28 @@ const Dashboard3 = () => {
         .map((response) => (Array.isArray(response.data) ? response.data : []))
         .flat();
 
-      // Filter motors with motor_working_order 1 to 3, max 3 per plant, and include motor_id
-      const filteredMotors = motorData.reduce((acc, motor) => {
+      // Group motors by plant_id and sort by motor_working_order
+      const groupedMotors = motorData.reduce((acc, motor) => {
         const plantId = motor.plant_id;
-        if (motor.motor_working_order >= 1 && motor.motor_working_order <= 3) {
-          if (!acc[plantId]) {
-            acc[plantId] = [];
-          }
-          if (acc[plantId].length < 3) {
-            acc[plantId].push({
-              plant_id: motor.plant_id,
-              motor_id: motor.motor_id,
-              motor_name: motor.motor_name,
-              motor_working_order: motor.motor_working_order,
-            });
-          }
+        if (!acc[plantId]) {
+          acc[plantId] = [];
         }
+        acc[plantId].push({
+          plant_id: motor.plant_id,
+          motor_id: motor.motor_id,
+          motor_name: motor.motor_name,
+          motor_working_order: motor.motor_working_order,
+        });
         return acc;
       }, {});
-      setPlantMotorData(filteredMotors);
-      console.log("Filtered Plant Motor Data (working order 1 to 3, max 3 per plant):", JSON.stringify(filteredMotors, null, 2));
+
+      // Sort motors for each plant by working order
+      Object.keys(groupedMotors).forEach((plantId) => {
+        groupedMotors[plantId].sort((a, b) => a.motor_working_order - b.motor_working_order);
+      });
+
+      setPlantMotorData(groupedMotors);
+      console.log("Grouped Plant Motor Data (sorted by working order):", JSON.stringify(groupedMotors, null, 2));
     } catch (error) {
       console.error("Unexpected error during motor API calls:", error.message);
       setPlantMotorData({});
@@ -192,6 +194,14 @@ const Dashboard3 = () => {
     return motors.find((motor) => motor.motor_working_order === workingOrder) || null;
   };
 
+  // Helper function to get label based on working order
+  const getMotorLabel = (workingOrder) => {
+    if (workingOrder === 1) return "main";
+    if (workingOrder === 2) return "standby";
+    if (workingOrder === 3) return "next";
+    return `motor ${workingOrder}`;
+  };
+
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
@@ -201,11 +211,7 @@ const Dashboard3 = () => {
         </div>
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:py-[110px]">
           {plantData.map((plant) => {
-            const motor1 = getMotorByWorkingOrder(plant.plant_id, 1);
-            const motor2 = getMotorByWorkingOrder(plant.plant_id, 2);
-            const motor3 = getMotorByWorkingOrder(plant.plant_id, 3);
-
-            console.log(motor1)
+            const motors = plantMotorData[plant.plant_id] || [];
 
             return (
               <div
@@ -216,7 +222,7 @@ const Dashboard3 = () => {
                   <p className="text-[#4E4D4D] text-[19px] font-[700] max-w-[60%] overflow-wrap-break-word">
                     {plant.plant_name || "Unknown Plant"}
                   </p>
-                <button
+                  <button
                     onClick={togglePump}
                     disabled={isButtonDisabled || connectionStatus === "Disconnected"}
                     className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
@@ -270,11 +276,69 @@ const Dashboard3 = () => {
                     Motor & Power
                   </p>
                   <div className="lg:flex gap-3">
-                    <div className="border border-[#DADADA] rounded-[8px] py-[12px] px-[8px] mb-[10px] text-[14px] font-[400] text-[#6B6B6B] Ligon w-[485px]">
-                      <div className="flex items-center justify-between border-b border-b-[#DADADA] pb-[12px] font-[700] text-[#4E4D4D]">
-                        <div className="text-center">
-                          <p className="text-[18px]">{motor1 ? motor1.motor_name : "No Motor"}</p>
-                          <p className="text-[16px] text-[#6B6B6B]">(main)</p>
+                    {motors.length > 0 && (
+                      <div className="border border-[#DADADA] rounded-[8px] py-[12px] px-[8px] mb-[10px] text-[14px] font-[400] text-[#6B6B6B] lg:w-[485px]">
+                        <div className="flex items-center justify-between border-b border-b-[#DADADA] pb-[12px] font-[700] text-[#4E4D4D]">
+                          <div className="text-center">
+                            <p className="text-[18px]">{motors[0].motor_name || "No Motor"}</p>
+                            <p className="text-[16px] text-[#6B6B6B]">(main)</p>
+                          </div>
+                          <p
+                            className={`text-[16px] ${
+                              sensor[motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
+                            }`}
+                          >
+                            {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKey] ?? "N/A"}
+                          </p>
+                        </div>
+                        <div className="flex py-[12px] justify-between text-[14px]">
+                          <p>V (L1/L2/L3)</p>
+                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {connectionStatus === "Disconnected"
+                              ? "N/A"
+                              : `${sensor[motorVoltageL1Key] ?? "N/A"}/${sensor[motorVoltageL2Key] ?? "N/A"}/${
+                                  sensor[motorVoltageL3Key] ?? "N/A"
+                                } V`}
+                          </p>
+                        </div>
+                        <div className="flex pt-[2px] pb-[14px] justify-between">
+                          <p>I (L1/L2/L3)</p>
+                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {connectionStatus === "Disconnected"
+                              ? "N/A"
+                              : `${sensor[motorCurrentL1Key] ?? "N/A"}/${sensor[motorCurrentL2Key] ?? "N/A"}/${
+                                  sensor[motorCurrentL3Key] ?? "N/A"
+                                } A`}
+                          </p>
+                        </div>
+                        <div className="flex justify-between">
+                          <p>Timers (Sess/Cum)</p>
+                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {connectionStatus === "Disconnected"
+                              ? "N/A"
+                              : `${
+                                  sensor[motorSessionRunTimeKey]
+                                    ? new Date(sensor[motorSessionRunTimeKey] * 1000).toISOString().substr(11, 8)
+                                    : "N/A"
+                                }/${
+                                  sensor[motorRunTimeKey]
+                                    ? new Date(sensor[motorRunTimeKey] * 1000).toISOString().substr(11, 8)
+                                    : "N/A"
+                                } S`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap justify-between gap-2">
+                    {motors.slice(1).map((motor) => (
+                      <div
+                        key={motor.motor_id}
+                        className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D] w-[48%]"
+                      >
+                        <div className="mr-5 text-center">
+                          <p className="text-[18px]">{motor.motor_name || "No Motor"}</p>
+                          <p className="text-[16px] text-[#6B6B6B]">({getMotorLabel(motor.motor_working_order)})</p>
                         </div>
                         <p
                           className={`text-[16px] ${
@@ -284,71 +348,7 @@ const Dashboard3 = () => {
                           {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKey] ?? "N/A"}
                         </p>
                       </div>
-                      <div className="flex py-[12px] justify-between text-[14px]">
-                        <p>V (L1/L2/L3)</p>
-                        <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {connectionStatus === "Disconnected"
-                            ? "N/A"
-                            : `${sensor[motorVoltageL1Key] ?? "N/A"}/${sensor[motorVoltageL2Key] ?? "N/A"}/${
-                                sensor[motorVoltageL3Key] ?? "N/A"
-                              } V`}
-                        </p>
-                      </div>
-                      <div className="flex pt-[2px] pb-[14px] justify-between">
-                        <p>I (L1/L2/L3)</p>
-                        <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {connectionStatus === "Disconnected"
-                            ? "N/A"
-                            : `${sensor[motorCurrentL1Key] ?? "N/A"}/${sensor[motorCurrentL2Key] ?? "N/A"}/${
-                                sensor[motorCurrentL3Key] ?? "N/A"
-                              } A`}
-                        </p>
-                      </div>
-                      <div className="flex justify-between">
-                        <p>Timers (Sess/Cum)</p>
-                        <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                          {connectionStatus === "Disconnected"
-                            ? "N/A"
-                            : `${
-                                sensor[motorSessionRunTimeKey]
-                                  ? new Date(sensor[motorSessionRunTimeKey] * 1000).toISOString().substr(11, 8)
-                                  : "N/A"
-                              }${
-                                sensor[motorRunTimeKey]
-                                  ? new Date(sensor[motorRunTimeKey] * 1000).toISOString().substr(11, 8)
-                                  : "N/A"
-                              } S`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D]">
-                      <div className="mr-5 text-center">
-                        <p className="text-[18px]">{motor2 ? motor2.motor_name : "No Motor"}</p>
-                        <p className="text-[16px] text-[#6B6B6B]">(standby)</p>
-                      </div>
-                      <p
-                        className={`text-[16px] ${
-                          sensor[motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
-                        }`}
-                      >
-                        {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKey] ?? "N/A"}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D]">
-                      <div className="mr-5 text-center">
-                        <p className="text-[18px]">{motor3 ? motor3.motor_name : "No Motor"}</p>
-                        <p className="text-[16px] text-[#6B6B6B]">(next)</p>
-                      </div>
-                      <p
-                        className={`text-[16px] ${
-                          sensor[motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
-                        }`}
-                      >
-                        {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKey] ?? "N/A"}
-                      </p>
-                    </div>
+                    ))}
                   </div>
                 </div>
                 <div>
