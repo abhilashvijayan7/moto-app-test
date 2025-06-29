@@ -22,9 +22,13 @@ function Sidebar() {
     { icon: headset, label: "Support", path: "/support" },
     { icon: technology, label: "Add Motor", path: "/add-motor" },
     { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
+    { icon: passkey, label: "Dashboard 3", path: "/dashboard-3" },
 
     { icon: passkey, label: "Change Password", path: "/change-password" },
     { icon: logout, label: "Logout", path: "/logout" },
+
+
+    
   ];
 
   return (

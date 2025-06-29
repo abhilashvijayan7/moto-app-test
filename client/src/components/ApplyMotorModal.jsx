@@ -155,14 +155,14 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         return;
       }
 
-      const response = await axios.post('https://water-pump.onrender.com/api/plantmotors', singlepayload);
+      await axios.post('https://water-pump.onrender.com/api/plantmotors', singlepayload);
       await axios.get('https://water-pump.onrender.com/api/plants');
       const plantMotorsResponse = await axios.get('https://water-pump.onrender.com/api/plantmotors');
       const filteredMotors = plantMotorsResponse.data.filter(motor => motor.plant_id === plantIdNum);
       setPlantMotors(filteredMotors.sort((a, b) => 
         new Date(b.installation_date) - new Date(a.installation_date)
       ));
-      onClose();
+      // Removed onClose() to keep modal open after save
     } catch (error) {
       console.error('Error submitting motors:', error);
       console.error('Server response:', error.response?.data);
