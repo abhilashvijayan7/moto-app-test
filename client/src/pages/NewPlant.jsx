@@ -122,7 +122,7 @@ function NewPlant() {
       contactPerson: plant.contact_person || "",
       phone: plant.contact_phone || "",
       email: plant.contact_email || "",
-      deviceId: plant.device_id ? plant.device_id.toString() : "",
+      deviceId: plant.device_id ? plant.device_id.toString() : "", // Ensure device_id is a string
     });
     setIsEditing(true);
     setEditingPlantId(plant.plant_id);
@@ -160,11 +160,6 @@ function NewPlant() {
       if (!formData.email.trim()) throw new Error("Email is required");
       if (!formData.deviceId.trim()) throw new Error("Device ID is required");
 
-      const deviceId = parseInt(formData.deviceId.trim(), 10);
-      if (isNaN(deviceId) || deviceId.toString() !== formData.deviceId.trim()) {
-        throw new Error("Device ID must be a valid number");
-      }
-
       const selectedLocation = locations.find((loc) => loc.address === formData.location);
       if (!selectedLocation) throw new Error("Please select a valid location");
 
@@ -174,7 +169,7 @@ function NewPlant() {
         contact_person: formData.contactPerson.trim(),
         contact_email: formData.email.trim(),
         contact_phone: formData.phone.trim(),
-        device_id: deviceId,
+        device_id: formData.deviceId.trim(), // Use the raw deviceId string
       };
 
       if (isEditing) {
@@ -564,7 +559,7 @@ function NewPlant() {
                 </div>
                 <div>
                   <label htmlFor="deviceId" className="block text-sm font-medium text-gray-700 mb-2">
-                    Device ID * (Numeric)
+                    Device ID *
                   </label>
                   <input
                     type="text"
@@ -573,7 +568,7 @@ function NewPlant() {
                     value={formData.deviceId}
                     onChange={handleInputChange}
                     required
-                    placeholder="Enter a numeric ID"
+                    placeholder="Enter Device ID (e.g., esp32-wtp-test-1185abt25)"
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                   />
                 </div>
@@ -667,7 +662,8 @@ function NewPlant() {
                     <tbody className="bg-white">
                       {paginatedPlants.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                          <td colSpan="6" className="border border-gray-300 px-4 py-8ẹn
+                          text-center text-gray-500">
                             {searchQuery ? "No plants found matching your search." : "No plants added yet."}
                           </td>
                         </tr>
