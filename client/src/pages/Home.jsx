@@ -1,295 +1,466 @@
-import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
-import headImage from '../images/image 3 (1).png';
-import dehaze from '../images/dehaze.png';
-import icon from '../images/Icon.png';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { io } from "socket.io-client";
+import axios from "axios";
+import icon from "../images/Icon.png";
 
-const socket = io('https://moto-app-test.onrender.com', {
-  transports: ['websocket'],
+const socket = io("https://moto-app-test.onrender.com", {
+  transports: ["websocket"],
 });
 
-const PlantDashboard = () => {
+const Home = () => {
   const [sensor, setSensor] = useState({});
-  const [motorStatus, setMotorStatus] = useState('OFF');
+  const [motorStatus, setMotorStatus] = useState("OFF");
   const [motorNumber, setMotorNumber] = useState(1);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState('connected');
-  const [plantStatus, setPlantStatus] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState("connected");
+  const [plantData, setPlantData] = useState([]);
+  const [plantSensorData, setPlantSensorData] = useState([]);
+  const [plantMotorData, setPlantMotorData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Memoize simplified plant data
+  const simplifiedPlantData2 = useMemo(() => 
+    plantData.map((plant) => ({
+      plant_id: plant.plant_id,
+      plant_name: plant.plant_name,
+    })), [plantData]
+  );
+
+  // Separate function to fetch sensor data
+  const fetchSensorData = useCallback(async (plants) => {
+    if (!plants.length) return;
+    
+    try {
+      const apiPromises = plants.map((plant) =>
+        axios.get(`https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`)
+          .catch((error) => {
+            console.error(`Error fetching sensor data for plant ${plant.plant_id}:`, error.message);
+            return null;
+          })
+      );
+      
+      const responses = await Promise.all(apiPromises);
+      const sensorData = responses
+        .filter((response) => response !== null)
+        .map((response) => (Array.isArray(response.data) ? response.data : []))
+        .flat();
+      
+      setPlantSensorData(sensorData);
+    } catch (error) {
+      console.error("Unexpected error during sensor API calls:", error.message);
+      setPlantSensorData([]);
+    }
+  }, []);
+
+  // Separate function to fetch motor data
+  const fetchPlantMotorData = useCallback(async (plants) => {
+    if (!plants.length) return;
+    
+    try {
+      const motorApiPromises = plants.map((plant) =>
+        axios.get(`https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`)
+          .catch((error) => {
+            console.error(`Error fetching motor data for plant ${plant.plant_id}:`, error.message);
+            return null;
+          })
+      );
+      
+      const motorResponses = await Promise.all(motorApiPromises);
+      const motorData = motorResponses
+        .filter((response) => response !== null)
+        .map((response) => (Array.isArray(response.data) ? response.data : []))
+        .flat();
+
+      const groupedMotors = motorData.reduce((acc, motor) => {
+        const plantId = motor.plant_id;
+        if (!acc[plantId]) {
+          acc[plantId] = [];
+        }
+        acc[plantId].push({
+          plant_id: motor.plant_id,
+          motor_id: motor.motor_id,
+          motor_name: motor.motor_name,
+          motor_working_order: motor.motor_working_order,
+        });
+        return acc;
+      }, {});
+
+      Object.keys(groupedMotors).forEach((plantId) => {
+        groupedMotors[plantId].sort((a, b) => a.motor_working_order - b.motor_working_order);
+      });
+
+      setPlantMotorData(groupedMotors);
+    } catch (error) {
+      console.error("Unexpected error during motor API calls:", error.message);
+      setPlantMotorData({});
+    }
+  }, []);
+
+  // Initial data fetch - only runs once
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch plant data first
+        const response = await axios.get("https://water-pump.onrender.com/api/plants");
+        const plants = Array.isArray(response.data) ? response.data : [];
+        setPlantData(plants);
+        
+        // Then fetch sensor and motor data in parallel
+        const simplifiedPlants = plants.map((plant) => ({
+          plant_id: plant.plant_id,
+          plant_name: plant.plant_name,
+        }));
+        
+        await Promise.all([
+          fetchSensorData(simplifiedPlants),
+          fetchPlantMotorData(simplifiedPlants)
+        ]);
+        
+      } catch (error) {
+        console.error("Error fetching initial data:", error.message);
+        setError(error.message);
+        setPlantData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialData();
+  }, []); // Empty dependency array - only run once
+
+  // Socket connection management - separate useEffect
   useEffect(() => {
     let timeout;
 
     const resetTimeout = () => {
       if (timeout) clearTimeout(timeout);
-      setConnectionStatus('connected');
-
-      if(sensor.plant_status =='IDLE' && isButtonDisabled)
-              setIsButtonDisabled(false);
-
+      setConnectionStatus("connected");
+      if (sensor.plant_status === "IDLE" && isButtonDisabled) {
+        setIsButtonDisabled(false);
+      }
       timeout = setTimeout(() => {
-        setConnectionStatus('Disconnected');
+        setConnectionStatus("Disconnected");
         setIsButtonDisabled(true);
       }, 10000);
     };
 
-    socket.on('sensor_data', (data) => {
-      console.log(data);
+    const handleSensorData = (data) => {
+      console.log("Received sensor_data:", JSON.stringify(data, null, 2));
       setSensor(data);
       resetTimeout();
-
-      // Update motorNumber if provided
       if (data.active_motor === 1 || data.active_motor === 2) {
         setMotorNumber(data.active_motor);
       }
-      // Note: motorStatus is not updated to prevent backend-driven changes
-    });
+    };
 
-    socket.on('connect', () => {
+    const handleConnect = () => {
       resetTimeout();
-    });
+    };
 
-    socket.on('disconnect', () => {
-      setConnectionStatus('Disconnected');
+    const handleDisconnect = () => {
+      setConnectionStatus("Disconnected");
       setIsButtonDisabled(true);
-    });
+    };
+
+    socket.on("sensor_data", handleSensorData);
+    socket.on("connect", handleConnect);
+    socket.on("disconnect", handleDisconnect);
 
     resetTimeout();
 
     return () => {
-      socket.off('sensor_data');
-      socket.off('connect');
-      socket.off('disconnect');
+      socket.off("sensor_data", handleSensorData);
+      socket.off("connect", handleConnect);
+      socket.off("disconnect", handleDisconnect);
       if (timeout) clearTimeout(timeout);
     };
-  }, []);
+  }, []); // Empty dependency array - only setup once
 
-  const togglePump = () => {
-    if (isButtonDisabled || connectionStatus === 'Disconnected') return;
-    const newStatus = motorStatus === 'ON' ? 'OFF' : 'ON';
-    socket.emit('motor_control', { command: newStatus });
-    console.log(newStatus)
-    setMotorStatus(newStatus); // Update motorStatus locally
+  // Memoize grouped sensors to avoid recalculation
+  const groupedSensors = useMemo(() => {
+    return plantSensorData.reduce((acc, sensor) => {
+      const plantId = sensor.plant_id;
+      if (!acc[plantId]) {
+        acc[plantId] = [];
+      }
+      acc[plantId].push(sensor);
+      return acc;
+    }, {});
+  }, [plantSensorData]);
+
+  const togglePump = useCallback(() => {
+    if (isButtonDisabled || connectionStatus === "Disconnected") return;
+    
+    const newStatus = motorStatus === "ON" ? "OFF" : "ON";
+    socket.emit("motor_control", { command: newStatus });
+    console.log("Motor command sent:", newStatus);
+    setMotorStatus(newStatus);
     setIsButtonDisabled(true);
+    
     setTimeout(() => {
       setIsButtonDisabled(false);
     }, 10000);
-  };
+  }, [isButtonDisabled, connectionStatus, motorStatus]);
 
-  const motorStatusKey = `motor${motorNumber}_status`;
-  const motorSessionRunTimeKey = `motor${motorNumber}_session_run_time_sec`;
-  const motorRunTimeKey = `motor${motorNumber}_run_time_sec`;
-  const motorVoltageL1Key = `motor${motorNumber}_voltage_l1`;
-  const motorVoltageL2Key = `motor${motorNumber}_voltage_l2`;
-  const motorVoltageL3Key = `motor${motorNumber}_voltage_l3`;
-  const motorCurrentL1Key = `motor${motorNumber}_current_l1`;
-  const motorCurrentL2Key = `motor${motorNumber}_current_l2`;
-  const motorCurrentL3Key = `motor${motorNumber}_current_l3`;
+  // Memoize motor status calculations
+  const motorStatusKeys = useMemo(() => ({
+    motorStatusKey: `motor${motorNumber}_status`,
+    motorSessionRunTimeKey: `motor${motorNumber}_session_run_time_sec`,
+    motorRunTimeKey: `motor${motorNumber}_run_time_sec`,
+    motorVoltageL1Key: `motor${motorNumber}_voltage_l1`,
+    motorVoltageL2Key: `motor${motorNumber}_voltage_l2`,
+    motorVoltageL3Key: `motor${motorNumber}_voltage_l3`,
+    motorCurrentL1Key: `motor${motorNumber}_current_l1`,
+    motorCurrentL2Key: `motor${motorNumber}_current_l2`,
+    motorCurrentL3Key: `motor${motorNumber}_current_l3`,
+  }), [motorNumber]);
 
-  const manualMode = sensor.manual_mode_active === 1 ? 'Manual' : 'Auto';
-  const displayedPlantStatus = connectionStatus === 'Disconnected'
-    ? 'Disconnected'
-    : sensor.plant_status;
+  const manualMode = sensor.manual_mode_active === 1 ? "Manual" : "Auto";
+  const displayedPlantStatus = connectionStatus === "Disconnected" ? "Disconnected" : sensor.plant_status;
+
+  const getMotorByWorkingOrder = useCallback((plantId, workingOrder) => {
+    const motors = plantMotorData[plantId] || [];
+    return motors.find((motor) => motor.motor_working_order === workingOrder) || null;
+  }, [plantMotorData]);
+
+  const getMotorLabel = useCallback((workingOrder) => {
+    if (workingOrder === 1) return "main";
+    if (workingOrder === 2) return "standby";
+    if (workingOrder === 3) return "next";
+    return `motor ${workingOrder}`;
+  }, []);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg">Loading plant data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-lg text-red-500">Error: {error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
-        <div className="flex items-center justify-between mt-[40px] mb-[9px] lg:hidden">
-          <img src={headImage} alt="Header" />
-          <img src={dehaze} alt="Menu" className="w-[24px] h-[24px]" />
-        </div>
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:py-[110px]">
-          <div className="w-[380px] px-[10px] py-[13px] border border-[#DADADA] rounded-[12px] bg-[#FFFFFF] lg:w-[417px]">
-            <div className="flex justify-between mb-[20px] items-center">
-              <p className="text-[#4E4D4D] text-[19px] font-[700] max-w-[60%] overflow-wrap-break-word">
-                Government Medical College Thrissur
-              </p>
-              <button
-                onClick={togglePump}
-                disabled={isButtonDisabled || connectionStatus === 'Disconnected'}
-                className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
-                  isButtonDisabled || connectionStatus === 'Disconnected'
-                    ? 'bg-[#DADADA] cursor-not-allowed'
-                    : motorStatus === 'ON'
-                    ? 'bg-[#EF5350]'
-                    : 'bg-[#66BB6A]'
-                }`}
+          {plantData.map((plant, index) => {
+            const motors = plantMotorData[plant.plant_id] || [];
+
+            return (
+              <div
+                key={plant.plant_id || `plant-${index}`}
+                className="w-[380px] px-[10px] py-[13px] border border-[#DADADA] rounded-[12px] bg-[#FFFFFF] lg:w-[417px]"
               >
-                <img src={icon} alt="Icon" className="w-[20px] h-[20px]" />
-                {motorStatus === 'ON' ? 'STOP' : 'START'}
-              </button>
-            </div>
-            <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
-              <div className="pr-[10px] max-w-[33%] lg:max-w-[30%]">
-                <p>Connection</p>
-                <p className={`text-[18px] font-[600] ${connectionStatus === 'Disconnected' ? 'text-[#EF5350]' : 'text-[#4CAF50]'} overflow-hidden text-ellipsis whitespace-nowrap`}>
-                  {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1).toLowerCase()}
-                </p>
-              </div>
-              <div className="pr-[10px] max-w-[33%] lg:max-w-[30%]">
-                <p>Status</p>
-                <p className={`text-[18px] font-[600] ${
-                  displayedPlantStatus === 'Disconnected' || displayedPlantStatus === 'POWER-OFF'
-                    ? 'text-[#EF5350]'
-                    : displayedPlantStatus === 'RUNNING'
-                    ? 'text-[#4CAF50]'
-                    : 'text-[#208CD4]'
-                } overflow-hidden text-ellipsis whitespace-nowrap`}>
-                  {displayedPlantStatus ? displayedPlantStatus.charAt(0).toUpperCase() + displayedPlantStatus.slice(1).toLowerCase() : 'N/A'}
-                </p>
-              </div>
-              <div className="max-w-[33%] lg:max-w-[30%]">
-                <p>Mode</p>
-                <p className="text-[18px] text-[#4CAF50] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                  {connectionStatus === 'Disconnected' ? 'N/A' : manualMode}
-                </p>
-              </div>
-            </div>
-            <div className="mb-[6px]">
-              <p className="text-[18px] text-[#4E4D4D] pb-[6px] border-b border-b-[#208CD4] mb-[12px] font-[700]">
-                Motor & Power
-              </p>
-              <div className="lg:flex gap-3">
-                <div className="border border-[#DADADA] rounded-[8px] py-[12px] px-[8px] mb-[10px] text-[14px] font-[400] text-[#6B6B6B] lg:w-[485px]">
-                  <div className="flex items-center justify-between border-b border-b-[#DADADA] pb-[12px] font-[700] text-[#4E4D4D]">
-                    <p className="text-[18px]">Motor {motorNumber}</p>
-                    <p className={`text-[16px] ${sensor[motorStatusKey] === 'ON' ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
-                      {sensor[motorStatusKey] || 'N/A'}
-                    </p>
-                  </div>
-                  <div className="flex py-[12px] justify-between text-[14px]">
-                    <p>V (L1/L2/L3)</p>
-                    <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                      {connectionStatus === 'Disconnected'
-                        ? 'N/A'
-                        : `${sensor[motorVoltageL1Key] ?? 'N/A'}/${sensor[motorVoltageL2Key] ?? 'N/A'}/${sensor[motorVoltageL3Key] ?? 'N/A'} V`}
-                    </p>
-                  </div>
-                  <div className="flex pt-[2px] pb-[14px] justify-between">
-                    <p>I (L1/L2/L3)</p>
-                    <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                      {connectionStatus === 'Disconnected'
-                        ? 'N/A'
-                        : `${sensor[motorCurrentL1Key] ?? 'N/A'}/${sensor[motorCurrentL2Key] ?? 'N/A'}/${sensor[motorCurrentL3Key] ?? 'N/A'} A`}
-                    </p>
-                  </div>
-                  <div className="flex justify-between">
-                    <p>Timers (Sess/Cum)</p>
-                    <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                      {connectionStatus === 'Disconnected'
-                        ? 'N/A'
-                        : `${sensor[motorSessionRunTimeKey] ? new Date(sensor[motorSessionRunTimeKey] * 1000).toISOString().substr(11, 8) : 'N/A'}/
-                          ${sensor[motorRunTimeKey] ? new Date(sensor[motorRunTimeKey] * 1000).toISOString().substr(11, 8) : 'N/A'}`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-between">
-                <div className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D]">
-                  <p className="text-[18px] mr-2">Motor {motorNumber === 1 ? 2 : 1}</p>
-                  <p className="text-[16px] text-[#66BB6A]">
-                    {connectionStatus === 'Disconnected' ? 'N/A' : sensor[`motor${motorNumber === 1 ? 2 : 1}_status`] || 'STAND BY'}
+                <div className="flex justify-between mb-[20px] items-center">
+                  <p className="text-[#4E4D4D] text-[19px] font-[700] max-w-[60%] overflow-wrap-break-word">
+                    {plant.plant_name || "Unknown Plant"}
                   </p>
+                  <button
+                    onClick={togglePump}
+                    disabled={isButtonDisabled || connectionStatus === "Disconnected"}
+                    className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
+                      isButtonDisabled || connectionStatus === "Disconnected"
+                        ? "bg-[#DADADA] cursor-not-allowed"
+                        : motorStatus === "ON"
+                        ? "bg-[#EF5350]"
+                        : "bg-[#66BB6A]"
+                    }`}
+                  >
+                    <img src={icon} alt="Icon" className="w-[20px] h-[20px]" />
+                    {motorStatus === "ON" ? "STOP" : "START"}
+                  </button>
                 </div>
-                <div className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D]">
-                  <p className="text-[18px] mr-2">Preferred Next</p>
-                  <p className="text-[16px] text-[#66BB6A]">
-                    {connectionStatus === 'Disconnected' ? 'N/A' : sensor.preferred_next_motor ? `Motor ${sensor.preferred_next_motor}` : 'N/A'}
+                <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
+                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
+                    <p>Connection</p>
+                    <p
+                      className={`text-[18px] font-[600] ${
+                        connectionStatus === "Disconnected" ? "text-[#EF5350]" : "text-[#4CAF50]"
+                      } overflow-hidden text-ellipsis whitespace-nowrap`}
+                    >
+                      {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1).toLowerCase()}
+                    </p>
+                  </div>
+                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
+                    <p>Status</p>
+                    <p
+                      className={`text-[18px] font-[600] ${
+                        displayedPlantStatus === "Disconnected" || displayedPlantStatus === "POWER-OK"
+                          ? "text-[#EF5350]"
+                          : displayedPlantStatus === "RUNNING"
+                          ? "text-[#4CAF50]"
+                          : "text-[#208CD4]"
+                      } overflow-hidden text-ellipsis whitespace-nowrap`}
+                    >
+                      {displayedPlantStatus
+                        ? displayedPlantStatus.charAt(0).toUpperCase() + displayedPlantStatus.slice(1).toLowerCase()
+                        : "N/A"}
+                    </p>
+                  </div>
+                  <div className="max-w-[33%] lg:max-w-[30%] text-center">
+                    <p>Mode</p>
+                    <p className="text-[18px] text-[#4CAF50] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                      {connectionStatus === "Disconnected" ? "N/A" : manualMode}
+                    </p>
+                  </div>
+                </div>
+                <div className="mb-[6px]">
+                  <p className="text-[18px] text-[#4E4D4D] pb-[6px] mb-[12px] font-[700]">
+                    Motor & Power
                   </p>
+                  <div className="lg:flex gap-3">
+                    {motors.length > 0 && (
+                      <div className="border border-[#DADADA] rounded-[8px] py-[12px] px-[8px] mb-[10px] text-[14px] font-[400] text-[#6B6B6B] lg:w-[485px]">
+                        <div className="flex items-center justify-between border-b border-b-[#DADADA] pb-[12px] font-[700] text-[#4E4D4D]">
+                          <div className="text-center">
+                            <p className="text-[18px]">{motors[0].motor_name || "No Motor"}</p>
+                            <p className="text-[16px] text-[#6B6B6B]">(main)</p>
+                          </div>
+                          <p
+                            className={`text-[16px] ${
+                              sensor[motorStatusKeys.motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
+                            }`}
+                          >
+                            {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKeys.motorStatusKey] ?? "N/A"}
+                          </p>
+                        </div>
+                        <div className="flex py-[12px] justify-between text-[14px]">
+                          <p>V (L1/L2/L3)</p>
+                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {connectionStatus === "Disconnected"
+                              ? "N/A"
+                              : `${sensor[motorStatusKeys.motorVoltageL1Key] ?? "N/A"}/${sensor[motorStatusKeys.motorVoltageL2Key] ?? "N/A"}/${
+                                  sensor[motorStatusKeys.motorVoltageL3Key] ?? "N/A"
+                                } V`}
+                          </p>
+                        </div>
+                        <div className="flex pt-[2px] pb-[14px] justify-between">
+                          <p>I (L1/L2/L3)</p>
+                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {connectionStatus === "Disconnected"
+                              ? "N/A"
+                              : `${sensor[motorStatusKeys.motorCurrentL1Key] ?? "N/A"}/${sensor[motorStatusKeys.motorCurrentL2Key] ?? "N/A"}/${
+                                  sensor[motorStatusKeys.motorCurrentL3Key] ?? "N/A"
+                                } A`}
+                          </p>
+                        </div>
+                        <div className="flex justify-between">
+                          <p>Timers (Sess/Cum)</p>
+                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                            {connectionStatus === "Disconnected"
+                              ? "N/A"
+                              : `${
+                                  sensor[motorStatusKeys.motorSessionRunTimeKey]
+                                    ? new Date(sensor[motorStatusKeys.motorSessionRunTimeKey] * 1000).toISOString().substr(11, 8)
+                                    : "N/A"
+                                }/${
+                                  sensor[motorStatusKeys.motorRunTimeKey]
+                                    ? new Date(sensor[motorStatusKeys.motorRunTimeKey] * 1000).toISOString().substr(11, 8)
+                                    : "N/A"
+                                } S`}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap justify-between gap-2">
+                    {motors.slice(1).map((motor) => (
+                      <div
+                        key={motor.motor_id || `motor-${motor.motor_name}-${motor.motor_working_order}`}
+                        className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D] w-[48%]"
+                      >
+                        <div className="mr-5 text-center">
+                          <p className="text-[18px]">{motor.motor_name || "No Motor"}</p>
+                          <p className="text-[16px] text-[#6B6B6B]">({getMotorLabel(motor.motor_working_order)})</p>
+                        </div>
+                        <p
+                          className={`text-[16px] ${
+                            sensor[motorStatusKeys.motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
+                          }`}
+                        >
+                          {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKeys.motorStatusKey] ?? "N/A"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="border-b border-b-[#208CD4] pb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
+                    Sensors & Actuators
+                  </p>
+                  <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
+                    <div className="grid grid-cols-3 gap-4 border-b border-b-[#DADADA] pb-[6px]">
+                      {groupedSensors[plant.plant_id]?.length > 0 ? (
+                        groupedSensors[plant.plant_id]
+                          .filter((apidata) => apidata.is_sensor_enabled === true)
+                          .map((apidata, index) => (
+                            <div key={apidata.sensor_key || `sensor-${index}`}>
+                              <p>{apidata.sensor_name || "Sensor"}</p>
+                              <p
+                                className={`text-[16px] font-[700] ${
+                                  sensor[apidata.sensor_key] === "ON"
+                                    ? "text-[#4CAF50]"
+                                    : sensor[apidata.sensor_key] === "OFF" || sensor[apidata.sensor_key] == null
+                                    ? "text-[#EF5350]"
+                                    : "text-[#208CD4]"
+                                }`}
+                              >
+                                {connectionStatus === "Disconnected" ? "N/A" : sensor[apidata.sensor_key] ?? "N/A"}
+                              </p>
+                            </div>
+                          ))
+                      ) : (
+                        <div className="col-span-3">No enabled sensor data available</div>
+                      )}
+                      {groupedSensors[plant.plant_id]?.length > 0 && sensor.vacuum_switch_ok != null && (
+                        <div>
+                          <p>Vacuum Switch</p>
+                          <p
+                            className={`text-[16px] font-[700] ${
+                              connectionStatus === "Disconnected" || sensor.vacuum_switch_ok == null
+                                ? "text-[#EF5350]"
+                                : sensor.vacuum_switch_ok === 1
+                                ? "text-[#4CAF50]"
+                                : "text-[#EF5350]"
+                            }`}
+                          >
+                            {connectionStatus === "Disconnected"
+                              ? "N/A"
+                              : sensor.vacuum_switch_ok == null
+                              ? "N/A"
+                              : sensor.vacuum_switch_ok === 1
+                              ? "OK"
+                              : "NOT OK"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div>
-              <p className="border-b border-b-[#208CD4] pb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
-                Sensors & Actuators
-              </p>
-              <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
-                <div className="flex border-b border-b-[#DADADA] pb-[6px] gap-9 lg:gap-15">
-                  <div className="w-[33%]">
-                    <p>Water Inflow</p>
-                    <p className={`text-[16px] font-[700] ${sensor.water_inlet_valve_status === 'ON' ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.water_inlet_valve_status ?? 'N/A'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>HOCL/Drainage</p>
-                    <p className={`text-[16px] font-[700] ${sensor.hocl_valve_status === 'ON' ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.hocl_valve_status ?? 'N/A'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>Chlorine Gas</p>
-                    <p className={`text-[16px] font-[700] ${sensor.chlorine_gas_valve_status === 'ON' ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.chlorine_gas_valve_status ?? 'N/A'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex border-b border-b-[#DADADA] py-[6px] gap-9 lg:gap-15">
-                  <div className="w-[33%]">
-                    <p>Active Motor</p>
-                    <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.active_motor ? `Motor ${sensor.active_motor}` : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>Water Level</p>
-                    <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.water_level ? `${sensor.water_level}%` : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>OHT Level</p>
-                    <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.water_level_oht ? `${sensor.water_level_oht}%` : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex border-b border-b-[#DADADA] py-[6px] gap-9 lg:gap-15">
-                  <div className="w-[33%]">
-                    <p>Vacuum Switch</p>
-                    <p className={`text-[16px] font-[600] ${sensor.vacuum_switch_ok === 1 ? 'text-[#4CAF50]' : 'text-[#EF5350]'}`}>
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.vacuum_switch_ok === 1 ? 'OK' : 'NOT OK'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>Cylinder wt</p>
-                    <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.chlorine_cylinder_weight ? `${sensor.chlorine_cylinder_weight} kg` : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>Res.cl (plant)</p>
-                    <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : `${sensor.residual_chlorine_plant} ppm`}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex border-b border-b-[#DADADA] py-[6px] gap-9 lg:gap-15">
-                  <div className="w-[33%]">
-                    <p>Res.cl (farthest)</p>
-                    <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.residual_chlorine_farthest ? `${sensor.residual_chlorine_farthest} ppm` : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>Leakage</p>
-                    <p className={`text-[16px] font-[600] ${sensor.chlorine_leakage_detected === 1 ? 'text-[#EF5350]' : 'text-[#4CAF50]'}`}>
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.chlorine_leakage_detected === 1 ? 'YES' : 'NO'}
-                    </p>
-                  </div>
-                  <div className="w-[33%]">
-                    <p>Last Fault</p>
-                    <p className="text-[16px] font-[600] text-[#208CD4]">
-                      {connectionStatus === 'Disconnected' ? 'N/A' : sensor.last_fault_message ?? 'None'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-export default PlantDashboard;
+export default Home;
