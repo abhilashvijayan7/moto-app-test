@@ -66,8 +66,8 @@ app.get("/send-notification", async (req, res) => {
 // MQTT Setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 
-const SENSOR_TOPIC = "watertreatment/plant1/data";
-const MOTOR_TOPIC = "watertreatment/plant1/command";
+const SENSOR_TOPIC = "watertreatment1/plant1/data";
+const MOTOR_TOPIC = "watertreatment1/plant1/command";
 
 let latestSensorData = {};
 
