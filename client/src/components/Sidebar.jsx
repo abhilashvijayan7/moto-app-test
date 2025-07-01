@@ -31,15 +31,15 @@ function Sidebar() {
   ];
 
   return (
-    <div className="left-side text-[#6B6B6B] w-[236px] bg-[#FFFFFF] shrink-0 hidden lg:block">
-      <img src={mainImage} alt="" className="pt-[40px] ml-[5.5px] mb-[35px]" />
-      <div className="mr-[26px] ml-[16px] flex flex-col justify-center ">
+    <div className="left-side text-[#6B6B6B] w-[200px] bg-[#FFFFFF] shrink-0 hidden lg:block">
+     <center><img src={mainImage} alt="KRP Aquatech" width="75%" className="pt-[30px] ml-[5.5px] mb-[30px]" /></center> 
+      <div className="mr-[10px] ml-[10px] flex flex-col justify-center ">
         {menuItems.map((item, index) => (
           <NavLink
             key={index}
             to={item.path}
             className={({ isActive }) =>
-              `flex py-[12px] pl-[20px] pr-[12px] gap-3 mb-[12px] ${
+              `flex py-[7px] pl-[10px] pr-[10px] gap-1 mb-[7px] ${
                 isActive ? "bg-[#f5f3f3] rounded-[8px]" : ""
               }`
             }
