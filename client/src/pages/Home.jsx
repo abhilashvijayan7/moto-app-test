@@ -10,10 +10,9 @@ const socketMoto = io("https://moto-app-test.onrender.com", {
 
 const socketWaterPump = io("https://water-pump.onrender.com", {
   transports: ["websocket"],
-   secure: true,
+  secure: true,
   reconnection: true,
   rejectUnauthorized: false,
-
 });
 
 const Home = () => {
@@ -112,34 +111,40 @@ const Home = () => {
     }
   }, []);
 
-  // Initial data fetch
-  useEffect(() => {
-    const fetchInitialData = async () => {
-      setLoading(true);
-      setError(null);
+  // Fetch initial data
+  const fetchInitialData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await axios.get("https://water-pump.onrender.com/api/plants");
-        const plants = Array.isArray(response.data) ? response.data : [];
-        setPlantData(plants);
+    try {
+      const response = await axios.get("https://water-pump.onrender.com/api/plants");
+      const plants = Array.isArray(response.data) ? response.data : [];
+      setPlantData(plants);
 
-        const simplifiedPlants = plants.map((plant) => ({
-          plant_id: plant.plant_id,
-          plant_name: plant.plant_name,
-        }));
+      const simplifiedPlants = plants.map((plant) => ({
+        plant_id: plant.plant_id,
+        plant_name: plant.plant_name,
+      }));
 
-        await Promise.all([fetchSensorData(simplifiedPlants), fetchPlantMotorData(simplifiedPlants)]);
-      } catch (error) {
-        console.error("Error fetching initial data:", error.message);
-        setError(error.message);
-        setPlantData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchInitialData();
+      await Promise.all([fetchSensorData(simplifiedPlants), fetchPlantMotorData(simplifiedPlants)]);
+    } catch (error) {
+      console.error("Error fetching initial data:", error.message);
+      setError(error.message);
+      setPlantData([]);
+    } finally {
+      setLoading(false);
+    }
   }, [fetchSensorData, fetchPlantMotorData]);
+
+  // Initial data fetch on mount
+  useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
+  // Refresh data when sensorWaterPump changes
+  useEffect(() => {
+    fetchInitialData();
+  }, [sensorWaterPump, fetchInitialData]);
 
   // Socket connection management for both servers
   useEffect(() => {
@@ -172,26 +177,36 @@ const Home = () => {
       }
     };
 
-
-
     const handleSensor = (data) => {
-      console.log("Received plant_sensor_updated:", JSON.stringify(data));
+      console.log("Received plant_sensor_updated from water-pump:", JSON.stringify(data));
+      setSensorWaterPump(data);
+      resetTimeout("water-pump", setConnectionStatusWaterPump);
     };
 
     const handleConnectMoto = () => {
+      console.log("Connected to moto-app-test server");
       resetTimeout("moto", setConnectionStatusMoto);
     };
 
     const handleConnectWaterPump = () => {
+      console.log("Connected to water-pump server");
       resetTimeout("water-pump", setConnectionStatusWaterPump);
     };
 
     const handleDisconnectMoto = () => {
+      console.log("Disconnected from moto-app-test server");
       setConnectionStatusMoto("Disconnected");
       setIsButtonDisabled(true);
     };
 
     const handleDisconnectWaterPump = () => {
+      console.log("Disconnected from water-pump server");
+      setConnectionStatusWaterPump("Disconnected");
+      setIsButtonDisabled(true);
+    };
+
+    const handleConnectErrorWaterPump = (error) => {
+      console.error("Connection error for water-pump server:", error.message);
       setConnectionStatusWaterPump("Disconnected");
       setIsButtonDisabled(true);
     };
@@ -203,20 +218,27 @@ const Home = () => {
     socketWaterPump.on("plant_sensor_updated", handleSensor);
     socketWaterPump.on("connect", handleConnectWaterPump);
     socketWaterPump.on("disconnect", handleDisconnectWaterPump);
+    socketWaterPump.on("connect_error", handleConnectErrorWaterPump);
+
+    socketWaterPump.emit("test_connection", { message: "Checking water-pump connection" });
+
+    socketWaterPump.on("test_connection_response", (data) => {
+      console.log("Received test_connection_response from water-pump:", data);
+    });
 
     resetTimeout("moto", setConnectionStatusMoto);
     resetTimeout("water-pump", setConnectionStatusWaterPump);
 
     return () => {
-      // Clean up socketMoto listeners
       socketMoto.off("sensor_data", handleSensorDataMoto);
       socketMoto.off("connect", handleConnectMoto);
       socketMoto.off("disconnect", handleDisconnectMoto);
 
-      // Clean up socketWaterPump listeners, excluding sensor_data
       socketWaterPump.off("plant_sensor_updated", handleSensor);
       socketWaterPump.off("connect", handleConnectWaterPump);
       socketWaterPump.off("disconnect", handleDisconnectWaterPump);
+      socketWaterPump.off("connect_error", handleConnectErrorWaterPump);
+      socketWaterPump.off("test_connection_response");
 
       if (timeoutMoto) clearTimeout(timeoutMoto);
       if (timeoutWaterPump) clearTimeout(timeoutWaterPump);
