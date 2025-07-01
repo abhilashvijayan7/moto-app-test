@@ -39,7 +39,7 @@ const Home = () => {
     [plantData]
   );
 
-  // Fetch sensor data
+  // Fetch sensor data for specific plants
   const fetchSensorData = useCallback(async (plants) => {
     if (!plants.length) return;
 
@@ -60,15 +60,9 @@ const Home = () => {
         .flat();
 
       setPlantSensorData((prev) => {
-        const updatedSensors = sensorData.reduce((acc, sensor) => {
-          const plantId = sensor.plant_id;
-          if (!acc[plantId]) {
-            acc[plantId] = [];
-          }
-          acc[plantId].push(sensor);
-          return acc;
-        }, { ...prev });
-        return Object.values(updatedSensors).flat();
+        const updatedPlantIds = new Set(plants.map((plant) => plant.plant_id));
+        const filteredPrev = prev.filter((sensor) => !updatedPlantIds.has(sensor.plant_id));
+        return [...filteredPrev, ...sensorData];
       });
     } catch (error) {
       console.error("Unexpected error during sensor API calls:", error.message);
@@ -76,7 +70,7 @@ const Home = () => {
     }
   }, []);
 
-  // Fetch motor data
+  // Fetch motor data for specific plants
   const fetchPlantMotorData = useCallback(async (plants) => {
     if (!plants.length) return;
 
@@ -127,29 +121,37 @@ const Home = () => {
   // Fetch initial data (supports single plant or all plants)
   const fetchInitialData = useCallback(
     async (plantId = null) => {
-      setLoading(true);
-      setError(null);
-
       try {
         let plants = [];
         if (plantId) {
           // Fetch single plant
           const response = await axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`);
-          plants = Array.isArray(response.data) ? response.data : [response.data];
+          plants = Array.isArray(response.data) ? response.data : [response.data].filter(Boolean);
         } else {
           // Fetch all plants
+          setLoading(true);
+          setError(null);
           const response = await axios.get("https://water-pump.onrender.com/api/plants");
           plants = Array.isArray(response.data) ? response.data : [];
         }
 
-        setPlantData((prev) => {
-          const existingPlantIds = new Set(prev.map((p) => p.plant_id));
-          const newPlants = plants.filter((p) => !existingPlantIds.has(p.plant_id));
-          const updatedPlants = prev.map((p) =>
-            plants.find((newP) => newP.plant_id === p.plant_id) || p
-          );
-          return [...updatedPlants, ...newPlants];
-        });
+        if (plantId) {
+          // Update only the specific plant in plantData
+          setPlantData((prev) => {
+            const existingPlant = prev.find((p) => p.plant_id === plantId);
+            if (existingPlant) {
+              // Update existing plant
+              return prev.map((p) =>
+                p.plant_id === plantId ? { ...p, ...plants[0] } : p
+              );
+            }
+            // Add new plant if not found
+            return [...prev, ...plants];
+          });
+        } else {
+          // Replace plantData for initial fetch
+          setPlantData(plants);
+        }
 
         const simplifiedPlants = plants.map((plant) => ({
           plant_id: plant.plant_id,
@@ -162,7 +164,7 @@ const Home = () => {
         setError(error.message);
         if (!plantId) setPlantData([]);
       } finally {
-        setLoading(false);
+        if (!plantId) setLoading(false);
       }
     },
     [fetchSensorData, fetchPlantMotorData]
