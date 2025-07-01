@@ -10,6 +10,10 @@ const socketMoto = io("https://moto-app-test.onrender.com", {
 
 const socketWaterPump = io("https://water-pump.onrender.com", {
   transports: ["websocket"],
+   secure: true,
+  reconnection: true,
+  rejectUnauthorized: false,
+
 });
 
 const Home = () => {
@@ -168,14 +172,7 @@ const Home = () => {
       }
     };
 
-    const handleSensorDataWaterPump = (data) => {
-      console.log("Received sensor_data from water-pump:", JSON.stringify(data, null, 2));
-      setSensorWaterPump(data);
-      resetTimeout("water-pump", setConnectionStatusWaterPump);
-      if (data.active_motor === 1 || data.active_motor === 2) {
-        setMotorNumber(data.active_motor);
-      }
-    };
+
 
     const handleSensor = (data) => {
       console.log("Received plant_sensor_updated:", JSON.stringify(data));
@@ -203,7 +200,6 @@ const Home = () => {
     socketMoto.on("connect", handleConnectMoto);
     socketMoto.on("disconnect", handleDisconnectMoto);
 
-    socketWaterPump.on("sensor_data", handleSensorDataWaterPump);
     socketWaterPump.on("plant_sensor_updated", handleSensor);
     socketWaterPump.on("connect", handleConnectWaterPump);
     socketWaterPump.on("disconnect", handleDisconnectWaterPump);
