@@ -234,6 +234,26 @@ const Home = () => {
     return `motor ${workingOrder}`;
   }, []);
 
+  // Calculate total session and cumulative runtime dynamically based on motors
+  const calculateTotalRunTime = useCallback((plantId) => {
+    const motors = plantMotorData[plantId] || [];
+    let totalSessionRunTime = 0;
+    let totalRunTime = 0;
+
+    motors.forEach((motor) => {
+      const motorNum = motor.motor_working_order;
+      const sessionKey = `motor${motorNum}_session_run_time_sec`;
+      const runTimeKey = `motor${motorNum}_run_time_sec`;
+      totalSessionRunTime += (sensor[sessionKey] || 0);
+      totalRunTime += (sensor[runTimeKey] || 0);
+    });
+
+    return {
+      totalSessionRunTime,
+      totalRunTime,
+    };
+  }, [sensor, plantMotorData]);
+
   // Loading state
   if (loading) {
     return (
@@ -262,6 +282,8 @@ const Home = () => {
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:py-[110px]">
           {plantData.map((plant, index) => {
             const motors = plantMotorData[plant.plant_id] || [];
+            const plantSensors = groupedSensors[plant.plant_id] || [];
+            const { totalSessionRunTime, totalRunTime } = calculateTotalRunTime(plant.plant_id);
 
             return (
               <div
@@ -287,13 +309,15 @@ const Home = () => {
                     {motorStatus === "ON" ? "STOP" : "START"}
                   </button>
                 </div>
+
+                {/* Connection, Status, and Mode */}
                 <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
                   <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
                     <p>Connection</p>
                     <p
                       className={`text-[18px] font-[600] ${
                         connectionStatus === "Disconnected" ? "text-[#EF5350]" : "text-[#4CAF50]"
-                      } overflow-hidden text-ellipsis whitespace-nowrap`}
+                      }`}
                     >
                       {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1).toLowerCase()}
                     </p>
@@ -307,7 +331,7 @@ const Home = () => {
                           : displayedPlantStatus === "RUNNING"
                           ? "text-[#4CAF50]"
                           : "text-[#208CD4]"
-                      } overflow-hidden text-ellipsis whitespace-nowrap`}
+                      }`}
                     >
                       {displayedPlantStatus
                         ? displayedPlantStatus.charAt(0).toUpperCase() + displayedPlantStatus.slice(1).toLowerCase()
@@ -316,99 +340,103 @@ const Home = () => {
                   </div>
                   <div className="max-w-[33%] lg:max-w-[30%] text-center">
                     <p>Mode</p>
-                    <p className="text-[18px] text-[#4CAF50] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
+                    <p className="text-[18px] text-[#4CAF50] font-[600]">
                       {connectionStatus === "Disconnected" ? "N/A" : manualMode}
                     </p>
                   </div>
                 </div>
-                <div className="mb-[6px]">
-                  <p className="text-[18px] text-[#4E4D4D] pb-[6px] mb-[12px] font-[700]">
-                    Motor & Power
-                  </p>
-                  <div className="lg:flex gap-3">
-                    {motors.length > 0 && (
-                      <div className="border border-[#DADADA] rounded-[8px] py-[12px] px-[8px] mb-[10px] text-[14px] font-[400] text-[#6B6B6B] lg:w-[485px]">
-                        <div className="flex items-center justify-between border-b border-b-[#DADADA] pb-[12px] font-[700] text-[#4E4D4D]">
-                          <div className="text-center">
-                            <p className="text-[18px]">{motors[0].motor_name || "No Motor"}</p>
-                            <p className="text-[16px] text-[#6B6B6B]">(main)</p>
-                          </div>
-                          <p
-                            className={`text-[16px] ${
-                              sensor[motorStatusKeys.motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
-                            }`}
-                          >
-                            {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKeys.motorStatusKey] ?? "N/A"}
-                          </p>
-                        </div>
-                        <div className="flex py-[12px] justify-between text-[14px]">
-                          <p>V (L1/L2/L3)</p>
-                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                            {connectionStatus === "Disconnected"
-                              ? "N/A"
-                              : `${sensor[motorStatusKeys.motorVoltageL1Key] ?? "N/A"}/${sensor[motorStatusKeys.motorVoltageL2Key] ?? "N/A"}/${
-                                  sensor[motorStatusKeys.motorVoltageL3Key] ?? "N/A"
-                                } V`}
-                          </p>
-                        </div>
-                        <div className="flex pt-[2px] pb-[14px] justify-between">
-                          <p>I (L1/L2/L3)</p>
-                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                            {connectionStatus === "Disconnected"
-                              ? "N/A"
-                              : `${sensor[motorStatusKeys.motorCurrentL1Key] ?? "N/A"}/${sensor[motorStatusKeys.motorCurrentL2Key] ?? "N/A"}/${
-                                  sensor[motorStatusKeys.motorCurrentL3Key] ?? "N/A"
-                                } A`}
-                          </p>
-                        </div>
-                        <div className="flex justify-between">
-                          <p>Timers (Sess/Cum)</p>
-                          <p className="text-[#208CD4] font-[600] overflow-hidden text-ellipsis whitespace-nowrap">
-                            {connectionStatus === "Disconnected"
-                              ? "N/A"
-                              : `${
-                                  sensor[motorStatusKeys.motorSessionRunTimeKey]
-                                    ? new Date(sensor[motorStatusKeys.motorSessionRunTimeKey] * 1000).toISOString().substr(11, 8)
-                                    : "N/A"
-                                }/${
-                                  sensor[motorStatusKeys.motorRunTimeKey]
-                                    ? new Date(sensor[motorStatusKeys.motorRunTimeKey] * 1000).toISOString().substr(11, 8)
-                                    : "N/A"
-                                } S`}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+
+                {/* Voltage and Current */}
+                <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
+                  <div className="pr-[10px] max-w-[50%] text-center">
+                    <p>V (V1/V2/V3)</p>
+                    <p className="text-[18px] text-[#208CD4] font-[600]">
+                      {connectionStatus === "Disconnected"
+                        ? "N/A"
+                        : `${sensor[motorStatusKeys.motorVoltageL1Key] ?? "N/A"}/${sensor[motorStatusKeys.motorVoltageL2Key] ?? "N/A"}/${
+                            sensor[motorStatusKeys.motorVoltageL3Key] ?? "N/A"
+                          } V`}
+                    </p>
                   </div>
-                  <div className="flex flex-wrap justify-between gap-2">
-                    {motors.slice(1).map((motor) => (
-                      <div
-                        key={motor.motor_id || `motor-${motor.motor_name}-${motor.motor_working_order}`}
-                        className="flex items-center justify-between border border-[#DADADA] rounded-md px-2 py-1.5 font-[700] text-[#4E4D4D] w-[48%]"
-                      >
-                        <div className="mr-5 text-center">
-                          <p className="text-[18px]">{motor.motor_name || "No Motor"}</p>
-                          <p className="text-[16px] text-[#6B6B6B]">({getMotorLabel(motor.motor_working_order)})</p>
-                        </div>
-                        <p
-                          className={`text-[16px] ${
-                            sensor[motorStatusKeys.motorStatusKey] === "ON" ? "text-[#4CAF50]" : "text-[#EF5350]"
-                          }`}
-                        >
-                          {connectionStatus === "Disconnected" ? "N/A" : sensor[motorStatusKeys.motorStatusKey] ?? "N/A"}
-                        </p>
-                      </div>
-                    ))}
+                  <div className="max-w-[50%] text-center">
+                    <p>I (I1/I2/I3)</p>
+                    <p className="text-[18px] text-[#208CD4] font-[600]">
+                      {connectionStatus === "Disconnected"
+                        ? "N/A"
+                        : `${sensor[motorStatusKeys.motorCurrentL1Key] ?? "N/A"}/${sensor[motorStatusKeys.motorCurrentL2Key] ?? "N/A"}/${
+                            sensor[motorStatusKeys.motorCurrentL3Key] ?? "N/A"
+                          } A`}
+                    </p>
                   </div>
                 </div>
+
+                {/* Motor Section with Individual Timers */}
+                <div className="mb-[6px]">
+                  <p className="text-[18px] text-[#4E4D4D] pb-[6px] mb-[12px] font-[700]">Motor & Power</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {motors.map((motor) => {
+                      const motorKey = `motor${motor.motor_working_order}_status`;
+                      const sessionRunTimeKey = `motor${motor.motor_working_order}_session_run_time_sec`;
+                      const runTimeKey = `motor${motor.motor_working_order}_run_time_sec`;
+                      const status = connectionStatus === "Disconnected" ? "N/A" : sensor[motorKey] ?? "N/A";
+                      const sessionTime = sensor[sessionRunTimeKey]
+                        ? new Date(sensor[sessionRunTimeKey] * 1000).toISOString().substr(11, 8)
+                        : "N/A";
+                      const cumulativeTime = sensor[runTimeKey]
+                        ? new Date(sensor[runTimeKey] * 1000).toISOString().substr(11, 8)
+                        : "N/A";
+
+                      return (
+                        <div
+                          key={motor.motor_id}
+                          className="border border-[#DADADA] rounded-[8px] p-2 text-[14px] font-[400] text-[#6B6B6B]"
+                        >
+                          <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
+                            <div className="text-center">
+                              <p className="text-[18px]">{motor.motor_name || `Motor ${motor.motor_working_order}`}</p>
+                              <p className="text-[16px] text-[#6B6B6B]">
+                                ({getMotorLabel(motor.motor_working_order)})
+                              </p>
+                            </div>
+                            <p
+                              className={`text-[16px] ${
+                                status === "ON" ? "text-[#4CAF50]" : status === "OFF" ? "text-[#EF5350]" : "text-[#208CD4]"
+                              }`}
+                            >
+                              {status}
+                            </p>
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            <p className="text-transparent">Placeholder</p>
+                            <p className="text-[#208CD4] font-[600]">
+                              {`${sessionTime}/${cumulativeTime} S`}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Total Time */}
+                  <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
+                    <p className="font-[700] text-[#4E4D4D]">Total Time (Sess/Cum)</p>
+                    <p className="text-[#208CD4] font-[600]">
+                      {connectionStatus === "Disconnected"
+                        ? "N/A"
+                        : `${new Date(totalSessionRunTime * 1000).toISOString().substr(11, 8)}/${new Date(totalRunTime * 1000).toISOString().substr(11, 8)} S`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sensors & Actuators */}
                 <div>
                   <p className="border-b border-b-[#208CD4] pb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
                     Sensors & Actuators
                   </p>
                   <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
                     <div className="grid grid-cols-3 gap-4 border-b border-b-[#DADADA] pb-[6px]">
-                      {groupedSensors[plant.plant_id]?.length > 0 ? (
-                        groupedSensors[plant.plant_id]
+                      {plantSensors.length > 0 ? (
+                        plantSensors
                           .filter((apidata) => apidata.is_sensor_enabled === true)
                           .map((apidata, index) => (
                             <div key={apidata.sensor_key || `sensor-${index}`}>
@@ -429,7 +457,7 @@ const Home = () => {
                       ) : (
                         <div className="col-span-3">No enabled sensor data available</div>
                       )}
-                      {groupedSensors[plant.plant_id]?.length > 0 && sensor.vacuum_switch_ok != null && (
+                      {sensor.vacuum_switch_ok != null && (
                         <div>
                           <p>Vacuum Switch</p>
                           <p
