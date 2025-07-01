@@ -16,8 +16,8 @@ const socketWaterPump = io("https://water-pump.onrender.com", {
 });
 
 const Home = () => {
-  const [sensorMoto, setSensorMoto] = useState({}); // Sensor data from moto-app-test
-  const [sensorWaterPump, setSensorWaterPump] = useState({}); // Sensor data from water-pump
+  const [sensorMoto, setSensorMoto] = useState({});
+  const [sensorWaterPump, setSensorWaterPump] = useState({});
   const [motorStatus, setMotorStatus] = useState("OFF");
   const [motorNumber, setMotorNumber] = useState(1);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
@@ -59,10 +59,20 @@ const Home = () => {
         .map((response) => (Array.isArray(response.data) ? response.data : []))
         .flat();
 
-      setPlantSensorData(sensorData);
+      setPlantSensorData((prev) => {
+        const updatedSensors = sensorData.reduce((acc, sensor) => {
+          const plantId = sensor.plant_id;
+          if (!acc[plantId]) {
+            acc[plantId] = [];
+          }
+          acc[plantId].push(sensor);
+          return acc;
+        }, { ...prev });
+        return Object.values(updatedSensors).flat();
+      });
     } catch (error) {
       console.error("Unexpected error during sensor API calls:", error.message);
-      setPlantSensorData([]);
+      setPlantSensorData((prev) => prev);
     }
   }, []);
 
@@ -104,46 +114,70 @@ const Home = () => {
         groupedMotors[plantId].sort((a, b) => a.motor_working_order - b.motor_working_order);
       });
 
-      setPlantMotorData(groupedMotors);
+      setPlantMotorData((prev) => ({
+        ...prev,
+        ...groupedMotors,
+      }));
     } catch (error) {
       console.error("Unexpected error during motor API calls:", error.message);
-      setPlantMotorData({});
+      setPlantMotorData((prev) => prev);
     }
   }, []);
 
-  // Fetch initial data
-  const fetchInitialData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // Fetch initial data (supports single plant or all plants)
+  const fetchInitialData = useCallback(
+    async (plantId = null) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const response = await axios.get("https://water-pump.onrender.com/api/plants");
-      const plants = Array.isArray(response.data) ? response.data : [];
-      setPlantData(plants);
+      try {
+        let plants = [];
+        if (plantId) {
+          // Fetch single plant
+          const response = await axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`);
+          plants = Array.isArray(response.data) ? response.data : [response.data];
+        } else {
+          // Fetch all plants
+          const response = await axios.get("https://water-pump.onrender.com/api/plants");
+          plants = Array.isArray(response.data) ? response.data : [];
+        }
 
-      const simplifiedPlants = plants.map((plant) => ({
-        plant_id: plant.plant_id,
-        plant_name: plant.plant_name,
-      }));
+        setPlantData((prev) => {
+          const existingPlantIds = new Set(prev.map((p) => p.plant_id));
+          const newPlants = plants.filter((p) => !existingPlantIds.has(p.plant_id));
+          const updatedPlants = prev.map((p) =>
+            plants.find((newP) => newP.plant_id === p.plant_id) || p
+          );
+          return [...updatedPlants, ...newPlants];
+        });
 
-      await Promise.all([fetchSensorData(simplifiedPlants), fetchPlantMotorData(simplifiedPlants)]);
-    } catch (error) {
-      console.error("Error fetching initial data:", error.message);
-      setError(error.message);
-      setPlantData([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchSensorData, fetchPlantMotorData]);
+        const simplifiedPlants = plants.map((plant) => ({
+          plant_id: plant.plant_id,
+          plant_name: plant.plant_name,
+        }));
+
+        await Promise.all([fetchSensorData(simplifiedPlants), fetchPlantMotorData(simplifiedPlants)]);
+      } catch (error) {
+        console.error("Error fetching initial data:", error.message);
+        setError(error.message);
+        if (!plantId) setPlantData([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchSensorData, fetchPlantMotorData]
+  );
 
   // Initial data fetch on mount
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // Refresh data when sensorWaterPump changes
+  // Refresh data for specific plant when sensorWaterPump changes
   useEffect(() => {
-    fetchInitialData();
+    if (sensorWaterPump?.plant_id) {
+      fetchInitialData(sensorWaterPump.plant_id);
+    }
   }, [sensorWaterPump, fetchInitialData]);
 
   // Socket connection management for both servers
