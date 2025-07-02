@@ -16,6 +16,7 @@ function AddSensorAndMotor() {
   const [sensorForm, setSensorForm] = useState({
     sensorName: "",
     sensorType: "",
+    deviceType: "sensor", // New field for sensor/valve selection
   });
   const [sensors, setSensors] = useState([]);
   const [isSubmittingSensor, setIsSubmittingSensor] = useState(false);
@@ -208,6 +209,8 @@ function AddSensorAndMotor() {
         throw new Error("Sensor name is required");
       if (!sensorForm.sensorType.trim())
         throw new Error("Sensor type is required");
+      if (!sensorForm.deviceType)
+        throw new Error("Device type is required");
 
       const selectedSensorType = sensorTypes.find(
         (type) => type.sensor_type_name === sensorForm.sensorType.trim()
@@ -228,6 +231,7 @@ function AddSensorAndMotor() {
         const editSensorData = {
           sensor_name: sensorForm.sensorName.trim(),
           sensor_type_id: sensorTypeId,
+          device_type: sensorForm.deviceType,
         };
 
         try {
@@ -244,7 +248,7 @@ function AddSensorAndMotor() {
           console.log("Sensor updated successfully:", response);
 
           setSubmitSensorSuccess(true);
-          setSensorForm({ sensorName: "", sensorType: "" });
+          setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
           setEditingSensorId(null);
           await fetchSensors();
         } catch (error) {
@@ -257,6 +261,7 @@ function AddSensorAndMotor() {
         const sensorData = {
           sensor_name: sensorForm.sensorName.trim(),
           sensor_type_name: sensorForm.sensorType.trim(),
+          device_type: sensorForm.deviceType,
         };
 
         console.log("Creating sensor with data:", sensorData);
@@ -292,7 +297,7 @@ function AddSensorAndMotor() {
         }
 
         setSubmitSensorSuccess(true);
-        setSensorForm({ sensorName: "", sensorType: "" });
+        setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
         await fetchSensors();
       }
     } catch (error) {
@@ -311,6 +316,7 @@ function AddSensorAndMotor() {
     setSensorForm({
       sensorName: sensor.sensor_name || "",
       sensorType: sensor.sensor_type_name || "",
+      deviceType: sensor.device_type || "sensor",
     });
     setEditingSensorId(sensor.sensor_id);
 
@@ -321,7 +327,7 @@ function AddSensorAndMotor() {
   };
 
   const handleCancelEdit = () => {
-    setSensorForm({ sensorName: "", sensorType: "" });
+    setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
     setEditingSensorId(null);
     if (sensorNameInputRef.current) {
       sensorNameInputRef.current.blur();
@@ -332,7 +338,8 @@ function AddSensorAndMotor() {
   const filteredSensors = sensors.filter(
     (sensor) =>
       sensor.sensor_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sensor.sensor_type_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      sensor.sensor_type_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      sensor.device_type?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredSensors.length / sensorsPerPage);
@@ -363,13 +370,13 @@ function AddSensorAndMotor() {
         <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
           <div>
             <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
-              {editingSensorId ? "Edit Sensor" : "Add Sensor"}
+              {editingSensorId ? "Edit Sensor/Valve" : "Add Sensor/Valve"}
             </p>
             <div className="flex bg-gray-100 w-[148px] py-1 px-2 rounded-sm mb-[18px] items-center">
               <p>Home</p>
               <ChevronRight className="w-[20px] h-[20px] text-gray-500" />
               <p className="text-[#208CD4]">
-                {editingSensorId ? "Edit Sensor" : "Add Sensor"}
+                {editingSensorId ? "Edit Sensor/Valve" : "Add Sensor/Valve"}
               </p>
             </div>
           </div>
@@ -465,7 +472,7 @@ function AddSensorAndMotor() {
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div>
               <h1 className="text-2xl font-semibold text-gray-900 mb-8">
-                Sensor
+                Sensor/Valve
               </h1>
 
               {submitSensorSuccess && (
@@ -474,8 +481,8 @@ function AddSensorAndMotor() {
                     <div className="text-green-800">
                       <p className="text-sm font-medium">
                         {editingSensorId
-                          ? "Sensor updated successfully!"
-                          : "Sensor added successfully!"}
+                          ? "Sensor/Valve updated successfully!"
+                          : "Sensor/Valve added successfully!"}
                       </p>
                     </div>
                     <button
@@ -505,13 +512,13 @@ function AddSensorAndMotor() {
               )}
 
               <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   <div>
                     <label
                       htmlFor="sensorName"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Sensor Name
+                      Sensor/Valve Name
                     </label>
                     <input
                       type="text"
@@ -519,7 +526,7 @@ function AddSensorAndMotor() {
                       name="sensorName"
                       value={sensorForm.sensorName}
                       onChange={handleSensorChange}
-                      placeholder="Name of Sensor"
+                      placeholder="Name of Sensor/Valve"
                       className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                       ref={sensorNameInputRef}
                     />
@@ -551,6 +558,25 @@ function AddSensorAndMotor() {
                       ))}
                     </select>
                   </div>
+
+                  <div>
+                    <label
+                      htmlFor="deviceType"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Device Type
+                    </label>
+                    <select
+                      id="deviceType"
+                      name="deviceType"
+                      value={sensorForm.deviceType}
+                      onChange={handleSensorChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    >
+                      <option value="sensor">Sensor</option>
+                      <option value="valve">Valve</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="flex justify-end gap-4">
@@ -576,7 +602,7 @@ function AddSensorAndMotor() {
                     {isSubmittingSensor
                       ? "Saving..."
                       : editingSensorId
-                      ? "Update Sensor"
+                      ? "Update Sensor/Valve"
                       : "Save Changes"}
                   </button>
                 </div>
@@ -592,13 +618,13 @@ function AddSensorAndMotor() {
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
               <h2 className="text-2xl font-semibold text-gray-900">
-                Sensors List
+                Sensors/Valves List
               </h2>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search sensors..."
+                    placeholder="Search sensors/valves..."
                     value={searchQuery}
                     onChange={handleSearchChange}
                     className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -635,7 +661,7 @@ function AddSensorAndMotor() {
 
             {isLoadingSensors ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">Loading sensors...</p>
+                <p className="text-gray-500">Loading sensors/valves...</p>
               </div>
             ) : (
               <>
@@ -648,10 +674,13 @@ function AddSensorAndMotor() {
                           S/No
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
-                          Name of Sensor
+                          Name
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
                           Sensor Type
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                          Device Type
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
                           Actions
@@ -662,12 +691,12 @@ function AddSensorAndMotor() {
                       {paginatedSensors.length === 0 ? (
                         <tr>
                           <td
-                            colSpan="4"
+                            colSpan="5"
                             className="border border-gray-300 px-4 py-8 text-center text-gray-500"
                           >
                             {searchQuery
-                              ? "No sensors found matching your search."
-                              : "No sensors added yet."}
+                              ? "No sensors/valves found matching your search."
+                              : "No sensors/valves added yet."}
                           </td>
                         </tr>
                       ) : (
@@ -684,6 +713,9 @@ function AddSensorAndMotor() {
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                               {sensor.sensor_type_name}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                              {sensor.device_type}
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                               <button
@@ -705,8 +737,8 @@ function AddSensorAndMotor() {
                   {paginatedSensors.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
                       {searchQuery
-                        ? "No sensors found matching your search."
-                        : "No sensors added yet."}
+                        ? "No sensors/valves found matching your search."
+                        : "No sensors/valves added yet."}
                     </div>
                   ) : (
                     paginatedSensors.map((sensor, index) => (
@@ -739,6 +771,14 @@ function AddSensorAndMotor() {
                             </span>
                             <span className="text-gray-900">
                               {sensor.sensor_type_name}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-gray-500 font-medium">
+                              Device Type:
+                            </span>
+                            <span className="text-gray-900">
+                              {sensor.device_type}
                             </span>
                           </div>
                         </div>
