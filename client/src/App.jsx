@@ -10,6 +10,7 @@ import MyDevice from "./pages/MyDevice";
 import NewPlant from "./pages/NewPlant";
 import AddMotor from "./pages/AddMotor";
 import AddSensor from "./pages/AddSensor";
+import Topic from "./pages/Topic";
 
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
@@ -43,6 +44,8 @@ function App() {
             <Route path="/new-plant" element={<NewPlant />} />
             <Route path="/add-motor" element={<AddMotor />} />
             <Route path="/add-sensor" element={<AddSensor />} />
+            <Route path="/topic" element={<Topic />} />
+
             <Route path="/support" element={<Support />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/logout" element={<Logout />} />

@@ -10,6 +10,9 @@ import logout from "../images/logout.png";
 import icons8_plus_32 from "../images/icons8-plus-32.png";
 import technology from "../images/technology_15876046.png";
 import sensor from "../images/sensor_16704590.png";
+import topic from "../images/topic.png";
+
+
 
 function Sidebar() {
   const menuItems = [
@@ -22,7 +25,9 @@ function Sidebar() {
     { icon: headset, label: "Support", path: "/support" },
     { icon: technology, label: "Add Motor", path: "/add-motor" },
     { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
+    { icon: topic, label: "Add Topic", path: "/topic" },
 
+    
     { icon: passkey, label: "Change Password", path: "/change-password" },
     { icon: logout, label: "Logout", path: "/logout" },
 
