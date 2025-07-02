@@ -79,10 +79,6 @@ const loadPlantTopics = async () => {
 // MQTT Setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 let latestSensorData = {};
-console.log("hooo")
-console.log(latestSensorData)
-console.log("kjdslkfjs")
-
 
 // Subscribe to sensor topics from JSON
 const subscribeToSensorTopics = async () => {
@@ -130,15 +126,12 @@ mqttClient.on("message", async (topic, message) => {
 
     // Store sensor data with plantId
     latestSensorData[plantId] = data;
- const motoBoundData = {id:plantId,sensordata:latestSensorData}
-    console.log(motoBoundData)
+    const motoBoundData = { id: plantId, sensordata: data }; // Emit current plant data
+
     // Emit sensor data to frontend with plantId
-    io.emit("sensor_data", { motoBoundData });
+    io.emit("sensor_data", { data: motoBoundData });
 
     console.log(`Received data for plant ${plantId}:`, data);
-    console.log(latestSensorData)
-
-   
 
     // Check Residual Chlorine Level
     const residualCl = parseFloat(data.residual_chlorine_plant);
@@ -164,10 +157,7 @@ io.on("connection", (socket) => {
   console.log("Frontend connected:", socket.id);
 
   // Send all latest sensor data to the newly connected client
-  // Object.keys().forEach((plantId) => {
-    socket.emit("sensor_data", { data: motoBoundData });
-  //   console.log(plantId)
-  // });
+  socket.emit("sensor_data", { data: latestSensorData });
 
   socket.on("motor_control", async (data) => {
     const { command, plantId } = data;
@@ -213,6 +203,3 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-
