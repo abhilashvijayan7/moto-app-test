@@ -21,7 +21,7 @@ const Home = () => {
   const [motorStatus, setMotorStatus] = useState("OFF");
   const [motorNumber, setMotorNumber] = useState(1);
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
-  const [connectionStatusMoto, setConnectionStatusMoto] = useState("connected");
+  const [connectionStatusMoto, setConnectionStatusMoto] = useState({});
   const [connectionStatusWaterPump, setConnectionStatusWaterPump] = useState("connected");
   const [plantData, setPlantData] = useState([]);
   const [plantSensorData, setPlantSensorData] = useState([]);
@@ -124,11 +124,9 @@ const Home = () => {
       try {
         let plants = [];
         if (plantId) {
-          // Fetch single plant
           const response = await axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`);
           plants = Array.isArray(response.data) ? response.data : [response.data].filter(Boolean);
         } else {
-          // Fetch all plants
           setLoading(true);
           setError(null);
           const response = await axios.get("https://water-pump.onrender.com/api/plants");
@@ -136,20 +134,16 @@ const Home = () => {
         }
 
         if (plantId) {
-          // Update only the specific plant in plantData
           setPlantData((prev) => {
             const existingPlant = prev.find((p) => p.plant_id === plantId);
             if (existingPlant) {
-              // Update existing plant
               return prev.map((p) =>
                 p.plant_id === plantId ? { ...p, ...plants[0] } : p
               );
             }
-            // Add new plant if not found
             return [...prev, ...plants];
           });
         } else {
-          // Replace plantData for initial fetch
           setPlantData(plants);
         }
 
@@ -186,31 +180,50 @@ const Home = () => {
   useEffect(() => {
     let timeoutMoto, timeoutWaterPump;
 
-    const resetTimeout = (socketType, setConnectionStatus) => {
+    const resetTimeout = (socketType, setConnectionStatus, plantId) => {
       const timeout = socketType === "moto" ? timeoutMoto : timeoutWaterPump;
       if (timeout) clearTimeout(timeout);
-      setConnectionStatus("connected");
+      if (socketType === "moto" && plantId) {
+        setConnectionStatusMoto((prev) => ({ ...prev, [plantId]: "connected" }));
+      } else {
+        setConnectionStatusWaterPump("connected");
+      }
       if (
-        (socketType === "moto" ? sensorMoto : sensorWaterPump).plant_status === "IDLE" &&
+        (socketType === "moto" ? sensorMoto[plantId] : sensorWaterPump).plant_status === "IDLE" &&
         isButtonDisabled
       ) {
         setIsButtonDisabled(false);
       }
       const newTimeout = setTimeout(() => {
-        setConnectionStatus("Disconnected");
+        if (socketType === "moto" && plantId) {
+          setConnectionStatusMoto((prev) => ({ ...prev, [plantId]: "Disconnected" }));
+        } else {
+          setConnectionStatusWaterPump("Disconnected");
+        }
         setIsButtonDisabled(true);
       }, 10000);
       if (socketType === "moto") timeoutMoto = newTimeout;
       else timeoutWaterPump = newTimeout;
     };
 
-    const handleSensorDataMoto = (man) => {
-      console.log("Received sensor_data from moto-app-test:", JSON.stringify(man));
-      setSensorMoto(man);
-      resetTimeout("moto", setConnectionStatusMoto);
-      if (man.active_motor === 1 || man.active_motor === 2) {
-        setMotorNumber(man.active_motor);
+    const handleSensorDataMoto = (data) => {
+      console.log("Received sensor_data from moto-app-test:", JSON.stringify(data));
+      const plantId = data.data.id; // Assuming 'id' is the plant_id
+      setSensorMoto((prev) => ({
+        ...prev,
+        [plantId]: data.data.sensordata,
+      }));
+      // Update motor status based on received data
+      if (data.data.sensordata.motor1_status === "ON") {
+        setMotorNumber(1);
+        setMotorStatus("ON");
+      } else if (data.data.sensordata.motor2_status === "ON") {
+        setMotorNumber(2);
+        setMotorStatus("ON");
+      } else {
+        setMotorStatus("OFF");
       }
+      resetTimeout("moto", setConnectionStatusMoto, plantId);
     };
 
     const handleSensor = (data) => {
@@ -221,17 +234,21 @@ const Home = () => {
 
     const handleConnectMoto = () => {
       console.log("Connected to moto-app-test server");
-      resetTimeout("moto", setConnectionStatusMoto);
+      setConnectionStatusMoto(
+        plantData.reduce((acc, plant) => ({ ...acc, [plant.plant_id]: "Disconnected" }), {})
+      );
     };
 
     const handleConnectWaterPump = () => {
       console.log("Connected to water-pump server");
-      resetTimeout("water-pump", setConnectionStatusWaterPump);
+      setConnectionStatusWaterPump("connected");
     };
 
     const handleDisconnectMoto = () => {
       console.log("Disconnected from moto-app-test server");
-      setConnectionStatusMoto("Disconnected");
+      setConnectionStatusMoto(
+        plantData.reduce((acc, plant) => ({ ...acc, [plant.plant_id]: "Disconnected" }), {})
+      );
       setIsButtonDisabled(true);
     };
 
@@ -262,9 +279,6 @@ const Home = () => {
       console.log("Received test_connection_response from water-pump:", data);
     });
 
-    resetTimeout("moto", setConnectionStatusMoto);
-    resetTimeout("water-pump", setConnectionStatusWaterPump);
-
     return () => {
       socketMoto.off("sensor_data", handleSensorDataMoto);
       socketMoto.off("connect", handleConnectMoto);
@@ -279,7 +293,7 @@ const Home = () => {
       if (timeoutMoto) clearTimeout(timeoutMoto);
       if (timeoutWaterPump) clearTimeout(timeoutWaterPump);
     };
-  }, [sensorMoto, sensorWaterPump, isButtonDisabled]);
+  }, [sensorMoto, sensorWaterPump, isButtonDisabled, plantData]);
 
   // Memoize grouped sensors
   const groupedSensors = useMemo(() => {
@@ -296,7 +310,8 @@ const Home = () => {
   const togglePump = useCallback(() => {
     if (
       isButtonDisabled ||
-      (connectionStatusMoto === "Disconnected" && connectionStatusWaterPump === "Disconnected")
+      (Object.values(connectionStatusMoto).every((status) => status === "Disconnected") &&
+        connectionStatusWaterPump === "Disconnected")
     ) {
       return;
     }
@@ -329,20 +344,42 @@ const Home = () => {
     [motorNumber]
   );
 
-  // Combine sensor data (prioritize water-pump data if available)
-  const sensor = useMemo(() => {
-    return connectionStatusWaterPump === "connected" ? sensorWaterPump : sensorMoto;
-  }, [sensorMoto, sensorWaterPump, connectionStatusWaterPump]);
+  // Combine sensor data per plant
+  const getSensorForPlant = useCallback(
+    (plantId) => {
+      return connectionStatusWaterPump === "connected" && sensorWaterPump.plant_id === plantId
+        ? sensorWaterPump
+        : sensorMoto[plantId] || {};
+    },
+    [sensorMoto, sensorWaterPump, connectionStatusWaterPump]
+  );
 
-  const connectionStatus = useMemo(() => {
-    return connectionStatusWaterPump === "connected" || connectionStatusMoto === "connected"
-      ? "connected"
-      : "Disconnected";
-  }, [connectionStatusMoto, connectionStatusWaterPump]);
+  // Determine connection status per plant
+  const getConnectionStatusForPlant = useCallback(
+    (plantId) => {
+      return connectionStatusWaterPump === "connected" && sensorWaterPump.plant_id === plantId
+        ? "connected"
+        : connectionStatusMoto[plantId] || "Disconnected";
+    },
+    [connectionStatusMoto, connectionStatusWaterPump, sensorWaterPump]
+  );
 
-  const manualMode = sensor.manual_mode_active === 1 ? "Manual" : "Auto";
-  const displayedPlantStatus =
-    connectionStatus === "Disconnected" ? "Disconnected" : sensor.plant_status;
+  const getManualModeForPlant = useCallback(
+    (plantId) => {
+      const sensor = getSensorForPlant(plantId);
+      return sensor.manual_mode_active === 1 ? "Manual" : "Auto";
+    },
+    [getSensorForPlant]
+  );
+
+  const getDisplayedPlantStatus = useCallback(
+    (plantId) => {
+      const connectionStatus = getConnectionStatusForPlant(plantId);
+      const sensor = getSensorForPlant(plantId);
+      return connectionStatus === "Disconnected" ? "Disconnected" : sensor.plant_status || "NA";
+    },
+    [getSensorForPlant, getConnectionStatusForPlant]
+  );
 
   const getMotorByWorkingOrder = useCallback(
     (plantId, workingOrder) => {
@@ -362,6 +399,7 @@ const Home = () => {
   const calculateTotalRunTime = useCallback(
     (plantId) => {
       const motors = plantMotorData[plantId] || [];
+      const sensor = getSensorForPlant(plantId);
       let totalSessionRunTime = 0;
       let totalRunTime = 0;
 
@@ -378,7 +416,67 @@ const Home = () => {
         totalRunTime,
       };
     },
-    [sensor, plantMotorData]
+    [getSensorForPlant, plantMotorData]
+  );
+
+  // Map moto sensor data to plantSensorData format for UI consistency
+  const getMappedSensorsForPlant = useCallback(
+    (plantId) => {
+      const sensor = getSensorForPlant(plantId);
+      const connectionStatus = getConnectionStatusForPlant(plantId);
+      if (connectionStatus === "Disconnected") {
+        return [];
+      }
+
+      // Map moto-app-test sensor data to match plantSensorData structure
+      const sensorKeys = [
+        { sensor_key: "chlorine_gas_valve_status", sensor_name: "Chlorine Gas Valve" },
+        { sensor_key: "hocl_valve_status", sensor_name: "HOCl Valve" },
+        { sensor_key: "water_inlet_valve_status", sensor_name: "Water Inlet Valve" },
+        { sensor_key: "residual_chlorine_plant", sensor_name: "Residual Chlorine" },
+        { sensor_key: "water_level_meter", sensor_name: "Water Level" },
+        { sensor_key: "vacuum_switch_ok", sensor_name: "Vacuum Switch" },
+      ];
+
+      return sensorKeys
+        .filter((s) => sensor[s.sensor_key] !== undefined)
+        .map((s) => ({
+          plant_id: plantId,
+          sensor_key: s.sensor_key,
+          sensor_name: s.sensor_name,
+          is_sensor_enabled: true,
+          value: sensor[s.sensor_key],
+        }));
+    },
+    [getSensorForPlant, getConnectionStatusForPlant]
+  );
+
+  // Map motor data for UI consistency
+  const getMappedMotorsForPlant = useCallback(
+    (plantId) => {
+      const sensor = getSensorForPlant(plantId);
+      const connectionStatus = getConnectionStatusForPlant(plantId);
+      const motors = plantMotorData[plantId] || [];
+      if (connectionStatus === "Disconnected") {
+        return motors.map((motor) => ({
+          ...motor,
+          status: "NA",
+          session_run_time_sec: 0,
+          run_time_sec: 0,
+        }));
+      }
+
+      return motors.map((motor) => {
+        const motorNum = motor.motor_working_order;
+        return {
+          ...motor,
+          status: sensor[`motor${motorNum}_status`] || "NA",
+          session_run_time_sec: sensor[`motor${motorNum}_session_run_time_sec`] || 0,
+          run_time_sec: sensor[`motor${motorNum}_run_time_sec`] || 0,
+        };
+      });
+    },
+    [getSensorForPlant, getConnectionStatusForPlant, plantMotorData]
   );
 
   // Loading state
@@ -408,8 +506,12 @@ const Home = () => {
       <div className="flex-1 w-full">
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:py-[110px]">
           {plantData.map((plant, index) => {
-            const motors = plantMotorData[plant.plant_id] || [];
-            const plantSensors = groupedSensors[plant.plant_id] || [];
+            const plantSensors = getMappedSensorsForPlant(plant.plant_id);
+            const motors = getMappedMotorsForPlant(plant.plant_id);
+            const sensor = getSensorForPlant(plant.plant_id);
+            const connectionStatus = getConnectionStatusForPlant(plant.plant_id);
+            const manualMode = getManualModeForPlant(plant.plant_id);
+            const displayedPlantStatus = getDisplayedPlantStatus(plant.plant_id);
             const { totalSessionRunTime, totalRunTime } = calculateTotalRunTime(plant.plant_id);
 
             return (
@@ -516,20 +618,14 @@ const Home = () => {
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {motors.map((motor) => {
-                      const motorKey = `motor${motor.motor_working_order}_status`;
-                      const sessionRunTimeKey = `motor${motor.motor_working_order}_session_run_time_sec`;
-                      const runTimeKey = `motor${motor.motor_working_order}_run_time_sec`;
-                      const status =
-                        connectionStatus === "Disconnected"
-                          ? "NA"
-                          : sensor[motorKey] ?? "NA";
-                      const sessionTime = sensor[sessionRunTimeKey]
-                        ? new Date(sensor[sessionRunTimeKey] * 1000)
+                      const status = motor.status;
+                      const sessionTime = motor.session_run_time_sec
+                        ? new Date(motor.session_run_time_sec * 1000)
                             .toISOString()
                             .substr(11, 8)
                         : "NA";
-                      const cumulativeTime = sensor[runTimeKey]
-                        ? new Date(sensor[runTimeKey] * 1000)
+                      const cumulativeTime = motor.run_time_sec
+                        ? new Date(motor.run_time_sec * 1000)
                             .toISOString()
                             .substr(11, 8)
                         : "NA";
@@ -600,14 +696,14 @@ const Home = () => {
                           .map((apidata, index) => {
                             const isVacuumSwitch = apidata.sensor_key === "vacuum_switch_ok";
                             const sensorValue = isVacuumSwitch
-                              ? connectionStatus === "Disconnected" || sensor[apidata.sensor_key] == null
+                              ? connectionStatus === "Disconnected" || apidata.value == null
                                 ? "NA"
-                                : sensor[apidata.sensor_key] === 1
+                                : apidata.value === 1
                                 ? "OK"
                                 : "NOT OK"
-                              : connectionStatus === "Disconnected" || sensor[apidata.sensor_key] == null
+                              : connectionStatus === "Disconnected" || apidata.value == null
                               ? "NA"
-                              : sensor[apidata.sensor_key];
+                              : apidata.value;
 
                             return (
                               <div key={apidata.sensor_key || `sensor-${index}`}>
@@ -646,5 +742,3 @@ const Home = () => {
 };
 
 export default Home;
-
-// before test
