@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
@@ -7,6 +6,7 @@ const cors = require("cors");
 const mqtt = require("mqtt");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
+const fs = require("fs").promises; // Add fs for reading JSON file
 
 const app = express();
 const server = http.createServer(app);
@@ -63,54 +63,99 @@ app.get("/send-notification", async (req, res) => {
   }
 });
 
+// Read plant topics from JSON file
+const loadPlantTopics = async () => {
+  try {
+    const data = await fs.readFile("./topics.json", "utf8");
+    const topics = JSON.parse(data);
+    console.log("Loaded plant topics:", topics.plants);
+    return topics.plants;
+  } catch (error) {
+    console.error("Error reading topics.json:", error.message);
+    return [];
+  }
+};
+
 // MQTT Setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
-
-const SENSOR_TOPIC = "watertreatment1/plant1/data";
-const MOTOR_TOPIC = "watertreatment1/plant1/command";
-
 let latestSensorData = {};
+console.log("hooo")
+console.log(latestSensorData)
+console.log("kjdslkfjs")
 
-mqttClient.on("connect", () => {
-  console.log("Connected to MQTT broker");
-  mqttClient.subscribe(SENSOR_TOPIC, (err) => {
-    if (err) {
-      console.error("Error subscribing to topic:", err.message);
-    } else {
-      console.log("Subscribed to:", SENSOR_TOPIC);
-    }
+
+// Subscribe to sensor topics from JSON
+const subscribeToSensorTopics = async () => {
+  const plants = await loadPlantTopics();
+  if (!plants.length) {
+    console.error("No plant topics found, subscribing to default topic.");
+    mqttClient.subscribe("watertreatment1/plant1/data", (err) => {
+      if (err) {
+        console.error("Error subscribing to default topic:", err.message);
+      } else {
+        console.log("Subscribed to default topic: watertreatment1/plant1/data");
+      }
+    });
+    return;
+  }
+
+  plants.forEach((plant) => {
+    mqttClient.subscribe(plant.SENSOR_TOPIC, (err) => {
+      if (err) {
+        console.error(`Error subscribing to topic ${plant.SENSOR_TOPIC}:`, err.message);
+      } else {
+        console.log(`Subscribed to topic: ${plant.SENSOR_TOPIC}`);
+      }
+    });
   });
+};
+
+mqttClient.on("connect", async () => {
+  console.log("Connected to MQTT broker");
+  await subscribeToSensorTopics();
 });
 
 mqttClient.on("message", async (topic, message) => {
-  if (topic === SENSOR_TOPIC) {
-    try {
-      const data = JSON.parse(message.toString());
-      latestSensorData = data;
-const motorBoudData = {id:plantId,latestSensorData}
-console.log(motorBoudData)
-      io.emit("sensor_data", latestSensorData);
-
-      // console.log(latestSensorData)
-
-      // ✅ Check Residual Chlorine Level
-      const residualCl = parseFloat(data.residual_chlorine_plant);
-      if (!isNaN(residualCl) && residualCl > 5 && savedTokens.length > 0) {
-        const chlorineAlert = {
-          notification: {
-            title: "⚠️ High Chlorine Level Detected",
-            body: `Residual Cl (Plant): ${residualCl} ppm`,
-          },
-          tokens: savedTokens,
-        };
-
-        await admin.messaging().sendEachForMulticast(chlorineAlert);
-        console.log("🚨 Chlorine alert notification sent.");
-      }
-
-    } catch (e) {
-      console.error("Error parsing MQTT message", e);
+  try {
+    // Find plant by SENSOR_TOPIC
+    const plants = await loadPlantTopics();
+    const plant = plants.find((p) => p.SENSOR_TOPIC === topic);
+    if (!plant) {
+      console.warn(`No plant found for topic: ${topic}`);
+      return;
     }
+
+    const plantId = plant.plant_id;
+    const data = JSON.parse(message.toString());
+
+    // Store sensor data with plantId
+    latestSensorData[plantId] = data;
+ const motoBoundData = {id:plantId,sensordata:latestSensorData}
+    console.log(motoBoundData)
+    // Emit sensor data to frontend with plantId
+    io.emit("sensor_data", { motoBoundData });
+
+    console.log(`Received data for plant ${plantId}:`, data);
+    console.log(latestSensorData)
+
+   
+
+    // Check Residual Chlorine Level
+    const residualCl = parseFloat(data.residual_chlorine_plant);
+    if (!isNaN(residualCl) && residualCl > 5 && savedTokens.length > 0) {
+      const chlorineAlert = {
+        notification: {
+          title: `⚠️ High Chlorine Level Detected - Plant ${plantId}`,
+          body: `Residual Cl (Plant ${plantId}): ${residualCl} ppm`,
+        },
+        tokens: savedTokens,
+      };
+
+      await admin.messaging().sendEachForMulticast(chlorineAlert);
+      console.log(`🚨 Chlorine alert notification sent for plant ${plantId}.`);
+    }
+  } catch (e) {
+    console.error("Error parsing MQTT message:", e.message);
   }
 });
 
@@ -118,27 +163,42 @@ console.log(motorBoudData)
 io.on("connection", (socket) => {
   console.log("Frontend connected:", socket.id);
 
-  socket.emit("sensor_data", latestSensorData);
-        // console.log(latestSensorData)
+  // Send all latest sensor data to the newly connected client
+  // Object.keys().forEach((plantId) => {
+    socket.emit("sensor_data", { data: motoBoundData });
+  //   console.log(plantId)
+  // });
 
+  socket.on("motor_control", async (data) => {
+    const { command, plantId } = data;
 
-  socket.on("motor_control", (data) => {
-    const command = data.command;
+    if (!plantId) {
+      console.warn("No plantId provided in motor_control message.");
+      return;
+    }
 
     if (!mqttClient.connected) {
       console.warn("MQTT client not connected, cannot publish.");
       return;
     }
 
+    // Find MOTOR_TOPIC for the plantId
+    const plants = await loadPlantTopics();
+    const plant = plants.find((p) => p.plant_id.toString() === plantId.toString());
+    if (!plant) {
+      console.warn(`No MOTOR_TOPIC found for plantId: ${plantId}`);
+      return;
+    }
+
+    const motorTopic = plant.MOTOR_TOPIC;
     const payload = typeof command === "object" ? JSON.stringify(command) : String(command);
-    console.log(payload)
-console.log(MOTOR_TOPIC)
-    mqttClient.publish(MOTOR_TOPIC, payload, (err) => {
+
+    mqttClient.publish(motorTopic, payload, (err) => {
       if (err) {
-        console.error("Error publishing motor command:", err.message);
+        console.error(`Error publishing motor command to ${motorTopic}:`, err.message);
       } else {
-        console.log("Published motor command:", payload);
-        io.emit("motor_status_update", payload);
+        console.log(`Published motor command to ${motorTopic}:`, payload);
+        io.emit("motor_status_update", { plantId, command: payload });
       }
     });
   });
@@ -154,4 +214,5 @@ server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// before test
+
+
