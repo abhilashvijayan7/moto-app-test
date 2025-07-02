@@ -16,7 +16,9 @@ function AddSensorAndMotor() {
   const [sensorForm, setSensorForm] = useState({
     sensorName: "",
     sensorType: "",
-    deviceType: "sensor", // New field for sensor/valve selection
+    deviceType: "sensor",
+    onTime: "", // New field for valve on time
+    offTime: "", // New field for valve off time
   });
   const [sensors, setSensors] = useState([]);
   const [isSubmittingSensor, setIsSubmittingSensor] = useState(false);
@@ -211,6 +213,12 @@ function AddSensorAndMotor() {
         throw new Error("Sensor type is required");
       if (!sensorForm.deviceType)
         throw new Error("Device type is required");
+      if (sensorForm.deviceType === "valve") {
+        if (!sensorForm.onTime || isNaN(sensorForm.onTime) || sensorForm.onTime <= 0)
+          throw new Error("On time must be a positive number");
+        if (!sensorForm.offTime || isNaN(sensorForm.offTime) || sensorForm.offTime <= 0)
+          throw new Error("Off time must be a positive number");
+      }
 
       const selectedSensorType = sensorTypes.find(
         (type) => type.sensor_type_name === sensorForm.sensorType.trim()
@@ -232,6 +240,8 @@ function AddSensorAndMotor() {
           sensor_name: sensorForm.sensorName.trim(),
           sensor_type_id: sensorTypeId,
           device_type: sensorForm.deviceType,
+          on_time: sensorForm.deviceType === "valve" ? Number(sensorForm.onTime) : null,
+          off_time: sensorForm.deviceType === "valve" ? Number(sensorForm.offTime) : null,
         };
 
         try {
@@ -248,7 +258,7 @@ function AddSensorAndMotor() {
           console.log("Sensor updated successfully:", response);
 
           setSubmitSensorSuccess(true);
-          setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
+          setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor", onTime: "", offTime: "" });
           setEditingSensorId(null);
           await fetchSensors();
         } catch (error) {
@@ -262,6 +272,8 @@ function AddSensorAndMotor() {
           sensor_name: sensorForm.sensorName.trim(),
           sensor_type_name: sensorForm.sensorType.trim(),
           device_type: sensorForm.deviceType,
+          on_time: sensorForm.deviceType === "valve" ? Number(sensorForm.onTime) : null,
+          off_time: sensorForm.deviceType === "valve" ? Number(sensorForm.offTime) : null,
         };
 
         console.log("Creating sensor with data:", sensorData);
@@ -297,7 +309,7 @@ function AddSensorAndMotor() {
         }
 
         setSubmitSensorSuccess(true);
-        setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
+        setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor", onTime: "", offTime: "" });
         await fetchSensors();
       }
     } catch (error) {
@@ -317,6 +329,8 @@ function AddSensorAndMotor() {
       sensorName: sensor.sensor_name || "",
       sensorType: sensor.sensor_type_name || "",
       deviceType: sensor.device_type || "sensor",
+      onTime: sensor.on_time || "",
+      offTime: sensor.off_time || "",
     });
     setEditingSensorId(sensor.sensor_id);
 
@@ -327,7 +341,7 @@ function AddSensorAndMotor() {
   };
 
   const handleCancelEdit = () => {
-    setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
+    setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor", onTime: "", offTime: "" });
     setEditingSensorId(null);
     if (sensorNameInputRef.current) {
       sensorNameInputRef.current.blur();
@@ -577,6 +591,47 @@ function AddSensorAndMotor() {
                       <option value="valve">Valve</option>
                     </select>
                   </div>
+
+                  {sensorForm.deviceType === "valve" && (
+                    <>
+                      <div>
+                        <label
+                          htmlFor="onTime"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          On Time (seconds)
+                        </label>
+                        <input
+                          type="number"
+                          id="onTime"
+                          name="onTime"
+                          value={sensorForm.onTime}
+                          onChange={handleSensorChange}
+                          placeholder="Enter On Time"
+                          min="0"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="offTime"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
+                          Off Time (seconds)
+                        </label>
+                        <input
+                          type="number"
+                          id="offTime"
+                          name="offTime"
+                          value={sensorForm.offTime}
+                          onChange={handleSensorChange}
+                          placeholder="Enter Off Time"
+                          min="0"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-4">
@@ -683,6 +738,12 @@ function AddSensorAndMotor() {
                           Device Type
                         </th>
                         <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                          On Time
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                          Off Time
+                        </th>
+                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
                           Actions
                         </th>
                       </tr>
@@ -691,7 +752,7 @@ function AddSensorAndMotor() {
                       {paginatedSensors.length === 0 ? (
                         <tr>
                           <td
-                            colSpan="5"
+                            colSpan="7"
                             className="border border-gray-300 px-4 py-8 text-center text-gray-500"
                           >
                             {searchQuery
@@ -716,6 +777,12 @@ function AddSensorAndMotor() {
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                               {sensor.device_type}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                              {sensor.on_time ? `${sensor.on_time} sec` : '-'}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                              {sensor.off_time ? `${sensor.off_time} sec` : '-'}
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                               <button
@@ -779,6 +846,22 @@ function AddSensorAndMotor() {
                             </span>
                             <span className="text-gray-900">
                               {sensor.device_type}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-gray-500 font-medium">
+                              On Time:
+                            </span>
+                            <span className="text-gray-900">
+                              {sensor.on_time ? `${sensor.on_time} sec` : '-'}
+                            </span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-gray-500 font-medium">
+                              Off Time:
+                            </span>
+                            <span className="text-gray-900">
+                              {sensor.off_time ? `${sensor.off_time} sec` : '-'}
                             </span>
                           </div>
                         </div>
