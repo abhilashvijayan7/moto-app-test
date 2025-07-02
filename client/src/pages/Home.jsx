@@ -204,12 +204,12 @@ const Home = () => {
       else timeoutWaterPump = newTimeout;
     };
 
-    const handleSensorDataMoto = (data) => {
-      console.log("Received sensor_data from moto-app-test:", JSON.stringify(data, null, 2));
-      setSensorMoto(data);
+    const handleSensorDataMoto = (man) => {
+      console.log("Received sensor_data from moto-app-test:", JSON.stringify(man));
+      setSensorMoto(man);
       resetTimeout("moto", setConnectionStatusMoto);
-      if (data.active_motor === 1 || data.active_motor === 2) {
-        setMotorNumber(data.active_motor);
+      if (man.active_motor === 1 || man.active_motor === 2) {
+        setMotorNumber(man.active_motor);
       }
     };
 

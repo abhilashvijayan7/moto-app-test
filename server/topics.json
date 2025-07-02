@@ -1,0 +1,29 @@
+{
+  "plants": [
+    {
+      "plant_id": 12,
+      "SENSOR_TOPIC": "watertreatment1/12/data",
+      "MOTOR_TOPIC": "watertreatment1/12/command"
+    },
+    {
+      "plant_id": 13,
+      "SENSOR_TOPIC": "watertreatment1/13/data",
+      "MOTOR_TOPIC": "watertreatment1/13/command"
+    },
+    {
+      "plant_id": 14,
+      "SENSOR_TOPIC": "watertreatment1/14/data",
+      "MOTOR_TOPIC": "watertreatment1/14/command"
+    },
+    {
+      "plant_id": 15,
+      "SENSOR_TOPIC": "watertreatment1/plant1/data",
+      "MOTOR_TOPIC": "watertreatment1/plant1/command"
+    },
+    {
+      "plant_id": 16,
+      "SENSOR_TOPIC": "watertreatment1/16/data",
+      "MOTOR_TOPIC": "watertreatment1/16/command"
+    }
+  ]
+}
