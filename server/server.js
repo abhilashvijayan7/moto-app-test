@@ -87,9 +87,10 @@ mqttClient.on("message", async (topic, message) => {
     try {
       const data = JSON.parse(message.toString());
       latestSensorData = data;
+const motorBoudData = {id:plantId,latestSensorData}
+console.log(motorBoudData)
+      io.emit("sensor_data", latestSensorData);
 
-      // io.emit("sensor_data", latestSensorData);
-// new edit
       // console.log(latestSensorData)
 
       // ✅ Check Residual Chlorine Level
@@ -116,9 +117,8 @@ mqttClient.on("message", async (topic, message) => {
 // Socket.IO Connection
 io.on("connection", (socket) => {
   console.log("Frontend connected:", socket.id);
-const motorBoudData = {id:plantId,latestSensorData}
-console.log(motorBoudData)
-  socket.emit("sensor_data", motorBoudData);
+
+  socket.emit("sensor_data", latestSensorData);
         // console.log(latestSensorData)
 
 
