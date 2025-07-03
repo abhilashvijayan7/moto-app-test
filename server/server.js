@@ -6,7 +6,7 @@ const cors = require("cors");
 const mqtt = require("mqtt");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
-const fs = require("fs").promises; // Add fs for reading JSON file
+const fs = require("fs").promises;
 
 const app = express();
 const server = http.createServer(app);
@@ -113,7 +113,6 @@ mqttClient.on("connect", async () => {
 
 mqttClient.on("message", async (topic, message) => {
   try {
-    // Find plant by SENSOR_TOPIC
     const plants = await loadPlantTopics();
     const plant = plants.find((p) => p.SENSOR_TOPIC === topic);
     if (!plant) {
@@ -124,16 +123,13 @@ mqttClient.on("message", async (topic, message) => {
     const plantId = plant.plant_id;
     const data = JSON.parse(message.toString());
 
-    // Store sensor data with plantId
     latestSensorData[plantId] = data;
-    const motoBoundData = { id: plantId, sensordata: data }; // Emit current plant data
+    const motoBoundData = { id: plantId, sensordata: data };
 
-    // Emit sensor data to frontend with plantId
     io.emit("sensor_data", { data: motoBoundData });
 
     console.log(`Received data for plant ${plantId}:`, data);
 
-    // Check Residual Chlorine Level
     const residualCl = parseFloat(data.residual_chlorine_plant);
     if (!isNaN(residualCl) && residualCl > 5 && savedTokens.length > 0) {
       const chlorineAlert = {
@@ -156,39 +152,41 @@ mqttClient.on("message", async (topic, message) => {
 io.on("connection", (socket) => {
   console.log("Frontend connected:", socket.id);
 
-  // Send all latest sensor data to the newly connected client
   socket.emit("sensor_data", { data: latestSensorData });
 
   socket.on("motor_control", async (data) => {
-
-    console.log(data)
+    console.log("Received motor_control:", data);
     const { command, plantId } = data;
 
     if (!plantId) {
       console.warn("No plantId provided in motor_control message.");
-      return;
+      return socket.emit("error", { message: "plantId is required" });
+    }
+
+    if (!["ON", "OFF"].includes(command)) {
+      console.warn(`Invalid command received: ${command}`);
+      return socket.emit("error", { message: "Invalid command. Use 'ON' or 'OFF'" });
     }
 
     if (!mqttClient.connected) {
       console.warn("MQTT client not connected, cannot publish.");
-      return;
+      return socket.emit("error", { message: "MQTT client not connected" });
     }
 
-    // Find MOTOR_TOPIC for the plantId
     const plants = await loadPlantTopics();
     const plant = plants.find((p) => p.plant_id.toString() === plantId.toString());
     if (!plant) {
       console.warn(`No MOTOR_TOPIC found for plantId: ${plantId}`);
-      return;
+      return socket.emit("error", { message: `No plant found for plantId: ${plantId}` });
     }
 
     const motorTopic = plant.MOTOR_TOPIC;
-    const payload = typeof command === "object" ? JSON.stringify(command) : String(command);
+    const payload = String(command);
 
     mqttClient.publish(motorTopic, payload, (err) => {
-      console.log(payload)
       if (err) {
         console.error(`Error publishing motor command to ${motorTopic}:`, err.message);
+        socket.emit("error", { message: `Failed to publish command to ${motorTopic}` });
       } else {
         console.log(`Published motor command to ${motorTopic}:`, payload);
         io.emit("motor_status_update", { plantId, command: payload });
