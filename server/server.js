@@ -130,6 +130,24 @@ mqttClient.on("message", async (topic, message) => {
 
     console.log(`Received data for plant ${plantId}:`, data);
 
+    // Broadcast motor status update based on sensor data
+    let motorStatus = "OFF";
+    let motorNumber = 1;
+    if (data.motor1_status === "ON") {
+      motorStatus = "ON";
+      motorNumber = 1;
+    } else if (data.motor2_status === "ON") {
+      motorStatus = "ON";
+      motorNumber = 2;
+    }
+
+    io.emit("motor_status_update", {
+      plantId,
+      command: motorStatus,
+      motorNumber,
+      timestamp: Date.now(),
+    });
+
     const residualCl = parseFloat(data.residual_chlorine_plant);
     if (!isNaN(residualCl) && residualCl > 5 && savedTokens.length > 0) {
       const chlorineAlert = {
@@ -183,13 +201,17 @@ io.on("connection", (socket) => {
     const motorTopic = plant.MOTOR_TOPIC;
     const payload = String(command);
 
-    mqttClient.publish(motorTopic, payload, (err) => {
+    mqttClient.publish(motorTopic, payload, { qos: 1 }, (err) => {
       if (err) {
         console.error(`Error publishing motor command to ${motorTopic}:`, err.message);
         socket.emit("error", { message: `Failed to publish command to ${motorTopic}` });
       } else {
         console.log(`Published motor command to ${motorTopic}:`, payload);
-        io.emit("motor_status_update", { plantId, command: payload });
+        io.emit("motor_status_update", {
+          plantId,
+          command: payload,
+          timestamp: Date.now(),
+        });
       }
     });
   });
@@ -204,3 +226,5 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// after change

@@ -18,8 +18,8 @@ const socketWaterPump = io("https://water-pump.onrender.com", {
 const Home = () => {
   const [sensorMoto, setSensorMoto] = useState({});
   const [sensorWaterPump, setSensorWaterPump] = useState({});
-  const [motorStatuses, setMotorStatuses] = useState({}); // Plant-specific motor statuses
-  const [motorNumbers, setMotorNumbers] = useState({}); // Plant-specific motor numbers
+  const [motorStatuses, setMotorStatuses] = useState({});
+  const [motorNumbers, setMotorNumbers] = useState({});
   const [isButtonDisabled, setIsButtonDisabled] = useState({});
   const [connectionStatusMoto, setConnectionStatusMoto] = useState({});
   const [connectionStatusWaterPump, setConnectionStatusWaterPump] = useState("connected");
@@ -196,9 +196,18 @@ const Home = () => {
     }, {});
   }, [plantSensorData]);
 
+  // Debounce utility to prevent rapid clicks
+  const debounce = (func, wait) => {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
   // Toggle pump for a specific plant
   const togglePump = useCallback(
-    (plantId) => {
+    debounce((plantId) => {
       console.log("toggle pump for plant:", plantId);
       const sensor = getSensorForPlant(plantId);
       const plantStatus = sensor.plant_status;
@@ -225,7 +234,7 @@ const Home = () => {
       setTimeout(() => {
         setIsButtonDisabled((prev) => ({ ...prev, [plantId]: false }));
       }, 1000);
-    },
+    }, 500),
     [isButtonDisabled, motorStatuses, getSensorForPlant, getConnectionStatusForPlant]
   );
 
@@ -467,7 +476,11 @@ const Home = () => {
       );
     };
 
-    // Handle motor status updates from backend
+    const handleError = (data) => {
+      console.error("Server error:", data.message);
+      setError(data.message);
+    };
+
     socketMoto.on("motor_status_update", (data) => {
       const { plantId, command } = data;
       console.log(`Received motor_status_update for plant ${plantId}: ${command}`);
@@ -479,6 +492,9 @@ const Home = () => {
       console.log(`Received motor_status_update for plant ${plantId}: ${command}`);
       setMotorStatuses((prev) => ({ ...prev, [plantId]: command }));
     });
+
+    socketMoto.on("error", handleError);
+    socketWaterPump.on("error", handleError);
 
     socketMoto.on("sensor_data", handleSensorDataMoto);
     socketMoto.on("connect", handleConnectMoto);
@@ -500,6 +516,7 @@ const Home = () => {
       socketMoto.off("connect", handleConnectMoto);
       socketMoto.off("disconnect", handleDisconnectMoto);
       socketMoto.off("motor_status_update");
+      socketMoto.off("error", handleError);
 
       socketWaterPump.off("plant_sensor_updated", handleSensor);
       socketWaterPump.off("connect", handleConnectWaterPump);
@@ -507,6 +524,7 @@ const Home = () => {
       socketWaterPump.off("connect_error", handleConnectErrorWaterPump);
       socketWaterPump.off("test_connection_response");
       socketWaterPump.off("motor_status_update");
+      socketWaterPump.off("error", handleError);
 
       if (timeoutMoto) clearTimeout(timeoutMoto);
       if (timeoutWaterPump) clearTimeout(timeoutWaterPump);
@@ -805,3 +823,5 @@ const Home = () => {
 };
 
 export default Home;
+
+// after change
