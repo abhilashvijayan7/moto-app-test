@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import icon from "../images/Icon.png";
@@ -27,7 +27,8 @@ const Home = () => {
   const [plantSensorData, setPlantSensorData] = useState([]);
   const [plantMotorData, setPlantMotorData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState({}); // Plant-specific errors
+  const lastUpdateTimes = useRef({}); // Track last update timestamp per plant
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -49,6 +50,7 @@ const Home = () => {
           .get(`https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`)
           .catch((error) => {
             console.error(`Error fetching sensor data for plant ${plant.plant_id}:`, error.message);
+            setError((prev) => ({ ...prev, [plant.plant_id]: `Failed to fetch sensor data: ${error.message}` }));
             return null;
           })
       );
@@ -80,6 +82,7 @@ const Home = () => {
           .get(`https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`)
           .catch((error) => {
             console.error(`Error fetching motor data for plant ${plant.plant_id}:`, error.message);
+            setError((prev) => ({ ...prev, [plant.plant_id]: `Failed to fetch motor data: ${error.message}` }));
             return null;
           })
       );
@@ -128,7 +131,7 @@ const Home = () => {
           plants = Array.isArray(response.data) ? response.data : [response.data].filter(Boolean);
         } else {
           setLoading(true);
-          setError(null);
+          setError({});
           const response = await axios.get("https://water-pump.onrender.com/api/plants");
           plants = Array.isArray(response.data) ? response.data : [];
         }
@@ -155,7 +158,7 @@ const Home = () => {
         await Promise.all([fetchSensorData(simplifiedPlants), fetchPlantMotorData(simplifiedPlants)]);
       } catch (error) {
         console.error("Error fetching initial data:", error.message);
-        setError(error.message);
+        setError((prev) => ({ ...prev, global: `Failed to fetch plant data: ${error.message}` }));
         if (!plantId) setPlantData([]);
       } finally {
         if (!plantId) setLoading(false);
@@ -208,7 +211,7 @@ const Home = () => {
   // Toggle pump for a specific plant
   const togglePump = useCallback(
     debounce((plantId) => {
-      console.log("toggle pump for plant:", plantId);
+      console.log(`Button clicked for plant_id: ${plantId}`);
       const sensor = getSensorForPlant(plantId);
       const plantStatus = sensor.plant_status;
       const connectionStatus = getConnectionStatusForPlant(plantId);
@@ -218,18 +221,23 @@ const Home = () => {
         connectionStatus === "Disconnected" ||
         (plantStatus !== "IDLE" && plantStatus !== "RUNNING")
       ) {
+        setError((prev) => ({
+          ...prev,
+          [plantId]: `Cannot toggle: ${connectionStatus === "Disconnected" ? "Disconnected" : "Invalid plant status"}`,
+        }));
         return;
       }
 
       const newStatus = motorStatuses[plantId] === "ON" ? "OFF" : "ON";
 
-      console.log(`Toggling motor for plant ${plantId} to ${newStatus}`);
+      console.log(`Sending motor_control for plant ${plantId} to ${newStatus}`);
       socketMoto.emit("motor_control", { command: newStatus, plantId });
       socketWaterPump.emit("motor_control", { command: newStatus, plantId });
-      console.log("Motor command sent to both servers:", { command: newStatus, plantId });
 
+      // Optimistically update UI
       setMotorStatuses((prev) => ({ ...prev, [plantId]: newStatus }));
       setIsButtonDisabled((prev) => ({ ...prev, [plantId]: true }));
+      setError((prev) => ({ ...prev, [plantId]: null })); // Clear error
 
       setTimeout(() => {
         setIsButtonDisabled((prev) => ({ ...prev, [plantId]: false }));
@@ -478,28 +486,29 @@ const Home = () => {
 
     const handleError = (data) => {
       console.error("Server error:", data.message);
-      setError(data.message);
+      const plantIdMatch = data.message.match(/plantId: (\w+)/);
+      const plantId = plantIdMatch ? plantIdMatch[1] : "global";
+      setError((prev) => ({ ...prev, [plantId]: data.message }));
     };
 
-    socketMoto.on("motor_status_update", (data) => {
-      const { plantId, command } = data;
-      console.log(`Received motor_status_update for plant ${plantId}: ${command}`);
-      setMotorStatuses((prev) => ({ ...prev, [plantId]: command }));
-    });
+    const handleMotorStatusUpdate = (data) => {
+      const { plantId, command, timestamp } = data;
+      console.log(`Received motor_status_update for plant ${plantId}: ${command} at ${timestamp}`);
+      if (!lastUpdateTimes.current[plantId] || timestamp >= lastUpdateTimes.current[plantId]) {
+        setMotorStatuses((prev) => ({ ...prev, [plantId]: command }));
+        lastUpdateTimes.current[plantId] = timestamp;
+      } else {
+        console.log(`Ignoring outdated motor_status_update for plant ${plantId} with timestamp ${timestamp}`);
+      }
+    };
 
-    socketWaterPump.on("motor_status_update", (data) => {
-      const { plantId, command } = data;
-      console.log(`Received motor_status_update for plant ${plantId}: ${command}`);
-      setMotorStatuses((prev) => ({ ...prev, [plantId]: command }));
-    });
-
+    socketMoto.on("motor_status_update", handleMotorStatusUpdate);
+    socketWaterPump.on("motor_status_update", handleMotorStatusUpdate);
     socketMoto.on("error", handleError);
     socketWaterPump.on("error", handleError);
-
     socketMoto.on("sensor_data", handleSensorDataMoto);
     socketMoto.on("connect", handleConnectMoto);
     socketMoto.on("disconnect", handleDisconnectMoto);
-
     socketWaterPump.on("plant_sensor_updated", handleSensor);
     socketWaterPump.on("connect", handleConnectWaterPump);
     socketWaterPump.on("disconnect", handleDisconnectWaterPump);
@@ -515,7 +524,7 @@ const Home = () => {
       socketMoto.off("sensor_data", handleSensorDataMoto);
       socketMoto.off("connect", handleConnectMoto);
       socketMoto.off("disconnect", handleDisconnectMoto);
-      socketMoto.off("motor_status_update");
+      socketMoto.off("motor_status_update", handleMotorStatusUpdate);
       socketMoto.off("error", handleError);
 
       socketWaterPump.off("plant_sensor_updated", handleSensor);
@@ -523,7 +532,7 @@ const Home = () => {
       socketWaterPump.off("disconnect", handleDisconnectWaterPump);
       socketWaterPump.off("connect_error", handleConnectErrorWaterPump);
       socketWaterPump.off("test_connection_response");
-      socketWaterPump.off("motor_status_update");
+      socketWaterPump.off("motor_status_update", handleMotorStatusUpdate);
       socketWaterPump.off("error", handleError);
 
       if (timeoutMoto) clearTimeout(timeoutMoto);
@@ -569,12 +578,12 @@ const Home = () => {
     );
   }
 
-  // Error state
-  if (error) {
+  // Global error state
+  if (error.global) {
     return (
       <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
         <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-red-500">Error: {error}</div>
+          <div className="text-lg text-red-500">Error: {error.global}</div>
         </div>
       </div>
     );
@@ -604,20 +613,26 @@ const Home = () => {
                   <p className="text-[#4E4D4D] text-[17px] font-[700] max-w-[70%] overflow-wrap-break-word">
                     {plant.plant_name || "Unknown Plant"}
                   </p>
-                  <button
-                    onClick={() => togglePump(plant.plant_id)}
-                    disabled={isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"}
-                    className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
-                      isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"
-                        ? "bg-[#DADADA] cursor-not-allowed"
-                        : currentMotorStatus === "ON"
-                        ? "bg-[#EF5350]"
-                        : "bg-[#66BB6A]"
-                    }`}
-                  >
-                    <img src={icon} alt="Icon" className="w-[20px] h-[20px]" />
-                    {currentMotorStatus === "ON" ? "STOP" : "START"}
-                  </button>
+                  <div className="flex flex-col items-center">
+                    <button
+                      id={plant.plant_id} // Set button ID to plant_id
+                      onClick={() => togglePump(plant.plant_id)}
+                      disabled={isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"}
+                      className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
+                        isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"
+                          ? "bg-[#DADADA] cursor-not-allowed"
+                          : currentMotorStatus === "ON"
+                          ? "bg-[#EF5350]"
+                          : "bg-[#66BB6A]"
+                      }`}
+                    >
+                      <img src={icon} alt="Icon" className="w-[20px] h-[20px]" />
+                      {currentMotorStatus === "ON" ? "STOP" : "START"}
+                    </button>
+                    {error[plant.plant_id] && (
+                      <p className="text-red-500 text-sm mt-2">{error[plant.plant_id]}</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Connection, Status, and Mode */}
@@ -823,5 +838,3 @@ const Home = () => {
 };
 
 export default Home;
-
-// after change
