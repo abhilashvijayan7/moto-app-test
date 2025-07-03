@@ -90,7 +90,10 @@ const Home = () => {
       const motorResponses = await Promise.all(motorApiPromises);
       const motorData = motorResponses
         .filter((response) => response !== null)
-        .map((response) => (Array.isArray(response.data) ? response.data : []))
+        .map((response) => {
+          console.log(`Motor API response for plant ${response.config.url}:`, response.data);
+          return Array.isArray(response.data) ? response.data : [];
+        })
         .flat();
 
       const groupedMotors = motorData.reduce((acc, motor) => {
@@ -109,6 +112,7 @@ const Home = () => {
 
       Object.keys(groupedMotors).forEach((plantId) => {
         groupedMotors[plantId].sort((a, b) => a.motor_working_order - b.motor_working_order);
+        console.log(`Sorted motors for plant ${plantId}:`, groupedMotors[plantId]);
       });
 
       setPlantMotorData((prev) => ({
@@ -228,7 +232,7 @@ const Home = () => {
     socketWaterPump.emit("motor_control", { command: newStatus, plantId });
 
     // Update timestamp to track the command
-    lastUpdateTimes.current[plantId] = Date.now();
+    lastUpdate267Times.current[plantId] = Date.now();
   }, [motorStatuses, getSensorForPlant, getConnectionStatusForPlant]);
 
   // Memoize motor status keys
@@ -291,6 +295,8 @@ const Home = () => {
         const sessionKey = `motor${motorNum}_session_run_time_sec`;
         const runTimeKey = `motor${motorNum}_run_time_sec`;
         totalSessionRunTime += sensor[sessionKey] || 0;
+
+
         totalRunTime += sensor[runTimeKey] || 0;
       });
 
@@ -302,35 +308,42 @@ const Home = () => {
     [getSensorForPlant, plantMotorData]
   );
 
-  // Map moto sensor data to plantSensorData format for UI consistency
+  // Map sensors for a plant, showing only active sensors specific to the plant
   const getMappedSensorsForPlant = useCallback(
     (plantId) => {
       const sensor = getSensorForPlant(plantId);
       const connectionStatus = getConnectionStatusForPlant(plantId);
-      if (connectionStatus === "Disconnected") {
+      const plantSensors = groupedSensors[plantId] || [];
+
+      // If no sensor data is available for the plant, return an empty array to avoid rendering
+      if (!plantSensors.length) {
         return [];
       }
 
-      const sensorKeys = [
-        { sensor_key: "chlorine_gas_valve_status", sensor_name: "Chlorine Gas Valve" },
-        { sensor_key: "hocl_valve_status", sensor_name: "HOCl Valve" },
-        { sensor_key: "water_inlet_valve_status", sensor_name: "Water Inlet Valve" },
-        { sensor_key: "residual_chlorine_plant", sensor_name: "Residual Chlorine" },
-        { sensor_key: "water_level_meter", sensor_name: "Water Level" },
-        { sensor_key: "vacuum_switch_ok", sensor_name: "Vacuum Switch" },
-      ];
+      // Use active sensors from plantSensorData (filtered by is_sensor_enabled)
+      const activeSensors = plantSensors.filter((s) => s.is_sensor_enabled === true);
 
-      return sensorKeys
-        .filter((s) => sensor[s.sensor_key] !== undefined)
-        .map((s) => ({
+      // If disconnected, return active sensors with "NA" values
+      if (connectionStatus === "Disconnected") {
+        return activeSensors.map((s) => ({
           plant_id: plantId,
           sensor_key: s.sensor_key,
           sensor_name: s.sensor_name,
-          is_sensor_enabled: true,
-          value: sensor[s.sensor_key],
+          is_sensor_enabled: s.is_sensor_enabled,
+          value: "NA",
         }));
+      }
+
+      // Map active sensors, using real-time data if available, falling back to "NA"
+      return activeSensors.map((s) => ({
+        plant_id: plantId,
+        sensor_key: s.sensor_key,
+        sensor_name: s.sensor_name,
+        is_sensor_enabled: s.is_sensor_enabled,
+        value: sensor[s.sensor_key] !== undefined ? sensor[s.sensor_key] : s.value !== undefined ? s.value : "NA",
+      }));
     },
-    [getSensorForPlant, getConnectionStatusForPlant]
+    [getSensorForPlant, getConnectionStatusForPlant, groupedSensors]
   );
 
   // Map motor data for UI consistency
@@ -339,6 +352,14 @@ const Home = () => {
       const sensor = getSensorForPlant(plantId);
       const connectionStatus = getConnectionStatusForPlant(plantId);
       const motors = plantMotorData[plantId] || [];
+
+      // If no motors are available for the plant, return an empty array
+      if (!motors.length) {
+        console.log(`No motors available for plant ${plantId}`);
+        return [];
+      }
+
+      // If disconnected, return motors with "NA" status and zero times
       if (connectionStatus === "Disconnected") {
         return motors.map((motor) => ({
           ...motor,
@@ -348,13 +369,14 @@ const Home = () => {
         }));
       }
 
+      // Map available motors with real-time data or "NA" for missing values
       return motors.map((motor) => {
         const motorNum = motor.motor_working_order;
         return {
           ...motor,
-          status: sensor[`motor${motorNum}_status`] || "NA",
-          session_run_time_sec: sensor[`motor${motorNum}_session_run_time_sec`] || 0,
-          run_time_sec: sensor[`motor${motorNum}_run_time_sec`] || 0,
+          status: sensor[`motor${motorNum}_status`] !== undefined ? sensor[`motor${motorNum}_status`] : "NA",
+          session_run_time_sec: sensor[`motor${motorNum}_session_run_time_sec`] !== undefined ? sensor[`motor${motorNum}_session_run_time_sec`] : 0,
+          run_time_sec: sensor[`motor${motorNum}_run_time_sec`] !== undefined ? sensor[`motor${motorNum}_run_time_sec`] : 0,
         };
       });
     },
@@ -647,7 +669,7 @@ const Home = () => {
                   </p>
                   <div className="flex flex-col items-center">
                     <button
-                      id={plant.plant_id} // Set button ID to plant_id
+                      id={plant.plant_id}
                       onClick={() => togglePump(plant.plant_id)}
                       disabled={isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"}
                       className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
@@ -745,70 +767,78 @@ const Home = () => {
                     Motor & Power
                   </p>
                   <div className="grid grid-cols-2 gap-2">
-                    {motors.map((motor) => {
-                      const status = motor.status;
-                      const sessionTime = motor.session_run_time_sec
-                        ? new Date(motor.session_run_time_sec * 1000)
-                            .toISOString()
-                            .substr(11, 8)
-                        : "NA";
-                      const cumulativeTime = motor.run_time_sec
-                        ? new Date(motor.run_time_sec * 1000)
-                            .toISOString()
-                            .substr(11, 8)
-                        : "NA";
+                    {motors.length > 0 ? (
+                      motors.map((motor) => {
+                        const status = motor.status;
+                        const sessionTime = motor.session_run_time_sec
+                          ? new Date(motor.session_run_time_sec * 1000)
+                              .toISOString()
+                              .substr(11, 8)
+                          : "NA";
+                        const cumulativeTime = motor.run_time_sec
+                          ? new Date(motor.run_time_sec * 1000)
+                              .toISOString()
+                              .substr(11, 8)
+                          : "NA";
 
-                      return (
-                        <div
-                          key={motor.motor_id}
-                          className="border border-[#DADADA] rounded-[8px] p-1 text-[14px] font-[400] text-[#6B6B6B]"
-                        >
-                          <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
-                            <div className="text-center">
-                              <p className="text-[16px]">
-                                {motor.motor_name ||
-                                  `Motor ${motor.motor_working_order}`}{" "}
-                                ({getMotorLabel(motor.motor_working_order)})
+                        return (
+                          <div
+                            key={motor.motor_id}
+                            className="border border-[#DADADA] rounded-[8px] p-1 text-[14px] font-[400] text-[#6B6B6B]"
+                          >
+                            <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
+                              <div className="text-center">
+                                <p className="text-[16px]">
+                                  {motor.motor_name ||
+                                    `Motor ${motor.motor_working_order}`}{" "}
+                                  ({getMotorLabel(motor.motor_working_order)})
+                                </p>
+                              </div>
+                              <p
+                                className={`text-[16px] ${
+                                  status === "ON"
+                                    ? "text-[#4CAF50]"
+                                    : status === "OFF"
+                                    ? "text-[#EF5350]"
+                                    : "text-[#208CD4]"
+                                }`}
+                              >
+                                {status}
                               </p>
                             </div>
-                            <p
-                              className={`text-[16px] ${
-                                status === "ON"
-                                  ? "text-[#4CAF50]"
-                                  : status === "OFF"
-                                  ? "text-[#EF5350]"
-                                  : "text-[#208CD4]"
-                              }`}
-                            >
-                              {status}
-                            </p>
+                            <div className="flex justify-between mt-1">
+                              <p className="text-transparent">Placeholder</p>
+                              <p className="text-[#208CD4] font-[600]">
+                                {`${sessionTime}/ ${cumulativeTime} S`}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex justify-between mt-1">
-                            <p className="text-transparent">Placeholder</p>
-                            <p className="text-[#208CD4] font-[600]">
-                              {`${sessionTime}/ ${cumulativeTime} S`}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <div className="col-span-2 text-center text-[#6B6B6B]">
+                        No motors available
+                      </div>
+                    )}
                   </div>
 
                   {/* Total Time */}
-                  <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
-                    <p className="font-[700] text-[#4E4D4D]">
-                      Total Time (Sess/Cum)
-                    </p>
-                    <p className="text-[#208CD4] font-[600]">
-                      {connectionStatus === "Disconnected"
-                        ? "NA"
-                        : `${new Date(totalSessionRunTime * 1000)
-                            .toISOString()
-                            .substr(11, 8)}/${new Date(totalRunTime * 1000)
-                            .toISOString()
-                            .substr(11, 8)} S`}
-                    </p>
-                  </div>
+                  {motors.length > 0 && (
+                    <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
+                      <p className="font-[700] text-[#4E4D4D]">
+                        Total Time (Sess/Cum)
+                      </p>
+                      <p className="text-[#208CD4] font-[600]">
+                        {connectionStatus === "Disconnected"
+                          ? "NA"
+                          : `${new Date(totalSessionRunTime * 1000)
+                              .toISOString()
+                              .substr(11, 8)}/${new Date(totalRunTime * 1000)
+                              .toISOString()
+                              .substr(11, 8)} S`}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Sensors & Actuators */}
@@ -824,12 +854,12 @@ const Home = () => {
                           .map((apidata, index) => {
                             const isVacuumSwitch = apidata.sensor_key === "vacuum_switch_ok";
                             const sensorValue = isVacuumSwitch
-                              ? connectionStatus === "Disconnected" || apidata.value == null
+                              ? apidata.value == null || connectionStatus === "Disconnected"
                                 ? "NA"
                                 : apidata.value === 1
                                 ? "OK"
                                 : "NOT OK"
-                              : connectionStatus === "Disconnected" || apidata.value == null
+                              : apidata.value == null || connectionStatus === "Disconnected"
                               ? "NA"
                               : apidata.value;
 
@@ -871,4 +901,3 @@ const Home = () => {
 
 export default Home;
 
-// jsgfjkhsafalskfhaslkjfhsdkjdf
