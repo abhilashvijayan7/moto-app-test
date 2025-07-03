@@ -14,29 +14,127 @@ export default function ApplyTopicPage() {
   const [plants, setPlants] = useState([]);
   const [error, setError] = useState(null);
 
-  // Fetch plants from API using Axios
+  // State for form inputs
+  const [formData, setFormData] = useState({
+    plant_id: '',
+    motor_topic: '',
+    sensor_topic: '',
+    valve_topic: '',
+  });
+
+  // Fetch plants from API
   useEffect(() => {
     const fetchPlants = async () => {
       try {
         const response = await axios.get('https://water-pump.onrender.com/api/plants');
-        console.log('API Response:', response.data); // Debug log
         setPlants(response.data);
         setError(null);
       } catch (err) {
-        console.error('API Error:', err); // Debug log
+        console.error('API Error (Plants):', err);
         setError(err.message || 'Failed to fetch plants. This may be due to CORS restrictions.');
       }
     };
     fetchPlants();
   }, []);
 
+  // Fetch applied topics from API
+  useEffect(() => {
+    const fetchPlantTopics = async () => {
+      try {
+        const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
+        const topics = response.data;
+
+        // Map plant names to topics
+        const topicsWithPlantNames = topics.map(topic => ({
+          ...topic,
+          plant_name: plants.find(plant => plant.plant_id === topic.plant_id)?.plant_name || 'Unknown'
+        }));
+
+        // Filter topics based on search query
+        const filteredTopics = topicsWithPlantNames.filter(
+          (topic) =>
+            topic.plant_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            topic.motor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            topic.sensor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            topic.valve_topic?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+
+        // Calculate pagination
+        const totalItems = filteredTopics.length;
+        setTotalPages(Math.ceil(totalItems / motorsPerPage));
+        const startIndex = (currentPage - 1) * motorsPerPage;
+        const paginatedData = filteredTopics.slice(startIndex, startIndex + motorsPerPage);
+        setPaginatedPlantTopics(paginatedData);
+        setError(null);
+      } catch (err) {
+        console.error('API Error (Plant Topics):', err);
+        setError(err.message || 'Failed to fetch plant topics.');
+      }
+    };
+    fetchPlantTopics();
+  }, [currentPage, motorsPerPage, searchQuery, plants]);
+
   // Handlers for form inputs
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const handleMotorsPerPageChange = (e) => {
     setMotorsPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        plant_id: Number(formData.plant_id),
+        motor_topic: formData.motor_topic,
+        sensor_topic: formData.sensor_topic,
+        valve_topic: formData.valve_topic,
+      };
+      await axios.post('https://water-pump.onrender.com/api/planttopics', payload);
+      setError(null);
+      // Reset form
+      setFormData({
+        plant_id: '',
+        motor_topic: '',
+        sensor_topic: '',
+        valve_topic: '',
+      });
+      // Re-fetch topics to update table
+      const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
+      const topics = response.data;
+      const topicsWithPlantNames = topics.map(topic => ({
+        ...topic,
+        plant_name: plants.find(plant => plant.plant_id === topic.plant_id)?.plant_name || 'Unknown'
+      }));
+      const filteredTopics = topicsWithPlantNames.filter(
+        (topic) =>
+          topic.plant_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          topic.motor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          topic.sensor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          topic.valve_topic?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setTotalPages(Math.ceil(filteredTopics.length / motorsPerPage));
+      const startIndex = (currentPage - 1) * motorsPerPage;
+      setPaginatedPlantTopics(filteredTopics.slice(startIndex, startIndex + motorsPerPage));
+    } catch (err) {
+      console.error('API Error (Post Plant Topic):', err);
+      setError(err.message || 'Failed to apply topic.');
+    }
+  };
+
+  // Handle pagination
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -68,7 +166,7 @@ export default function ApplyTopicPage() {
           )}
 
           {/* Input Form */}
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
               {/* Select Plant */}
               <div className="sm:col-span-3">
@@ -77,7 +175,11 @@ export default function ApplyTopicPage() {
                 </label>
                 <div className="relative">
                   <select
+                    name="plant_id"
+                    value={formData.plant_id}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                    required
                   >
                     <option value="">Select a plant...</option>
                     {plants.length === 0 ? (
@@ -103,8 +205,12 @@ export default function ApplyTopicPage() {
                 </label>
                 <input
                   type="text"
+                  name="motor_topic"
+                  value={formData.motor_topic}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter motor topic"
+                  required
                 />
               </div>
 
@@ -115,8 +221,12 @@ export default function ApplyTopicPage() {
                 </label>
                 <input
                   type="text"
+                  name="sensor_topic"
+                  value={formData.sensor_topic}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter sensor topic"
+                  required
                 />
               </div>
 
@@ -127,8 +237,12 @@ export default function ApplyTopicPage() {
                 </label>
                 <input
                   type="text"
+                  name="valve_topic"
+                  value={formData.valve_topic}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Enter valve topic"
+                  required
                 />
               </div>
 
@@ -137,21 +251,31 @@ export default function ApplyTopicPage() {
                 {/* Placeholder for buttons, no changes needed */}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Page Footer */}
-        <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
-          >
-            Save Changes
-          </button>
+            {/* Page Footer */}
+            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                type="button"
+                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={() =>
+                  setFormData({
+                    plant_id: '',
+                    motor_topic: '',
+                    sensor_topic: '',
+                    valve_topic: '',
+                  })
+                }
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
         </div>
 
         {/* Topics Table Section */}
@@ -185,20 +309,6 @@ export default function ApplyTopicPage() {
                 </div>
               </div>
 
-              {/* Error Messages Placeholder */}
-              {false && (
-                <div className="bg-red-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                  <div className="flex justify-between items-start">
-                    <div className="text-red-800">
-                      <p className="text-sm font-medium">Failed to load topics.</p>
-                    </div>
-                    <button className="text-sm underline hover:no-underline">
-                      Retry
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full border-collapse">
@@ -224,7 +334,7 @@ export default function ApplyTopicPage() {
                       paginatedPlantTopics.map((topic, index) => (
                         <tr key={topic.id} className="hover:bg-gray-50">
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                            {index + 1}
+                            {(currentPage - 1) * motorsPerPage + index + 1}
                           </td>
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                             {topic.plant_id || '-'}
@@ -268,7 +378,7 @@ export default function ApplyTopicPage() {
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-2">
                           <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
-                            #{index + 1}
+                            #{(currentPage - 1) * motorsPerPage + index + 1}
                           </span>
                           <h3 className="font-semibold text-gray-900 text-lg">
                             {topic.plant_name || 'Unknown'}
@@ -313,6 +423,7 @@ export default function ApplyTopicPage() {
                 <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
                   <button
                     disabled={currentPage === 1}
+                    onClick={() => handlePageChange(currentPage - 1)}
                     className={`px-4 py-2 text-sm font-medium rounded ${
                       currentPage === 1
                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -322,22 +433,28 @@ export default function ApplyTopicPage() {
                     Previous
                   </button>
                   {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNum = i + 1;
-                    return (
-                      <button
-                        key={pageNum}
-                        className={`px-3 py-2 text-sm font-medium rounded ${
-                          currentPage === pageNum
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+                    // Adjust pageNum based on currentPage to ensure unique keys
+                    const pageNum = Math.floor((currentPage - 1) / 5) * 5 + i + 1;
+                    if (pageNum <= totalPages) {
+                      return (
+                        <button
+                          key={`page-${pageNum}`}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`px-3 py-2 text-sm font-medium rounded ${
+                            currentPage === pageNum
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    }
+                    return null;
+                  }).filter(Boolean)}
                   <button
                     disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(currentPage + 1)}
                     className={`px-4 py-2 text-sm font-medium rounded ${
                       currentPage === totalPages
                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'

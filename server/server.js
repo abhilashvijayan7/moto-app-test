@@ -160,6 +160,8 @@ io.on("connection", (socket) => {
   socket.emit("sensor_data", { data: latestSensorData });
 
   socket.on("motor_control", async (data) => {
+
+    console.log(data)
     const { command, plantId } = data;
 
     if (!plantId) {
@@ -184,6 +186,7 @@ io.on("connection", (socket) => {
     const payload = typeof command === "object" ? JSON.stringify(command) : String(command);
 
     mqttClient.publish(motorTopic, payload, (err) => {
+      console.log(payload)
       if (err) {
         console.error(`Error publishing motor command to ${motorTopic}:`, err.message);
       } else {

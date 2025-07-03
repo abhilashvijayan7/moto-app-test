@@ -304,29 +304,36 @@ const Home = () => {
       }
       acc[plantId].push(sensor);
       return acc;
+UrbanCodeGenix
     }, {});
   }, [plantSensorData]);
 
-  const togglePump = useCallback(() => {
-    if (
-      isButtonDisabled ||
-      (Object.values(connectionStatusMoto).every((status) => status === "Disconnected") &&
-        connectionStatusWaterPump === "Disconnected")
-    ) {
-      return;
-    }
+  const togglePump = useCallback(
+    (plantId) => {
+      console.log("toggle pump for plant:", plantId);
+      if (
+        isButtonDisabled ||
+        (Object.values(connectionStatusMoto).every((status) => status === "Disconnected") &&
+          connectionStatusWaterPump === "Disconnected")
+      ) {
+        return;
+      }
 
-    const newStatus = motorStatus === "ON" ? "OFF" : "ON";
-    socketMoto.emit("motor_control", { command: newStatus });
-    socketWaterPump.emit("motor_control", { command: newStatus });
-    console.log("Motor command sent to both servers:", newStatus);
-    setMotorStatus(newStatus);
-    setIsButtonDisabled(true);
+      const newStatus = motorStatus === "ON" ? "OFF" : "ON";
 
-    setTimeout(() => {
-      setIsButtonDisabled(false);
-    }, 10000);
-  }, [isButtonDisabled, connectionStatusMoto, connectionStatusWaterPump, motorStatus]);
+      console.log(newStatus);
+      socketMoto.emit("motor_control", { command: newStatus, plantId });
+      socketWaterPump.emit("motor_control", { command: newStatus, plantId });
+      console.log("Motor command sent to both servers:", { command: newStatus, plantId });
+      setMotorStatus(newStatus);
+      setIsButtonDisabled(true);
+
+      setTimeout(() => {
+        setIsButtonDisabled(false);
+      }, 10000);
+    },
+    [isButtonDisabled, connectionStatusMoto, connectionStatusWaterPump, motorStatus]
+  );
 
   // Memoize motor status keys
   const motorStatusKeys = useMemo(
@@ -339,7 +346,7 @@ const Home = () => {
       motorVoltageL3Key: `motor${motorNumber}_voltage_l3`,
       motorCurrentL1Key: `motor${motorNumber}_current_l1`,
       motorCurrentL2Key: `motor${motorNumber}_current_l2`,
-      motorCurrentL3Key: `motor${motorNumber}_current_l3`,
+      motorCurrentL3Key: `motor${motorNumber}_motor_current_l3`,
     }),
     [motorNumber]
   );
@@ -524,7 +531,7 @@ const Home = () => {
                     {plant.plant_name || "Unknown Plant"}
                   </p>
                   <button
-                    onClick={togglePump}
+                    onClick={() => togglePump(plant.plant_id)}
                     disabled={isButtonDisabled || connectionStatus === "Disconnected"}
                     className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
                       isButtonDisabled || connectionStatus === "Disconnected"
