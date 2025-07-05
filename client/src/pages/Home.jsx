@@ -25,10 +25,9 @@ const Home = () => {
   const [connectionStatusWaterPump, setConnectionStatusWaterPump] = useState("connected");
   const [plantData, setPlantData] = useState([]);
   const [plantSensorData, setPlantSensorData] = useState([]);
-  const [plantMotorData, setPlantMotorData] = useState({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState({}); // Plant-specific errors
-  const lastUpdateTimes = useRef({}); // Track last update timestamp per plant
+  const [error, setError] = useState({});
+  const lastUpdateTimes = useRef({});
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -72,59 +71,6 @@ const Home = () => {
     }
   }, []);
 
-  // Fetch motor data for specific plants
-  const fetchPlantMotorData = useCallback(async (plants) => {
-    if (!plants.length) return;
-
-    try {
-      const motorApiPromises = plants.map((plant) =>
-        axios
-          .get(`https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`)
-          .catch((error) => {
-            console.error(`Error fetching motor data for plant ${plant.plant_id}:`, error.message);
-            setError((prev) => ({ ...prev, [plant.plant_id]: `Failed to fetch motor data: ${error.message}` }));
-            return null;
-          })
-      );
-
-      const motorResponses = await Promise.all(motorApiPromises);
-      const motorData = motorResponses
-        .filter((response) => response !== null)
-        .map((response) => {
-          console.log(`Motor API response for plant ${response.config.url}:`, response.data);
-          return Array.isArray(response.data) ? response.data : [];
-        })
-        .flat();
-
-      const groupedMotors = motorData.reduce((acc, motor) => {
-        const plantId = motor.plant_id;
-        if (!acc[plantId]) {
-          acc[plantId] = [];
-        }
-        acc[plantId].push({
-          plant_id: motor.plant_id,
-          motor_id: motor.motor_id,
-          motor_name: motor.motor_name,
-          motor_working_order: motor.motor_working_order,
-        });
-        return acc;
-      }, {});
-
-      Object.keys(groupedMotors).forEach((plantId) => {
-        groupedMotors[plantId].sort((a, b) => a.motor_working_order - b.motor_working_order);
-        console.log(`Sorted motors for plant ${plantId}:`, groupedMotors[plantId]);
-      });
-
-      setPlantMotorData((prev) => ({
-        ...prev,
-        ...groupedMotors,
-      }));
-    } catch (error) {
-      console.error("Unexpected error during motor API calls:", error.message);
-      setPlantMotorData((prev) => prev);
-    }
-  }, []);
-
   // Fetch initial data (supports single plant or all plants)
   const fetchInitialData = useCallback(
     async (plantId = null) => {
@@ -159,7 +105,7 @@ const Home = () => {
           plant_name: plant.plant_name,
         }));
 
-        await Promise.all([fetchSensorData(simplifiedPlants), fetchPlantMotorData(simplifiedPlants)]);
+        await fetchSensorData(simplifiedPlants);
       } catch (error) {
         console.error("Error fetching initial data:", error.message);
         setError((prev) => ({ ...prev, global: `Failed to fetch plant data: ${error.message}` }));
@@ -168,7 +114,7 @@ const Home = () => {
         if (!plantId) setLoading(false);
       }
     },
-    [fetchSensorData, fetchPlantMotorData]
+    [fetchSensorData]
   );
 
   // Combine sensor data per plant
@@ -207,7 +153,6 @@ const Home = () => {
   const togglePump = useCallback((plantId) => {
     console.log(`Button clicked for plant_id: ${plantId}, current plant_status: ${getSensorForPlant(plantId).plant_status}`);
     
-    // Immediately disable the button to prevent multiple clicks
     setIsButtonDisabled((prev) => ({ ...prev, [plantId]: true }));
     
     const sensor = getSensorForPlant(plantId);
@@ -227,20 +172,16 @@ const Home = () => {
     const newStatus = motorStatuses[plantId] === "ON" ? "OFF" : "ON";
     console.log(`Sending motor_control for plant ${plantId} to ${newStatus}`);
 
-    // Send motor control command
     socketMoto.emit("motor_control", { command: newStatus, plantId });
     socketWaterPump.emit("motor_control", { command: newStatus, plantId });
 
-    // Update timestamp to track the command
-    lastUpdate267Times.current[plantId] = Date.now();
+    lastUpdateTimes.current[plantId] = Date.now();
   }, [motorStatuses, getSensorForPlant, getConnectionStatusForPlant]);
 
   // Memoize motor status keys
   const motorStatusKeys = useCallback(
     (motorNumber) => ({
       motorStatusKey: `motor${motorNumber}_status`,
-      motorSessionRunTimeKey: `motor${motorNumber}_session_run_time_sec`,
-      motorRunTimeKey: `motor${motorNumber}_run_time_sec`,
       motorVoltageL1Key: `motor${motorNumber}_voltage_l1`,
       motorVoltageL2Key: `motor${motorNumber}_voltage_l2`,
       motorVoltageL3Key: `motor${motorNumber}_voltage_l3`,
@@ -268,14 +209,6 @@ const Home = () => {
     [getSensorForPlant, getConnectionStatusForPlant]
   );
 
-  const getMotorByWorkingOrder = useCallback(
-    (plantId, workingOrder) => {
-      const motors = plantMotorData[plantId] || [];
-      return motors.find((motor) => motor.motor_working_order === workingOrder) || null;
-    },
-    [plantMotorData]
-  );
-
   const getMotorLabel = useCallback((workingOrder) => {
     if (workingOrder === 1) return "main";
     if (workingOrder === 2) return "standby";
@@ -283,29 +216,60 @@ const Home = () => {
     return `motor ${workingOrder}`;
   }, []);
 
+  // Map motors from sensor data
+  const getMappedMotorsForPlant = useCallback(
+    (plantId) => {
+      const sensor = getSensorForPlant(plantId);
+      const connectionStatus = getConnectionStatusForPlant(plantId);
+
+      // Define possible motors based on sensor data keys
+      const motors = [];
+      const motorRuntimeSec = sensor.motor_runtime_sec || 0;
+
+      if (sensor.motor1_status !== undefined) {
+        motors.push({
+          motor_id: `motor1-${plantId}`,
+          motor_name: "Motor 1",
+          motor_working_order: 1,
+          status: sensor.motor1_status || "NA",
+          run_time_sec: sensor.motor1_status === "ON" ? motorRuntimeSec : 0,
+        });
+      }
+      if (sensor.motor2_status !== undefined) {
+        motors.push({
+          motor_id: `motor2-${plantId}`,
+          motor_name: "Motor 2",
+          motor_working_order: 2,
+          status: sensor.motor2_status || "NA",
+          run_time_sec: sensor.motor2_status === "ON" ? motorRuntimeSec : 0,
+        });
+      }
+
+      if (!motors.length) {
+        console.log(`No motors available in sensor data for plant ${plantId}`);
+        return [];
+      }
+
+      if (connectionStatus === "Disconnected") {
+        return motors.map((motor) => ({
+          ...motor,
+          status: "NA",
+          run_time_sec: 0,
+        }));
+      }
+
+      return motors;
+    },
+    [getSensorForPlant, getConnectionStatusForPlant]
+  );
+
+  // Calculate total runtime from sensor data
   const calculateTotalRunTime = useCallback(
     (plantId) => {
-      const motors = plantMotorData[plantId] || [];
       const sensor = getSensorForPlant(plantId);
-      let totalSessionRunTime = 0;
-      let totalRunTime = 0;
-
-      motors.forEach((motor) => {
-        const motorNum = motor.motor_working_order;
-        const sessionKey = `motor${motorNum}_session_run_time_sec`;
-        const runTimeKey = `motor${motorNum}_run_time_sec`;
-        totalSessionRunTime += sensor[sessionKey] || 0;
-
-
-        totalRunTime += sensor[runTimeKey] || 0;
-      });
-
-      return {
-        totalSessionRunTime,
-        totalRunTime,
-      };
+      return sensor.total_runtime_sec || 0;
     },
-    [getSensorForPlant, plantMotorData]
+    [getSensorForPlant]
   );
 
   // Map sensors for a plant, showing only active sensors specific to the plant
@@ -315,15 +279,12 @@ const Home = () => {
       const connectionStatus = getConnectionStatusForPlant(plantId);
       const plantSensors = groupedSensors[plantId] || [];
 
-      // If no sensor data is available for the plant, return an empty array to avoid rendering
       if (!plantSensors.length) {
         return [];
       }
 
-      // Use active sensors from plantSensorData (filtered by is_sensor_enabled)
       const activeSensors = plantSensors.filter((s) => s.is_sensor_enabled === true);
 
-      // If disconnected, return active sensors with "NA" values
       if (connectionStatus === "Disconnected") {
         return activeSensors.map((s) => ({
           plant_id: plantId,
@@ -334,7 +295,6 @@ const Home = () => {
         }));
       }
 
-      // Map active sensors, using real-time data if available, falling back to "NA"
       return activeSensors.map((s) => ({
         plant_id: plantId,
         sensor_key: s.sensor_key,
@@ -344,43 +304,6 @@ const Home = () => {
       }));
     },
     [getSensorForPlant, getConnectionStatusForPlant, groupedSensors]
-  );
-
-  // Map motor data for UI consistency
-  const getMappedMotorsForPlant = useCallback(
-    (plantId) => {
-      const sensor = getSensorForPlant(plantId);
-      const connectionStatus = getConnectionStatusForPlant(plantId);
-      const motors = plantMotorData[plantId] || [];
-
-      // If no motors are available for the plant, return an empty array
-      if (!motors.length) {
-        console.log(`No motors available for plant ${plantId}`);
-        return [];
-      }
-
-      // If disconnected, return motors with "NA" status and zero times
-      if (connectionStatus === "Disconnected") {
-        return motors.map((motor) => ({
-          ...motor,
-          status: "NA",
-          session_run_time_sec: 0,
-          run_time_sec: 0,
-        }));
-      }
-
-      // Map available motors with real-time data or "NA" for missing values
-      return motors.map((motor) => {
-        const motorNum = motor.motor_working_order;
-        return {
-          ...motor,
-          status: sensor[`motor${motorNum}_status`] !== undefined ? sensor[`motor${motorNum}_status`] : "NA",
-          session_run_time_sec: sensor[`motor${motorNum}_session_run_time_sec`] !== undefined ? sensor[`motor${motorNum}_session_run_time_sec`] : 0,
-          run_time_sec: sensor[`motor${motorNum}_run_time_sec`] !== undefined ? sensor[`motor${motorNum}_run_time_sec`] : 0,
-        };
-      });
-    },
-    [getSensorForPlant, getConnectionStatusForPlant, plantMotorData]
   );
 
   // Socket connection management for both servers
@@ -600,25 +523,21 @@ const Home = () => {
 
   // Initialize motorStatuses and motorNumbers for each plant
   useEffect(() => {
-    const initialStatuses = plantData.reduce((acc, plant) => {
+    plantData.forEach((plant) => {
       const sensor = getSensorForPlant(plant.plant_id);
-      acc[plant.plant_id] = sensor.plant_status === "RUNNING" ? "ON" : "OFF";
-      return acc;
-    }, {});
-    setMotorStatuses((prev) => ({ ...prev, ...initialStatuses }));
-
-    const initialNumbers = plantData.reduce((acc, plant) => {
-      acc[plant.plant_id] = 1;
-      return acc;
-    }, {});
-    setMotorNumbers((prev) => ({ ...prev, ...initialNumbers }));
-
-    const initialDisabled = plantData.reduce((acc, plant) => {
-      const sensor = getSensorForPlant(plant.plant_id);
-      acc[plant.plant_id] = !(sensor.plant_status === "IDLE" || sensor.plant_status === "RUNNING");
-      return acc;
-    }, {});
-    setIsButtonDisabled((prev) => ({ ...prev, ...initialDisabled }));
+      setMotorStatuses((prev) => ({
+        ...prev,
+        [plant.plant_id]: sensor.plant_status === "RUNNING" ? "ON" : "OFF",
+      }));
+      setMotorNumbers((prev) => ({
+        ...prev,
+        [plant.plant_id]: sensor.motor1_status === "ON" ? 1 : sensor.motor2_status === "ON" ? 2 : 1,
+      }));
+      setIsButtonDisabled((prev) => ({
+        ...prev,
+        [plant.plant_id]: !(sensor.plant_status === "IDLE" || sensor.plant_status === "RUNNING"),
+      }));
+    });
   }, [plantData, getSensorForPlant]);
 
   // Loading state
@@ -654,7 +573,7 @@ const Home = () => {
             const connectionStatus = getConnectionStatusForPlant(plant.plant_id);
             const manualMode = getManualModeForPlant(plant.plant_id);
             const displayedPlantStatus = getDisplayedPlantStatus(plant.plant_id);
-            const { totalSessionRunTime, totalRunTime } = calculateTotalRunTime(plant.plant_id);
+            const totalRunTime = calculateTotalRunTime(plant.plant_id);
             const currentMotorStatus = motorStatuses[plant.plant_id] || "OFF";
             const currentMotorNumber = motorNumbers[plant.plant_id] || 1;
 
@@ -770,16 +689,11 @@ const Home = () => {
                     {motors.length > 0 ? (
                       motors.map((motor) => {
                         const status = motor.status;
-                        const sessionTime = motor.session_run_time_sec
-                          ? new Date(motor.session_run_time_sec * 1000)
-                              .toISOString()
-                              .substr(11, 8)
-                          : "NA";
                         const cumulativeTime = motor.run_time_sec
                           ? new Date(motor.run_time_sec * 1000)
                               .toISOString()
                               .substr(11, 8)
-                          : "NA";
+                          : "00:00:00";
 
                         return (
                           <div
@@ -787,11 +701,9 @@ const Home = () => {
                             className="border border-[#DADADA] rounded-[8px] p-1 text-[14px] font-[400] text-[#6B6B6B]"
                           >
                             <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
-                              <div className="text-center">
+                              <div className="text-start">
                                 <p className="text-[16px]">
-                                  {motor.motor_name ||
-                                    `Motor ${motor.motor_working_order}`}{" "}
-                                  ({getMotorLabel(motor.motor_working_order)})
+                                  {motor.motor_name} <span className="text-[13px]">({getMotorLabel(motor.motor_working_order)})</span>
                                 </p>
                               </div>
                               <p
@@ -809,7 +721,7 @@ const Home = () => {
                             <div className="flex justify-between mt-1">
                               <p className="text-transparent">Placeholder</p>
                               <p className="text-[#208CD4] font-[600]">
-                                {`${sessionTime}/ ${cumulativeTime} S`}
+                                {`${cumulativeTime} S`}
                               </p>
                             </div>
                           </div>
@@ -826,14 +738,12 @@ const Home = () => {
                   {motors.length > 0 && (
                     <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
                       <p className="font-[700] text-[#4E4D4D]">
-                        Total Time (Sess/Cum)
+                        Total Time
                       </p>
                       <p className="text-[#208CD4] font-[600]">
                         {connectionStatus === "Disconnected"
                           ? "NA"
-                          : `${new Date(totalSessionRunTime * 1000)
-                              .toISOString()
-                              .substr(11, 8)}/${new Date(totalRunTime * 1000)
+                          : `${new Date(totalRunTime * 1000)
                               .toISOString()
                               .substr(11, 8)} S`}
                       </p>
@@ -900,4 +810,3 @@ const Home = () => {
 };
 
 export default Home;
-

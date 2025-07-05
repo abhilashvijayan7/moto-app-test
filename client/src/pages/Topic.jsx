@@ -14,13 +14,15 @@ export default function ApplyTopicPage() {
   const [plants, setPlants] = useState([]);
   const [error, setError] = useState(null);
 
-  // State for form inputs
+  // State for form inputs and edit mode
   const [formData, setFormData] = useState({
     plant_id: '',
     motor_topic: '',
     sensor_topic: '',
     valve_topic: '',
   });
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editTopicId, setEditTopicId] = useState(null);
 
   // Fetch plants from API
   useEffect(() => {
@@ -90,17 +92,28 @@ export default function ApplyTopicPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle form submission
+  // Handle form submission (Add or Edit)
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        plant_id: Number(formData.plant_id),
-        motor_topic: formData.motor_topic,
-        sensor_topic: formData.sensor_topic,
-        valve_topic: formData.valve_topic,
-      };
-      await axios.post('https://water-pump.onrender.com/api/planttopics', payload);
+      if (isEditMode) {
+        // Update existing topic
+        const payload = {
+          motor_topic: formData.motor_topic,
+          sensor_topic: formData.sensor_topic,
+          valve_topic: formData.valve_topic,
+        };
+        await axios.put(`https://water-pump.onrender.com/api/planttopics/${editTopicId}`, payload);
+      } else {
+        // Add new topic
+        const payload = {
+          plant_id: Number(formData.plant_id),
+          motor_topic: formData.motor_topic,
+          sensor_topic: formData.sensor_topic,
+          valve_topic: formData.valve_topic,
+        };
+        await axios.post('https://water-pump.onrender.com/api/planttopics', payload);
+      }
       setError(null);
       // Reset form
       setFormData({
@@ -109,6 +122,8 @@ export default function ApplyTopicPage() {
         sensor_topic: '',
         valve_topic: '',
       });
+      setIsEditMode(false);
+      setEditTopicId(null);
       // Re-fetch topics to update table
       const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
       const topics = response.data;
@@ -127,8 +142,51 @@ export default function ApplyTopicPage() {
       const startIndex = (currentPage - 1) * motorsPerPage;
       setPaginatedPlantTopics(filteredTopics.slice(startIndex, startIndex + motorsPerPage));
     } catch (err) {
-      console.error('API Error (Post Plant Topic):', err);
-      setError(err.message || 'Failed to apply topic.');
+      console.error('API Error:', err);
+      setError(err.message || `Failed to ${isEditMode ? 'update' : 'apply'} topic.`);
+    }
+  };
+
+  // Handle edit button click
+  const handleEdit = (topic) => {
+    setIsEditMode(true);
+    setEditTopicId(topic.id);
+    setFormData({
+      plant_id: topic.plant_id.toString(),
+      motor_topic: topic.motor_topic || '',
+      sensor_topic: topic.sensor_topic || '',
+      valve_topic: topic.valve_topic || '',
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Handle delete button click
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this topic?')) {
+      try {
+        await axios.delete(`https://water-pump.onrender.com/api/planttopics/${id}`);
+        setError(null);
+        // Re-fetch topics to update table
+        const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
+        const topics = response.data;
+        const topicsWithPlantNames = topics.map(topic => ({
+          ...topic,
+          plant_name: plants.find(plant => plant.plant_id === topic.plant_id)?.plant_name || 'Unknown'
+        }));
+        const filteredTopics = topicsWithPlantNames.filter(
+          (topic) =>
+            topic.plant_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            topic.motor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            topic.sensor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            topic.valve_topic?.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setTotalPages(Math.ceil(filteredTopics.length / motorsPerPage));
+        const startIndex = (currentPage - 1) * motorsPerPage;
+        setPaginatedPlantTopics(filteredTopics.slice(startIndex, startIndex + motorsPerPage));
+      } catch (err) {
+        console.error('API Error (Delete):', err);
+        setError(err.message || 'Failed to delete topic.');
+      }
     }
   };
 
@@ -141,10 +199,10 @@ export default function ApplyTopicPage() {
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl p-6">
         {/* Page Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
+        <div className="flex items-center justify-between bordered-gray-200 pb-4 mb-6">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800">Apply Topic</h2>
-            <p className="text-sm text-gray-500 mt-1">Select a plant and enter topic details</p>
+            <h2 className="text-2xl font-semibold text-gray-800">{isEditMode ? 'Edit Topic' : 'Apply Topic'}</h2>
+            <p className="text-sm text-gray-500 mt-1">{isEditMode ? 'Edit topic details' : 'Select a plant and enter topic details'}</p>
           </div>
         </div>
 
@@ -180,6 +238,7 @@ export default function ApplyTopicPage() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
                     required
+                    disabled={isEditMode} // Disable plant_id in edit mode
                   >
                     <option value="">Select a plant...</option>
                     {plants.length === 0 ? (
@@ -245,11 +304,6 @@ export default function ApplyTopicPage() {
                   required
                 />
               </div>
-
-              {/* Action Buttons */}
-              <div className="sm:col-span-3 flex justify-end space-x-2">
-                {/* Placeholder for buttons, no changes needed */}
-              </div>
             </div>
 
             {/* Page Footer */}
@@ -257,14 +311,16 @@ export default function ApplyTopicPage() {
               <button
                 type="button"
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-                onClick={() =>
+                onClick={() => {
                   setFormData({
                     plant_id: '',
                     motor_topic: '',
                     sensor_topic: '',
                     valve_topic: '',
-                  })
-                }
+                  });
+                  setIsEditMode(false);
+                  setEditTopicId(null);
+                }}
               >
                 Cancel
               </button>
@@ -272,7 +328,7 @@ export default function ApplyTopicPage() {
                 type="submit"
                 className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
               >
-                Save Changes
+                {isEditMode ? 'Update Topic' : 'Save Changes'}
               </button>
             </div>
           </form>
@@ -320,7 +376,7 @@ export default function ApplyTopicPage() {
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Motor Topic</th>
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[150px]">Sensor Topic</th>
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Valve Topic</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[80px]">Actions</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -351,12 +407,20 @@ export default function ApplyTopicPage() {
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                             {topic.valve_topic || '-'}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 flex space-x-2">
                             <button
                               className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
                               title="Edit topic"
+                              onClick={() => handleEdit(topic)}
                             >
                               Edit
+                            </button>
+                            <button
+                              className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-colors"
+                              title="Delete topic"
+                              onClick={() => handleDelete(topic.id)}
+                            >
+                              Delete
                             </button>
                           </td>
                         </tr>
@@ -384,12 +448,22 @@ export default function ApplyTopicPage() {
                             {topic.plant_name || 'Unknown'}
                           </h3>
                         </div>
-                        <button
-                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
-                          title="Edit topic"
-                        >
-                          Edit
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
+                            title="Edit topic"
+                            onClick={() => handleEdit(topic)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-colors"
+                            title="Delete topic"
+                            onClick={() => handleDelete(topic.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div className="flex flex-col">
@@ -433,7 +507,6 @@ export default function ApplyTopicPage() {
                     Previous
                   </button>
                   {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    // Adjust pageNum based on currentPage to ensure unique keys
                     const pageNum = Math.floor((currentPage - 1) / 5) * 5 + i + 1;
                     if (pageNum <= totalPages) {
                       return (
