@@ -106,9 +106,52 @@ const subscribeToSensorTopics = async () => {
   });
 };
 
+// Log runtime data to file every 30 seconds
+const logRuntimeData = async () => {
+  const timestamp = new Date().toISOString();
+  let logContent = `=== Runtime Log (${timestamp}) ===\n`;
+
+  const plants = await loadPlantTopics();
+  let hasRunningPlants = false;
+
+  for (const plant of plants) {
+    const plantId = plant.plant_id;
+    const plantName = plant.plant_name || "Unknown Plant";
+    const data = latestSensorData[plantId];
+
+    if (data && data.plant_status === "RUNNING") {
+      hasRunningPlants = true;
+      const motorRuntimeSec = data.motor_runtime_sec || 0;
+      const totalRuntimeSec = data.total_runtime_sec || 0;
+      const formattedTotalRunTime = new Date(totalRuntimeSec * 1000).toISOString().substr(11, 8);
+
+      logContent += `Plant ID: ${plantId}, Plant Name: ${plantName}\n`;
+      logContent += `  Motor 1 Status: ${data.motor1_status || "NA"}, Runtime: ${
+        data.motor1_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
+      }\n`;
+      logContent += `  Motor 2 Status: ${data.motor2_status || "NA"}, Runtime: ${
+        data.motor2_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
+      }\n`;
+      logContent += `  Total Plant Runtime: ${formattedTotalRunTime}\n`;
+      logContent += `----------------------------\n`;
+    }
+  }
+
+  if (hasRunningPlants) {
+    try {
+      await fs.appendFile("runtime_log.txt", logContent);
+      console.log(`Runtime data appended to runtime_log.txt at ${timestamp}`);
+    } catch (error) {
+      console.error("Error appending to runtime_log.txt:", error.message);
+    }
+  }
+};
+
 mqttClient.on("connect", async () => {
   console.log("Connected to MQTT broker");
   await subscribeToSensorTopics();
+  // Start logging runtime data every 30 seconds
+  setInterval(logRuntimeData, 30 * 1000);
 });
 
 mqttClient.on("message", async (topic, message) => {
@@ -227,4 +270,4 @@ server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// after change
+// motor runtime log created successfully

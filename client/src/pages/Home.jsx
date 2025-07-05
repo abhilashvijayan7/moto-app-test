@@ -222,7 +222,6 @@ const Home = () => {
       const sensor = getSensorForPlant(plantId);
       const connectionStatus = getConnectionStatusForPlant(plantId);
 
-      // Define possible motors based on sensor data keys
       const motors = [];
       const motorRuntimeSec = sensor.motor_runtime_sec || 0;
 
@@ -272,7 +271,7 @@ const Home = () => {
     [getSensorForPlant]
   );
 
-  // Map sensors for a plant, showing only active sensors specific to the plant
+  // Map sensors for a plant
   const getMappedSensorsForPlant = useCallback(
     (plantId) => {
       const sensor = getSensorForPlant(plantId);
@@ -306,7 +305,52 @@ const Home = () => {
     [getSensorForPlant, getConnectionStatusForPlant, groupedSensors]
   );
 
-  // Socket connection management for both servers
+  // Log runtime data to a downloadable text file every 30 seconds
+  useEffect(() => {
+    const logRuntimeData = () => {
+      const timestamp = new Date().toISOString();
+      let logContent = `=== Runtime Log (${timestamp}) ===\n`;
+
+      plantData.forEach((plant) => {
+        const plantId = plant.plant_id;
+        const plantName = plant.plant_name || "Unknown Plant";
+        const plantStatus = getDisplayedPlantStatus(plantId);
+        if (plantStatus === "RUNNING") {
+          const motors = getMappedMotorsForPlant(plantId);
+          const totalRunTime = calculateTotalRunTime(plantId);
+          const formattedTotalRunTime = new Date(totalRunTime * 1000).toISOString().substr(11, 8);
+
+          logContent += `Plant ID: ${plantId}, Plant Name: ${plantName}\n`;
+          motors.forEach((motor) => {
+            const formattedRunTime = motor.run_time_sec
+              ? new Date(motor.run_time_sec * 1000).toISOString().substr(11, 8)
+              : "00:00:00";
+            logContent += `  ${motor.motor_name} (${getMotorLabel(motor.motor_working_order)}): ${motor.status}, Runtime: ${formattedRunTime}\n`;
+          });
+          logContent += `  Total Plant Runtime: ${formattedTotalRunTime}\n`;
+          logContent += `----------------------------\n`;
+        }
+      });
+
+      if (logContent !== `=== Runtime Log (${timestamp}) ===\n`) {
+        const blob = new Blob([logContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `runtime_log_${timestamp.replace(/[:.]/g, "-")}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    };
+
+    const interval = setInterval(logRuntimeData, 30 * 1000); // Run every 30 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, [plantData, getDisplayedPlantStatus, getMappedMotorsForPlant, calculateTotalRunTime, getMotorLabel]);
+
+  // Socket connection management
   useEffect(() => {
     let timeoutMoto, timeoutWaterPump;
 
@@ -655,13 +699,9 @@ const Home = () => {
                     <p className="text-[18px] text-[#208CD4] font-[600]">
                       {connectionStatus === "Disconnected"
                         ? "NA"
-                        : `${
-                            sensor[motorStatusKeys(currentMotorNumber).motorVoltageL1Key] ?? "NA"
-                          }/ ${
+                        : `${sensor[motorStatusKeys(currentMotorNumber).motorVoltageL1Key] ?? "NA"}/ ${
                             sensor[motorStatusKeys(currentMotorNumber).motorVoltageL2Key] ?? "NA"
-                          }/ ${
-                            sensor[motorStatusKeys(currentMotorNumber).motorVoltageL3Key] ?? "NA"
-                          } V`}
+                          }/ ${sensor[motorStatusKeys(currentMotorNumber).motorVoltageL3Key] ?? "NA"} V`}
                     </p>
                   </div>
                   <div className="max-w-[50%] text-center">
@@ -669,13 +709,9 @@ const Home = () => {
                     <p className="text-[18px] text-[#208CD4] font-[600]">
                       {connectionStatus === "Disconnected"
                         ? "NA"
-                        : `${
-                            sensor[motorStatusKeys(currentMotorNumber).motorCurrentL1Key] ?? "NA"
-                          }/ ${
+                        : `${sensor[motorStatusKeys(currentMotorNumber).motorCurrentL1Key] ?? "NA"}/ ${
                             sensor[motorStatusKeys(currentMotorNumber).motorCurrentL2Key] ?? "NA"
-                          }/ ${
-                            sensor[motorStatusKeys(currentMotorNumber).motorCurrentL3Key] ?? "NA"
-                          } A`}
+                          }/ ${sensor[motorStatusKeys(currentMotorNumber).motorCurrentL3Key] ?? "NA"} A`}
                     </p>
                   </div>
                 </div>
@@ -811,4 +847,4 @@ const Home = () => {
 
 export default Home;
 
-// motor timing added successfully
+// motor runtime log created successfully
