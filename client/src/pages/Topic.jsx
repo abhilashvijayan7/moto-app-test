@@ -29,6 +29,7 @@ export default function ApplyTopicPage() {
     const fetchPlants = async () => {
       try {
         const response = await axios.get('https://water-pump.onrender.com/api/plants');
+        console.log('Plants API Response:', response.data); // Debug plants data
         setPlants(response.data);
         setError(null);
       } catch (err) {
@@ -44,10 +45,14 @@ export default function ApplyTopicPage() {
     const fetchPlantTopics = async () => {
       try {
         const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
+        console.log('Plant Topics API Response:', response.data); // Debug topics data
         const topics = response.data;
 
+        // Filter out topics without a valid plant_topic_id
+        const validTopics = topics.filter(topic => topic.plant_topic_id != null);
+
         // Map plant names to topics
-        const topicsWithPlantNames = topics.map(topic => ({
+        const topicsWithPlantNames = validTopics.map(topic => ({
           ...topic,
           plant_name: plants.find(plant => plant.plant_id === topic.plant_id)?.plant_name || 'Unknown'
         }));
@@ -97,12 +102,19 @@ export default function ApplyTopicPage() {
     e.preventDefault();
     try {
       if (isEditMode) {
+        // Validate input fields for edit
+        if (!formData.motor_topic || !formData.sensor_topic || !formData.valve_topic) {
+          setError('All topic fields are required.');
+          return;
+        }
         // Update existing topic
         const payload = {
           motor_topic: formData.motor_topic,
           sensor_topic: formData.sensor_topic,
           valve_topic: formData.valve_topic,
         };
+        console.log('Edit Payload:', payload); // Log payload for debugging
+        console.log('Edit Topic ID:', editTopicId); // Log ID for debugging
         await axios.put(`https://water-pump.onrender.com/api/planttopics/${editTopicId}`, payload);
       } else {
         // Add new topic
@@ -127,7 +139,8 @@ export default function ApplyTopicPage() {
       // Re-fetch topics to update table
       const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
       const topics = response.data;
-      const topicsWithPlantNames = topics.map(topic => ({
+      const validTopics = topics.filter(topic => topic.plant_topic_id != null);
+      const topicsWithPlantNames = validTopics.map(topic => ({
         ...topic,
         plant_name: plants.find(plant => plant.plant_id === topic.plant_id)?.plant_name || 'Unknown'
       }));
@@ -142,15 +155,24 @@ export default function ApplyTopicPage() {
       const startIndex = (currentPage - 1) * motorsPerPage;
       setPaginatedPlantTopics(filteredTopics.slice(startIndex, startIndex + motorsPerPage));
     } catch (err) {
-      console.error('API Error:', err);
-      setError(err.message || `Failed to ${isEditMode ? 'update' : 'apply'} topic.`);
+      console.error('API Error:', err.response?.data || err.message); // Enhanced error logging
+      setError(
+        err.response?.data?.message ||
+        err.message ||
+        `Failed to ${isEditMode ? 'update' : 'apply'} topic.`
+      );
     }
   };
 
   // Handle edit button click
   const handleEdit = (topic) => {
+    console.log('Topic Object:', topic); // Debug topic object
+    if (!topic.plant_topic_id) {
+      setError('Invalid topic ID.');
+      return;
+    }
     setIsEditMode(true);
-    setEditTopicId(topic.id);
+    setEditTopicId(topic.plant_topic_id);
     setFormData({
       plant_id: topic.plant_id.toString(),
       motor_topic: topic.motor_topic || '',
@@ -158,36 +180,6 @@ export default function ApplyTopicPage() {
       valve_topic: topic.valve_topic || '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Handle delete button click
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this topic?')) {
-      try {
-        await axios.delete(`https://water-pump.onrender.com/api/planttopics/${id}`);
-        setError(null);
-        // Re-fetch topics to update table
-        const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
-        const topics = response.data;
-        const topicsWithPlantNames = topics.map(topic => ({
-          ...topic,
-          plant_name: plants.find(plant => plant.plant_id === topic.plant_id)?.plant_name || 'Unknown'
-        }));
-        const filteredTopics = topicsWithPlantNames.filter(
-          (topic) =>
-            topic.plant_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            topic.motor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            topic.sensor_topic?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            topic.valve_topic?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        setTotalPages(Math.ceil(filteredTopics.length / motorsPerPage));
-        const startIndex = (currentPage - 1) * motorsPerPage;
-        setPaginatedPlantTopics(filteredTopics.slice(startIndex, startIndex + motorsPerPage));
-      } catch (err) {
-        console.error('API Error (Delete):', err);
-        setError(err.message || 'Failed to delete topic.');
-      }
-    }
   };
 
   // Handle pagination
@@ -199,7 +191,7 @@ export default function ApplyTopicPage() {
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl p-6">
         {/* Page Header */}
-        <div className="flex items-center justify-between bordered-gray-200 pb-4 mb-6">
+        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
           <div>
             <h2 className="text-2xl font-semibold text-gray-800">{isEditMode ? 'Edit Topic' : 'Apply Topic'}</h2>
             <p className="text-sm text-gray-500 mt-1">{isEditMode ? 'Edit topic details' : 'Select a plant and enter topic details'}</p>
@@ -376,7 +368,7 @@ export default function ApplyTopicPage() {
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Motor Topic</th>
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[150px]">Sensor Topic</th>
                       <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Valve Topic</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Actions</th>
+                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[100px]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -388,7 +380,7 @@ export default function ApplyTopicPage() {
                       </tr>
                     ) : (
                       paginatedPlantTopics.map((topic, index) => (
-                        <tr key={topic.id} className="hover:bg-gray-50">
+                        <tr key={topic.plant_topic_id} className="hover:bg-gray-50">
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                             {(currentPage - 1) * motorsPerPage + index + 1}
                           </td>
@@ -407,20 +399,13 @@ export default function ApplyTopicPage() {
                           <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                             {topic.valve_topic || '-'}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 flex space-x-2">
+                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                             <button
                               className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
                               title="Edit topic"
                               onClick={() => handleEdit(topic)}
                             >
                               Edit
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-colors"
-                              title="Delete topic"
-                              onClick={() => handleDelete(topic.id)}
-                            >
-                              Delete
                             </button>
                           </td>
                         </tr>
@@ -438,7 +423,7 @@ export default function ApplyTopicPage() {
                   </div>
                 ) : (
                   paginatedPlantTopics.map((topic, index) => (
-                    <div key={topic.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                    <div key={topic.plant_topic_id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex items-center gap-2">
                           <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
@@ -448,22 +433,13 @@ export default function ApplyTopicPage() {
                             {topic.plant_name || 'Unknown'}
                           </h3>
                         </div>
-                        <div className="flex space-x-2">
-                          <button
-                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
-                            title="Edit topic"
-                            onClick={() => handleEdit(topic)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-colors"
-                            title="Delete topic"
-                            onClick={() => handleDelete(topic.id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
+                        <button
+                          className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
+                          title="Edit topic"
+                          onClick={() => handleEdit(topic)}
+                        >
+                          Edit
+                        </button>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div className="flex flex-col">
@@ -545,3 +521,5 @@ export default function ApplyTopicPage() {
     </div>
   );
 }
+
+// edit topic completed
