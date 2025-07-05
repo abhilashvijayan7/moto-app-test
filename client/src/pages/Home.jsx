@@ -810,3 +810,5 @@ const Home = () => {
 };
 
 export default Home;
+
+// motor timing added successfully
