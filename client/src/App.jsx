@@ -11,6 +11,7 @@ import NewPlant from "./pages/NewPlant";
 import AddMotor from "./pages/AddMotor";
 import AddSensor from "./pages/AddSensor";
 import Topic from "./pages/Topic";
+import Log from "./pages/Log"
 
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
@@ -45,6 +46,7 @@ function App() {
             <Route path="/add-motor" element={<AddMotor />} />
             <Route path="/add-sensor" element={<AddSensor />} />
             <Route path="/topic" element={<Topic />} />
+            <Route path="/log" element={<Log />} />
 
             <Route path="/support" element={<Support />} />
             <Route path="/change-password" element={<ChangePassword />} />

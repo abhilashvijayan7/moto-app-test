@@ -10,7 +10,8 @@ import logout from "../images/logout.png";
 import icons8_plus_32 from "../images/icons8-plus-32.png";
 import technology from "../images/technology_15876046.png";
 import sensor from "../images/sensor_16704590.png";
-import topic from "../images/topic.png";
+import topic from "../images/topic2.png";
+import livelogs from "../images/livelogs.png"
 
 
 
@@ -26,6 +27,8 @@ function Sidebar() {
     { icon: technology, label: "Add Motor", path: "/add-motor" },
     { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
     { icon: topic, label: "Add Topic", path: "/topic" },
+        { icon: livelogs, label: "Live Log", path: "/log" },
+
 
     
     { icon: passkey, label: "Change Password", path: "/change-password" },
@@ -63,3 +66,5 @@ function Sidebar() {
 }
 
 export default Sidebar;
+
+// icon added for live log
