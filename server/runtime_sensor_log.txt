@@ -1,0 +1,493 @@
+=== Runtime and Sensor Log (2025-07-06T06:50:24.588Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:09
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:29
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.99
+    Water Level Meter: 2.51
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:51.498Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:34
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:54
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 3.22
+    Water Level Meter: 8.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-06T06:50:54.589Z) ===
+Plant ID: 15, Plant Name: Government medical college kozhikodee
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: ON, Runtime: 00:01:39
+    Motor 2 Status: OFF, Runtime: 00:00:00
+  Total Plant Runtime: 00:25:59
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 2.43
+    Water Level Meter: 6.17
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------

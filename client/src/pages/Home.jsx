@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { io } from "socket.io-client";
 import axios from "axios";
 import icon from "../images/Icon.png";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 // Initialize two separate socket connections
 const socketMoto = io("https://moto-app-test.onrender.com", {
@@ -27,6 +28,7 @@ const Home = () => {
   const [plantSensorData, setPlantSensorData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState({});
+  const [searchQuery, setSearchQuery] = useState("");
   const lastUpdateTimes = useRef({});
 
   // Memoize simplified plant data
@@ -38,6 +40,19 @@ const Home = () => {
       })),
     [plantData]
   );
+
+  // Filter plants based on search query
+  const filteredPlants = useMemo(() => {
+    if (!searchQuery.trim()) return plantData;
+    return plantData.filter((plant) =>
+      plant.plant_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [plantData, searchQuery]);
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
 
   // Fetch sensor data for specific plants
   const fetchSensorData = useCallback(async (plants) => {
@@ -305,39 +320,58 @@ const Home = () => {
     [getSensorForPlant, getConnectionStatusForPlant, groupedSensors]
   );
 
-  // Log runtime data to a downloadable text file every 30 seconds
+  // Log runtime and sensor data to a downloadable text file every 30 seconds
   useEffect(() => {
-    const logRuntimeData = () => {
+    const logRuntimeAndSensorData = () => {
       const timestamp = new Date().toISOString();
-      let logContent = `=== Runtime Log (${timestamp}) ===\n`;
+      let logContent = `=== Runtime and Sensor Log (${timestamp}) ===\n`;
 
       plantData.forEach((plant) => {
         const plantId = plant.plant_id;
         const plantName = plant.plant_name || "Unknown Plant";
         const plantStatus = getDisplayedPlantStatus(plantId);
-        if (plantStatus === "RUNNING") {
-          const motors = getMappedMotorsForPlant(plantId);
-          const totalRunTime = calculateTotalRunTime(plantId);
-          const formattedTotalRunTime = new Date(totalRunTime * 1000).toISOString().substr(11, 8);
+        const motors = getMappedMotorsForPlant(plantId);
+        const totalRunTime = calculateTotalRunTime(plantId);
+        const plantSensors = getMappedSensorsForPlant(plantId);
 
-          logContent += `Plant ID: ${plantId}, Plant Name: ${plantName}\n`;
+        logContent += `Plant ID: ${plantId}, Plant Name: ${plantName}\n`;
+        logContent += `  Status: ${plantStatus}\n`;
+
+        // Log motor runtime data
+        if (motors.length > 0) {
+          logContent += `  Motors:\n`;
           motors.forEach((motor) => {
             const formattedRunTime = motor.run_time_sec
               ? new Date(motor.run_time_sec * 1000).toISOString().substr(11, 8)
               : "00:00:00";
-            logContent += `  ${motor.motor_name} (${getMotorLabel(motor.motor_working_order)}): ${motor.status}, Runtime: ${formattedRunTime}\n`;
+            logContent += `    ${motor.motor_name} (${getMotorLabel(motor.motor_working_order)}): ${motor.status}, Runtime: ${formattedRunTime}\n`;
           });
+          const formattedTotalRunTime = new Date(totalRunTime * 1000).toISOString().substr(11, 8);
           logContent += `  Total Plant Runtime: ${formattedTotalRunTime}\n`;
-          logContent += `----------------------------\n`;
+        } else {
+          logContent += `  Motors: No motors available\n`;
         }
+
+        // Log sensor data
+        if (plantSensors.length > 0) {
+          logContent += `  Sensors:\n`;
+          plantSensors.forEach((sensor) => {
+            const sensorValue = sensor.value !== undefined && sensor.value !== null ? sensor.value : "NA";
+            logContent += `    ${sensor.sensor_name}: ${sensorValue}\n`;
+          });
+        } else {
+          logContent += `  Sensors: No enabled sensor data available\n`;
+        }
+
+        logContent += `----------------------------\n`;
       });
 
-      if (logContent !== `=== Runtime Log (${timestamp}) ===\n`) {
+      if (plantData.length > 0) {
         const blob = new Blob([logContent], { type: "text/plain" });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `runtime_log_${timestamp.replace(/[:.]/g, "-")}.txt`;
+        link.download = `runtime_sensor_log_${timestamp.replace(/[:.]/g, "-")}.txt`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -345,10 +379,10 @@ const Home = () => {
       }
     };
 
-    const interval = setInterval(logRuntimeData, 30 * 1000); // Run every 30 seconds
+    const interval = setInterval(logRuntimeAndSensorData, 30 * 1000); // Run every 30 seconds
 
     return () => clearInterval(interval); // Cleanup on unmount
-  }, [plantData, getDisplayedPlantStatus, getMappedMotorsForPlant, calculateTotalRunTime, getMotorLabel]);
+  }, [plantData, getDisplayedPlantStatus, getMappedMotorsForPlant, calculateTotalRunTime, getMotorLabel, getMappedSensorsForPlant]);
 
   // Socket connection management
   useEffect(() => {
@@ -609,236 +643,213 @@ const Home = () => {
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
+        {/* Search Input with Icon */}
+        <div className="mb-6 px-4 lg:px-[22px]">
+          <div className="relative">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#6B6B6B]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search plants by name..."
+              className="w-full pl-10 pr-4 py-3 border border-[#DADADA] rounded-[12px] text-[16px] text-[#4E4D4D] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] lg:w-[417px] lg:shadow-sm"
+            />
+          </div>
+        </div>
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:py-[110px]">
-          {plantData.map((plant, index) => {
-            const plantSensors = getMappedSensorsForPlant(plant.plant_id);
-            const motors = getMappedMotorsForPlant(plant.plant_id);
-            const sensor = getSensorForPlant(plant.plant_id);
-            const connectionStatus = getConnectionStatusForPlant(plant.plant_id);
-            const manualMode = getManualModeForPlant(plant.plant_id);
-            const displayedPlantStatus = getDisplayedPlantStatus(plant.plant_id);
-            const totalRunTime = calculateTotalRunTime(plant.plant_id);
-            const currentMotorStatus = motorStatuses[plant.plant_id] || "OFF";
-            const currentMotorNumber = motorNumbers[plant.plant_id] || 1;
+          {filteredPlants.length > 0 ? (
+            filteredPlants.map((plant, index) => {
+              const plantSensors = getMappedSensorsForPlant(plant.plant_id);
+              const motors = getMappedMotorsForPlant(plant.plant_id);
+              const sensor = getSensorForPlant(plant.plant_id);
+              const connectionStatus = getConnectionStatusForPlant(plant.plant_id);
+              const manualMode = getManualModeForPlant(plant.plant_id);
+              const displayedPlantStatus = getDisplayedPlantStatus(plant.plant_id);
+              const totalRunTime = calculateTotalRunTime(plant.plant_id);
+              const currentMotorStatus = motorStatuses[plant.plant_id] || "OFF";
+              const currentMotorNumber = motorNumbers[plant.plant_id] || 1;
 
-            return (
-              <div
-                key={plant.plant_id || `plant-${index}`}
-                className="w-[380px] px-[10px] py-[13px] border border-[#DADADA] rounded-[12px] bg-[#FFFFFF] lg:w-[417px]"
-              >
-                <div className="flex justify-between mb-[10px] items-center">
-                  <p className="text-[#4E4D4D] text-[17px] font-[700] max-w-[70%] overflow-wrap-break-word">
-                    {plant.plant_name || "Unknown Plant"}
-                  </p>
-                  <div className="flex flex-col items-center">
-                    <button
-                      id={plant.plant_id}
-                      onClick={() => togglePump(plant.plant_id)}
-                      disabled={isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"}
-                      className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
-                        isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"
-                          ? "bg-[#DADADA] cursor-not-allowed"
-                          : currentMotorStatus === "ON"
-                          ? "bg-[#EF5350]"
-                          : "bg-[#66BB6A]"
-                      }`}
-                    >
-                      <img src={icon} alt="Icon" className="w-[20px] h-[20px]" />
-                      {currentMotorStatus === "ON" ? "STOP" : "START"}
-                    </button>
-                    {error[plant.plant_id] && (
-                      <p className="text-red-500 text-sm mt-2">{error[plant.plant_id]}</p>
-                    )}
+              return (
+                <div
+                  key={plant.plant_id || `plant-${index}`}
+                  className="w-[380px] px-[10px] py-[13px] border border-[#DADADA] rounded-[12px] bg-[#FFFFFF] lg:w-[417px]"
+                >
+                  <div className="flex justify-between mb-[10px] items-center">
+                    <p className="text-[#4E4D4D] text-[17px] font-[700] max-w-[70%] overflow-wrap-break-word">
+                      {plant.plant_name || "Unknown Plant"}
+                    </p>
+                    <div className="flex flex-col items-center">
+                      <button
+                        id={plant.plant_id}
+                        onClick={() => togglePump(plant.plant_id)}
+                        disabled={isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected"}
+                        className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${isButtonDisabled[plant.plant_id] || connectionStatus === "Disconnected" ? "bg-[#DADADA] cursor-not-allowed" : currentMotorStatus === "ON" ? "bg-[#EF5350]" : "bg-[#66BB6A]"}`}
+                      >
+                        <img src={icon} alt="Icon" className="w-[20px] h-[20px]" />
+                        {currentMotorStatus === "ON" ? "STOP" : "START"}
+                      </button>
+                      {error[plant.plant_id] && (
+                        <p className="text-red-500 text-sm mt-2">{error[plant.plant_id]}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                {/* Connection, Status, and Mode */}
-                <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
-                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
-                    <p>Connection</p>
-                    <p
-                      className={`text-[18px] font-[600] ${
-                        connectionStatus === "Disconnected"
-                          ? "text-[#EF5350]"
-                          : "text-[#4CAF50]"
-                      }`}
-                    >
-                      {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1).toLowerCase()}
-                    </p>
+                  {/* Connection, Status, and Mode */}
+                  <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
+                    <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
+                      <p>Connection</p>
+                      <p
+                        className={`text-[18px] font-[600] ${connectionStatus === "Disconnected" ? "text-[#EF5350]" : "text-[#4CAF50]"}`}
+                      >
+                        {connectionStatus.charAt(0).toUpperCase() + connectionStatus.slice(1).toLowerCase()}
+                      </p>
+                    </div>
+                    <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
+                      <p>Status</p>
+                      <p
+                        className={`text-[18px] font-[600] ${displayedPlantStatus === "Disconnected" || displayedPlantStatus === "POWER-OK" ? "text-[#EF5350]" : displayedPlantStatus === "RUNNING" ? "text-[#4CAF50]" : "text-[#208CD4]"}`}
+                      >
+                        {displayedPlantStatus
+                          ? displayedPlantStatus.charAt(0).toUpperCase() + displayedPlantStatus.slice(1).toLowerCase()
+                          : "NA"}
+                      </p>
+                    </div>
+                    <div className="max-w-[33%] lg:max-w-[30%] text-center">
+                      <p>Mode</p>
+                      <p className="text-[18px] text-[#4CAF50] font-[600]">
+                        {connectionStatus === "Disconnected" ? "NA" : manualMode}
+                      </p>
+                    </div>
                   </div>
-                  <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
-                    <p>Status</p>
-                    <p
-                      className={`text-[18px] font-[600] ${
-                        displayedPlantStatus === "Disconnected" ||
-                        displayedPlantStatus === "POWER-OK"
-                          ? "text-[#EF5350]"
-                          : displayedPlantStatus === "RUNNING"
-                          ? "text-[#4CAF50]"
-                          : "text-[#208CD4]"
-                      }`}
-                    >
-                      {displayedPlantStatus
-                        ? displayedPlantStatus.charAt(0).toUpperCase() +
-                          displayedPlantStatus.slice(1).toLowerCase()
-                        : "NA"}
-                    </p>
-                  </div>
-                  <div className="max-w-[33%] lg:max-w-[30%] text-center">
-                    <p>Mode</p>
-                    <p className="text-[18px] text-[#4CAF50] font-[600]">
-                      {connectionStatus === "Disconnected" ? "NA" : manualMode}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Voltage and Current */}
-                <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
-                  <div className="pr-[10px] max-w-[50%] text-center">
-                    <p>V (V1/ V2/ V3)</p>
-                    <p className="text-[18px] text-[#208CD4] font-[600]">
-                      {connectionStatus === "Disconnected"
-                        ? "NA"
-                        : `${sensor[motorStatusKeys(currentMotorNumber).motorVoltageL1Key] ?? "NA"}/ ${
-                            sensor[motorStatusKeys(currentMotorNumber).motorVoltageL2Key] ?? "NA"
-                          }/ ${sensor[motorStatusKeys(currentMotorNumber).motorVoltageL3Key] ?? "NA"} V`}
-                    </p>
+                  {/* Voltage and Current */}
+                  <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
+                    <div className="pr-[10px] max-w-[50%] text-center">
+                      <p>V (V1/ V2/ V3)</p>
+                      <p className="text-[18px] text-[#208CD4] font-[600]">
+                        {connectionStatus === "Disconnected"
+                          ? "NA"
+                          : `${sensor[motorStatusKeys(currentMotorNumber).motorVoltageL1Key] ?? "NA"}/ ${sensor[motorStatusKeys(currentMotorNumber).motorVoltageL2Key] ?? "NA"}/ ${sensor[motorStatusKeys(currentMotorNumber).motorVoltageL3Key] ?? "NA"} V`}
+                      </p>
+                    </div>
+                    <div className="max-w-[50%] text-center">
+                      <p>I (I1/ I2/ I3)</p>
+                      <p className="text-[18px] text-[#208CD4] font-[600]">
+                        {connectionStatus === "Disconnected"
+                          ? "NA"
+                          : `${sensor[motorStatusKeys(currentMotorNumber).motorCurrentL1Key] ?? "NA"}/ ${sensor[motorStatusKeys(currentMotorNumber).motorCurrentL2Key] ?? "NA"}/ ${sensor[motorStatusKeys(currentMotorNumber).motorCurrentL3Key] ?? "NA"} A`}
+                      </p>
+                    </div>
                   </div>
-                  <div className="max-w-[50%] text-center">
-                    <p>I (I1/ I2/ I3)</p>
-                    <p className="text-[18px] text-[#208CD4] font-[600]">
-                      {connectionStatus === "Disconnected"
-                        ? "NA"
-                        : `${sensor[motorStatusKeys(currentMotorNumber).motorCurrentL1Key] ?? "NA"}/ ${
-                            sensor[motorStatusKeys(currentMotorNumber).motorCurrentL2Key] ?? "NA"
-                          }/ ${sensor[motorStatusKeys(currentMotorNumber).motorCurrentL3Key] ?? "NA"} A`}
+
+                  {/* Motor Section with Individual Timers */}
+                  <div className="mb-[6px]">
+                    <p className="text-[17px] text-[#4E4D4D] mb-[6px] font-[700]">
+                      Motor & Power
                     </p>
-                  </div>
-                </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      {motors.length > 0 ? (
+                        motors.map((motor) => {
+                          const status = motor.status;
+                          const cumulativeTime = motor.run_time_sec
+                            ? new Date(motor.run_time_sec * 1000).toISOString().substr(11, 8)
+                            : "00:00:00";
 
-                {/* Motor Section with Individual Timers */}
-                <div className="mb-[6px]">
-                  <p className="text-[17px] text-[#4E4D4D] mb-[6px] font-[700]">
-                    Motor & Power
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {motors.length > 0 ? (
-                      motors.map((motor) => {
-                        const status = motor.status;
-                        const cumulativeTime = motor.run_time_sec
-                          ? new Date(motor.run_time_sec * 1000)
-                              .toISOString()
-                              .substr(11, 8)
-                          : "00:00:00";
-
-                        return (
-                          <div
-                            key={motor.motor_id}
-                            className="border border-[#DADADA] rounded-[8px] p-1 text-[14px] font-[400] text-[#6B6B6B]"
-                          >
-                            <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
-                              <div className="text-start">
-                                <p className="text-[16px]">
-                                  {motor.motor_name} <span className="text-[13px]">({getMotorLabel(motor.motor_working_order)})</span>
+                          return (
+                            <div
+                              key={motor.motor_id}
+                              className="border border-[#DADADA] rounded-[8px] p-1 text-[14px] font-[400] text-[#6B6B6B]"
+                            >
+                              <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
+                                <div className="text-start">
+                                  <p className="text-[16px]">
+                                    {motor.motor_name} <span className="text-[13px]">({getMotorLabel(motor.motor_working_order)})</span>
+                                  </p>
+                                </div>
+                                <p
+                                  className={`text-[16px] ${status === "ON" ? "text-[#4CAF50]" : status === "OFF" ? "text-[#EF5350]" : "text-[#208CD4]"}`}
+                                >
+                                  {status}
                                 </p>
                               </div>
-                              <p
-                                className={`text-[16px] ${
-                                  status === "ON"
-                                    ? "text-[#4CAF50]"
-                                    : status === "OFF"
-                                    ? "text-[#EF5350]"
-                                    : "text-[#208CD4]"
-                                }`}
-                              >
-                                {status}
-                              </p>
+                              <div className="flex justify-between mt-1">
+                                <p className="text-transparent">Placeholder</p>
+                                <p className="text-[#208CD4] font-[600]">
+                                  {`${cumulativeTime} S`}
+                                </p>
+                              </div>
                             </div>
-                            <div className="flex justify-between mt-1">
-                              <p className="text-transparent">Placeholder</p>
-                              <p className="text-[#208CD4] font-[600]">
-                                {`${cumulativeTime} S`}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="col-span-2 text-center text-[#6B6B6B]">
-                        No motors available
+                          );
+                        })
+                      ) : (
+                        <div className="col-span-2 text-center text-[#6B6B6B]">
+                          No motors available
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Total Time */}
+                    {motors.length > 0 && (
+                      <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
+                        <p className="font-[700] text-[#4E4D4D]">
+                          Total Time
+                        </p>
+                        <p className="text-[#208CD4] font-[600]">
+                          {connectionStatus === "Disconnected"
+                            ? "NA"
+                            : `${new Date(totalRunTime * 1000).toISOString().substr(11, 8)} S`}
+                        </p>
                       </div>
                     )}
                   </div>
 
-                  {/* Total Time */}
-                  {motors.length > 0 && (
-                    <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
-                      <p className="font-[700] text-[#4E4D4D]">
-                        Total Time
-                      </p>
-                      <p className="text-[#208CD4] font-[600]">
-                        {connectionStatus === "Disconnected"
-                          ? "NA"
-                          : `${new Date(totalRunTime * 1000)
-                              .toISOString()
-                              .substr(11, 8)} S`}
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Sensors & Actuators */}
-                <div>
-                  <p className="border-b border-b-[#208CD4] mb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
-                    Sensors & Actuators
-                  </p>
-                  <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
-                    <div className="grid grid-cols-4 gap-2 border-b border-b-[#DADADA] pb-[6px]">
-                      {plantSensors.length > 0 ? (
-                        plantSensors
-                          .filter((apidata) => apidata.is_sensor_enabled === true)
-                          .map((apidata, index) => {
-                            const isVacuumSwitch = apidata.sensor_key === "vacuum_switch_ok";
-                            const sensorValue = isVacuumSwitch
-                              ? apidata.value == null || connectionStatus === "Disconnected"
+                  {/* Sensors & Actuators */}
+                  <div>
+                    <p className="border-b border-b-[#208CD4] mb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
+                      Sensors & Actuators
+                    </p>
+                    <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
+                      <div className="grid grid-cols-4 gap-2 border-b border-b-[#DADADA] pb-[6px]">
+                        {plantSensors.length > 0 ? (
+                          plantSensors
+                            .filter((apidata) => apidata.is_sensor_enabled === true)
+                            .map((apidata, index) => {
+                              const isVacuumSwitch = apidata.sensor_key === "vacuum_switch_ok";
+                              const sensorValue = isVacuumSwitch
+                                ? apidata.value == null || connectionStatus === "Disconnected"
+                                  ? "NA"
+                                  : apidata.value === 1
+                                  ? "OK"
+                                  : "NOT OK"
+                                : apidata.value == null || connectionStatus === "Disconnected"
                                 ? "NA"
-                                : apidata.value === 1
-                                ? "OK"
-                                : "NOT OK"
-                              : apidata.value == null || connectionStatus === "Disconnected"
-                              ? "NA"
-                              : apidata.value;
+                                : apidata.value;
 
-                            return (
-                              <div key={apidata.sensor_key || `sensor-${index}`}>
-                                <p className="font-[600]">{apidata.sensor_name || "Sensor"}</p>
-                                <p
-                                  className={`text-[15px] font-[600] ${
-                                    isVacuumSwitch
-                                      ? sensorValue === "OK"
-                                        ? "text-[#4CAF50]"
-                                        : "text-[#EF5350]"
-                                      : sensorValue === "ON"
-                                      ? "text-[#4CAF50]"
-                                      : sensorValue === "OFF" || sensorValue === "NA"
-                                      ? "text-[#EF5350]"
-                                      : "text-[#208CD4]"
-                                  }`}
-                                >
-                                  {sensorValue}
-                                </p>
-                              </div>
-                            );
-                          })
-                      ) : (
-                        <div className="col-span-3">No enabled sensor data available</div>
-                      )}
+                              return (
+                                <div key={apidata.sensor_key || `sensor-${index}`}>
+                                  <p className="font-[600]">{apidata.sensor_name || "Sensor"}</p>
+                                  <p
+                                    className={`text-[15px] font-[600] ${isVacuumSwitch ? sensorValue === "OK" ? "text-[#4CAF50]" : "text-[#EF5350]" : sensorValue === "ON" ? "text-[#4CAF50]" : sensorValue === "OFF" || sensorValue === "NA" ? "text-[#EF5350]" : "text-[#208CD4]"}`}
+                                  >
+                                    {sensorValue}
+                                  </p>
+                                </div>
+                              );
+                            })
+                        ) : (
+                          <div className="col-span-3">No enabled sensor data available</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <div className="w-full text-center text-[#6B6B6B]">
+              No plants found matching your search.
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -847,4 +858,4 @@ const Home = () => {
 
 export default Home;
 
-// motor runtime log created successfully
+// header after search implementaion
