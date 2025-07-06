@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import mainImage from "../images/image 3.png"; // Use the same logo as Sidebar
+import mainImage from "../images/image 3.png";
 import dashboard from "../images/dashboard.png";
 import devices from "../images/devices.png";
 import tv from "../images/tv_options_input_settings.png";
@@ -13,7 +14,6 @@ import icons8_plus_32 from "../images/icons8-plus-32.png";
 import technology from "../images/technology_15876046.png";
 import sensor from "../images/sensor_16704590.png";
 import topic from "../images/topic.png";
-
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -29,8 +29,6 @@ const Header = () => {
     { icon: technology, label: "Add Motor", path: "/add-motor" },
     { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
     { icon: topic, label: "Add Topic", path: "/topic" },
-
-
     { icon: passkey, label: "Change Password", path: "/change-password" },
     { icon: logout, label: "Logout", path: "/logout" },
   ];
@@ -53,7 +51,7 @@ const Header = () => {
   }, []);
 
   return (
-    <div className="lg:hidden">
+    <div className="lg:hidden sticky top-0 z-30 bg-[#FFFFFF]">
       <div className="flex items-center justify-between mt-[40px] mb-[9px] px-4">
         <img src={mainImage} alt="Header" className="h-10" />
         <button
@@ -109,4 +107,4 @@ const Header = () => {
 
 export default Header;
 
-// header before sticky
+// search completed

@@ -643,17 +643,19 @@ const Home = () => {
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
-        {/* Search Input with Icon */}
-        <div className="mb-6  lg:px-[22px] lg:flex  lg:justify-end">
-          <div className="relative mt-9   ">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#6B6B6B]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              placeholder="Search plants by name..."
-              className="w-full pl-10 pr-4 py-3 border border-[#DADADA] rounded-[12px] text-[16px] text-[#4E4D4D] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] lg:w-[417px] lg:shadow-sm"
-            />
+        {/* Search Input with Sticky Behavior */}
+        <div className="sticky top-[80px] z-20 bg-[#FFFFFF] lg:top-[20px] lg:bg-transparent ">
+          <div className="mb-6 lg:px-[22px] lg:flex lg:justify-end ">
+            <div className="relative mt-9 ">
+              <MagnifyingGlassIcon className="absolute left-3 top-6.5 transform -translate-y-1/2 h-5 w-5  text-[#6B6B6B]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                placeholder="Search plants by name..."
+                className="w-full pl-10 pr-4 py-3 border border-[#DADADA] rounded-[12px] text-[16px] text-[#4E4D4D] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] lg:w-[417px] lg:shadow-sm lg:mb-5"
+              />
+            </div>
           </div>
         </div>
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:pb-[110px]">
@@ -762,9 +764,12 @@ const Home = () => {
                             >
                               <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
                                 <div className="text-start">
-                                  <p className="text-[16px]">
-                                    {motor.motor_name} <span className="text-[13px]">({getMotorLabel(motor.motor_working_order)})</span>
-                                  </p>
+                                  <div className="flex items-center gap-1">
+                                    <p className="text-[16px]">{motor.motor_name}</p>
+                                    <span className="text-[13px]">
+                                      ({getMotorLabel(motor.motor_working_order)})
+                                    </span>
+                                  </div>
                                 </div>
                                 <p
                                   className={`text-[16px] ${status === "ON" ? "text-[#4CAF50]" : status === "OFF" ? "text-[#EF5350]" : "text-[#208CD4]"}`}
@@ -858,4 +863,4 @@ const Home = () => {
 
 export default Home;
 
-// home before sticky
+// search completed
