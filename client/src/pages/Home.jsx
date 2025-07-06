@@ -644,8 +644,8 @@ const Home = () => {
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
         {/* Search Input with Icon */}
-        <div className="mb-6 px-4 lg:px-[22px]">
-          <div className="relative">
+        <div className="mb-6  lg:px-[22px] lg:flex  lg:justify-end">
+          <div className="relative mt-9   ">
             <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#6B6B6B]" />
             <input
               type="text"
@@ -656,7 +656,7 @@ const Home = () => {
             />
           </div>
         </div>
-        <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:py-[110px]">
+        <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:pb-[110px]">
           {filteredPlants.length > 0 ? (
             filteredPlants.map((plant, index) => {
               const plantSensors = getMappedSensorsForPlant(plant.plant_id);
@@ -858,4 +858,4 @@ const Home = () => {
 
 export default Home;
 
-// header after search implementaion
+// home before sticky
