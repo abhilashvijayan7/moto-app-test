@@ -117,12 +117,14 @@ const DataLog = () => {
     : [];
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 bg-white rounded-md shadow-md lg:mt-20">
       <h2 className="text-2xl font-bold mb-4 text-gray-700">Data Log</h2>
       <table className="w-full text-left border-collapse">
         <thead>
           <tr className="bg-gray-200">
-           
+            <th className="p-2 border">TIME</th>
+            <th className="p-2 border">PLANT ID</th>
+            <th className="p-2 border">PLANT NAME</th>
             {headers.map((header, index) => (
               <th key={index} className="p-2 border">{header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</th>
             ))}
