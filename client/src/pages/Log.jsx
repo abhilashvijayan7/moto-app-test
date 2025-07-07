@@ -13,6 +13,21 @@ const DataLog = () => {
   const [sensorMoto, setSensorMoto] = useState({});
   const [plantNames, setPlantNames] = useState({});
 
+  // Load log data from localStorage on component mount
+  useEffect(() => {
+    const savedLogData = localStorage.getItem('logData');
+    if (savedLogData) {
+      setLogData(JSON.parse(savedLogData));
+    }
+  }, []);
+
+  // Save log data to localStorage whenever it changes
+  useEffect(() => {
+    if (logData.length > 0) {
+      localStorage.setItem('logData', JSON.stringify(logData));
+    }
+  }, [logData]);
+
   // Fetch plant names from API
   useEffect(() => {
     const fetchPlantNames = async () => {
@@ -205,4 +220,4 @@ const DataLog = () => {
 
 export default DataLog;
 
-// log after mobile responsive
+// log after local storage

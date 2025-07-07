@@ -114,49 +114,49 @@ const logRuntimeAndSensorData = async () => {
   const plants = await loadPlantTopics();
   let hasData = false;
 
-  for (const plant of plants) {
-    const plantId = plant.plant_id;
-    const plantName = plant.plant_name || "Unknown Plant";
-    const data = latestSensorData[plantId];
+  // for (const plant of plants) {
+  //   const plantId = plant.plant_id;
+  //   const plantName = plant.plant_name || "Unknown Plant";
+  //   const data = latestSensorData[plantId];
 
-    if (data) {
-      hasData = true;
-      const motorRuntimeSec = data.motor_runtime_sec || 0;
-      const totalRuntimeSec = data.total_runtime_sec || 0;
-      const formattedTotalRunTime = new Date(totalRuntimeSec * 1000).toISOString().substr(11, 8);
+  //   if (data) {
+  //     hasData = true;
+  //     const motorRuntimeSec = data.motor_runtime_sec || 0;
+  //     const totalRuntimeSec = data.total_runtime_sec || 0;
+  //     const formattedTotalRunTime = new Date(totalRuntimeSec * 1000).toISOString().substr(11, 8);
 
-      logContent += `Plant ID: ${plantId}, Plant Name: ${plantName}\n`;
-      logContent += `  Status: ${data.plant_status || "NA"}\n`;
-      logContent += `  Motors:\n`;
-      logContent += `    Motor 1 Status: ${data.motor1_status || "NA"}, Runtime: ${
-        data.motor1_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
-      }\n`;
-      logContent += `    Motor 2 Status: ${data.motor2_status || "NA"}, Runtime: ${
-        data.motor2_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
-      }\n`;
-      logContent += `  Total Plant Runtime: ${formattedTotalRunTime}\n`;
+  //     logContent += `Plant ID: ${plantId}, Plant Name: ${plantName}\n`;
+  //     logContent += `  Status: ${data.plant_status || "NA"}\n`;
+  //     logContent += `  Motors:\n`;
+  //     logContent += `    Motor 1 Status: ${data.motor1_status || "NA"}, Runtime: ${
+  //       data.motor1_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
+  //     }\n`;
+  //     logContent += `    Motor 2 Status: ${data.motor2_status || "NA"}, Runtime: ${
+  //       data.motor2_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
+  //     }\n`;
+  //     logContent += `  Total Plant Runtime: ${formattedTotalRunTime}\n`;
 
-      // Log sensor data
-      logContent += `  Sensors:\n`;
-      const sensorKeys = Object.keys(data).filter(key => 
-        ![
-          'plant_id', 'plant_status', 'motor1_status', 'motor2_status', 
-          'motor_runtime_sec', 'total_runtime_sec'
-        ].includes(key)
-      );
-      if (sensorKeys.length > 0) {
-        sensorKeys.forEach(key => {
-          const value = data[key] !== undefined && data[key] !== null ? data[key] : "NA";
-          // Convert snake_case to readable format
-          const sensorName = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-          logContent += `    ${sensorName}: ${value}\n`;
-        });
-      } else {
-        logContent += `    No sensor data available\n`;
-      }
-      logContent += `----------------------------\n`;
-    }
-  }
+  //     // Log sensor data
+  //     logContent += `  Sensors:\n`;
+  //     const sensorKeys = Object.keys(data).filter(key => 
+  //       ![
+  //         'plant_id', 'plant_status', 'motor1_status', 'motor2_status', 
+  //         'motor_runtime_sec', 'total_runtime_sec'
+  //       ].includes(key)
+  //     );
+  //     if (sensorKeys.length > 0) {
+  //       sensorKeys.forEach(key => {
+  //         const value = data[key] !== undefined && data[key] !== null ? data[key] : "NA";
+  //         // Convert snake_case to readable format
+  //         const sensorName = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  //         logContent += `    ${sensorName}: ${value}\n`;
+  //       });
+  //     } else {
+  //       logContent += `    No sensor data available\n`;
+  //     }
+  //     logContent += `----------------------------\n`;
+  //   }
+  // }
 
   if (hasData) {
     try {
