@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
 const axios = require("axios");
 const fs = require("fs").promises;
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -91,7 +92,6 @@ const subscribeToSensorTopics = async () => {
   const plants = await loadPlantTopics();
   if (!plants.length) {
     console.error("No plant topics found, subscribing to default topic.");
-
   }
 
   plants.forEach((plant) => {
@@ -157,9 +157,14 @@ const logRuntimeAndSensorData = async () => {
   }
 
   if (hasData) {
+    const logDir = path.join(__dirname, 'logs');
+    const logFile = path.join(logDir, 'runtime_sensor_log.txt');
+    
     try {
-      await fs.appendFile("runtime_sensor_log.txt", logContent);
-      console.log(`Runtime and sensor data appended to runtime_sensor_log.txt at ${timestamp}`);
+      // Ensure logs directory exists
+      await fs.mkdir(logDir, { recursive: true });
+      await fs.appendFile(logFile, logContent);
+      console.log(`Runtime and sensor data appended to ${logFile} at ${timestamp}`);
     } catch (error) {
       console.error("Error appending to runtime_sensor_log.txt:", error.message);
     }
@@ -281,10 +286,18 @@ io.on("connection", (socket) => {
   });
 });
 
+// Prevent serving static files or log file
+app.use((req, res, next) => {
+  if (req.path.includes('runtime_sensor_log.txt')) {
+    return res.status(403).send('Access denied');
+  }
+  next();
+});
+
 // Start Server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// topic loaded from api
+// download file removed

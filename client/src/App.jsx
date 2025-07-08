@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import usePushNotifications from "./hooks/usePushNotifications";
-import Header from "./components/Header"; // Import the new Header component
+import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import Home from "./pages/Home";
 import Motor from "./pages/Motor";
@@ -12,7 +12,7 @@ import AddMotor from "./pages/AddMotor";
 import AddSensor from "./pages/AddSensor";
 import Topic from "./pages/Topic";
 import Log from "./pages/Log"
-
+import LoginPage from "./pages/Login";
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
 }
@@ -24,17 +24,19 @@ function ChangePassword() {
 }
 
 function Logout() {
-  localStorage.removeItem("authToken"); // Example logout logic
+  localStorage.removeItem("authToken");
   return <Navigate to="/home" />;
 }
 
 function App() {
   usePushNotifications();
+  const isLoginPage = window.location.pathname === "/login";
+
   return (
     <div className="flex flex-col lg:flex-row lg:bg-[#DADADA] min-h-screen">
-      <Sidebar />
+      {!isLoginPage && <Sidebar />}
       <div className="flex-1 flex flex-col">
-        <Header /> {/* Add Header for mobile navigation */}
+        {!isLoginPage && <Header />}
         <div className="flex-1">
           <Routes>
             <Route path="/home" element={<Home />} />
@@ -47,7 +49,7 @@ function App() {
             <Route path="/add-sensor" element={<AddSensor />} />
             <Route path="/topic" element={<Topic />} />
             <Route path="/log" element={<Log />} />
-
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/support" element={<Support />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/logout" element={<Logout />} />
