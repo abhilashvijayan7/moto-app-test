@@ -13292,3 +13292,224 @@ Plant ID: 15, Plant Name: Plant 15
     Manual Mode Active: 0
     Last Fault Message: None
 ----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:23:54.685Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:02:57
+  Total Plant Runtime: 00:45:32
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 0.25
+    Water Level Meter: 8.39
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.477Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.490Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.485Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.489Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.489Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.495Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.483Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.486Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.493Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.490Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.493Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
+=== Runtime and Sensor Log (2025-07-08T13:24:02.488Z) ===
+Plant ID: 15, Plant Name: Plant 15
+  Status: RUNNING
+  Motors:
+    Motor 1 Status: OFF, Runtime: 00:00:00
+    Motor 2 Status: ON, Runtime: 00:03:07
+  Total Plant Runtime: 00:45:42
+  Sensors:
+    Chlorine Gas Valve Status: ON
+    Hocl Valve Status: OFF
+    Water Inlet Valve Status: ON
+    Residual Chlorine Plant: 4.24
+    Water Level Meter: 1.94
+    Vacuum Switch Ok: 1
+    Manual Mode Active: 0
+    Last Fault Message: None
+----------------------------
