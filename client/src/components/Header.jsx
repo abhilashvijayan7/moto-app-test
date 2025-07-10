@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { NavLink } from "react-router-dom";
 import { Menu, X } from "lucide-react";
@@ -14,7 +13,8 @@ import icons8_plus_32 from "../images/icons8-plus-32.png";
 import technology from "../images/technology_15876046.png";
 import sensor from "../images/sensor_16704590.png";
 import topic from "../images/topic2.png";
-import livelogs from "../images/livelogs.png"
+import livelogs from "../images/livelogs.png";
+import savedlogs from "../images/saved-png.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -30,8 +30,9 @@ const Header = () => {
     { icon: technology, label: "Add Motor", path: "/add-motor" },
     { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
     { icon: topic, label: "Add Topic", path: "/topic" },
-            { icon: livelogs, label: "Live Log", path: "/log" },
-    
+    { icon: livelogs, label: "Live Log", path: "/log" },
+    { icon: savedlogs, label: "Saved Log", path: "/saved-log" },
+
     { icon: passkey, label: "Change Password", path: "/change-password" },
     { icon: logout, label: "Logout", path: "/logout" },
   ];

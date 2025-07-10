@@ -11,9 +11,8 @@ import icons8_plus_32 from "../images/icons8-plus-32.png";
 import technology from "../images/technology_15876046.png";
 import sensor from "../images/sensor_16704590.png";
 import topic from "../images/topic2.png";
-import livelogs from "../images/livelogs.png"
-
-
+import livelogs from "../images/livelogs.png";
+import savedlogs from "../images/saved-png.png";
 
 function Sidebar() {
   const menuItems = [
@@ -27,20 +26,23 @@ function Sidebar() {
     { icon: technology, label: "Add Motor", path: "/add-motor" },
     { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
     { icon: topic, label: "Add Topic", path: "/topic" },
-        { icon: livelogs, label: "Live Log", path: "/log" },
+    { icon: livelogs, label: "Live Log", path: "/log" },
+    { icon: savedlogs, label: "Saved Log", path: "/saved-log" },
 
-
-    
     { icon: passkey, label: "Change Password", path: "/change-password" },
     { icon: logout, label: "Logout", path: "/logout" },
-
-
-    
   ];
 
   return (
     <div className="left-side text-[#6B6B6B] w-[200px] bg-[#FFFFFF] shrink-0 hidden lg:block">
-     <center><img src={mainImage} alt="KRP Aquatech" width="75%" className="pt-[30px] ml-[5.5px] mb-[30px]" /></center> 
+      <center>
+        <img
+          src={mainImage}
+          alt="KRP Aquatech"
+          width="75%"
+          className="pt-[30px] ml-[5.5px] mb-[30px]"
+        />
+      </center>
       <div className="mr-[10px] ml-[10px] flex flex-col justify-center ">
         {menuItems.map((item, index) => (
           <NavLink

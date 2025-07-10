@@ -13,6 +13,7 @@ import AddSensor from "./pages/AddSensor";
 import Topic from "./pages/Topic";
 import Log from "./pages/Log"
 import LoginPage from "./pages/Login";
+import SavedLog from "./pages/SavedLog";
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
 }
@@ -50,6 +51,8 @@ function App() {
             <Route path="/topic" element={<Topic />} />
             <Route path="/log" element={<Log />} />
             <Route path="/login" element={<LoginPage />} />
+                        <Route path="/saved-log" element={<SavedLog/>} />
+
             <Route path="/support" element={<Support />} />
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/logout" element={<Logout />} />
