@@ -7,8 +7,6 @@ const mqtt = require("mqtt");
 const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
 const axios = require("axios");
-const fs = require("fs").promises;
-const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
@@ -28,13 +26,16 @@ serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
+  service_account: {
+    email: serviceAccount.client_email,
+  },
 });
 
 // FCM Token Storage
 let savedTokens = [];
 
 app.post("/save-token", (req, res) => {
-  const { token } = req.body;
+  const { token } = req.body.data;
   if (token && !savedTokens.includes(token)) {
     savedTokens.push(token);
     console.log("Token saved:", token);
@@ -42,9 +43,9 @@ app.post("/save-token", (req, res) => {
   res.sendStatus(200);
 });
 
-app.get("/send-notification", async (req, res) => {
+app.get("/send", async (req, res) => {
   if (!savedTokens.length) {
-    return res.status(400).json({ success: false, message: "No device tokens saved." });
+    res.status(400).send({ success: false, message: "No device tokens saved." });
   }
 
   const message = {
@@ -73,7 +74,7 @@ const loadPlantTopics = async () => {
     console.log("Loaded plant topics from API:", topics);
     return topics.map(topic => ({
       plant_id: topic.plant_id,
-      plant_name: `Plant ${topic.plant_id}`, // Adjust if plant_name is available in API
+      plant_name: `Plant ${topic.plant_id}`,
       SENSOR_TOPIC: topic.sensor_topic,
       MOTOR_TOPIC: topic.motor_topic,
     }));
@@ -83,18 +84,102 @@ const loadPlantTopics = async () => {
   }
 };
 
+// Fetch motor data for a specific plant
+const fetchMotorData = async (plantId) => {
+  try {
+    const response = await axios.get(`https://water-pump.onrender.com/api/plantmotors/plant/${plantId}`);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (error) {
+    console.error(`Error fetching motor data for plant ${plantId}:`, error.message);
+    return [];
+  }
+};
+
+// Build API payload
+const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
+  const secondsToTimeString = (seconds) => {
+    const date = new Date(seconds * 1000);
+    return date.toISOString().substr(11, 8);
+  };
+
+  const motors = [
+    { key: "motor1_status", name: "motor1" },
+    { key: "motor2_status", name: "motor2" },
+  ]
+    .map(({ key, name }) => {
+      const matchingMotor = motorsFromApi.find((motor) => motor.motor_name === name);
+      const motorId = matchingMotor ? matchingMotor.motor_id : `unknown-${plantId}-${name}`;
+      return {
+        motor_id: motorId,
+        is_running: sensorData[key] === "ON",
+        motor_run_time_at_snapshot: secondsToTimeString(sensorData.motor_runtime_sec || 0),
+        motor_status: sensorData[key] || "OFF",
+        last_motor_fault: "None",
+      };
+    })
+    .filter(motor => motor.is_running); // Only include motors that are ON
+
+  const generateCurrentTimestamp = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const payload = {
+    plant_id: plantId,
+    recorded_at: generateCurrentTimestamp(),
+    plant_total_time: secondsToTimeString(sensorData.total_runtime_sec || 0),
+    plant_status: sensorData.plant_status || "IDLE",
+    operational_mode: sensorData.manual_mode_active === 1 ? "Manual" : "Automatic",
+    last_fault_message: sensorData.last_fault_message || "None",
+    water_inflow_status: sensorData.water_inlet_valve_status === "ON",
+    HOCL_valve_status: sensorData.hocl_valve_status === "ON",
+    chlorine_gas_valve_status: sensorData.chlorine_gas_valve_status === "ON",
+    water_level_glr: sensorData.water_level_meter || 0,
+    water_level_oht: 0,
+    vacuum_switch_status: sensorData.vacuum_switch_ok === 1 ? "OK" : "NOT OK",
+    residual_chlorine_plant: sensorData.residual_chlorine_plant || 0,
+    residual_chlorine_farthest: 0,
+    chlorine_cylinder_weight: 0,
+    chlorine_leakage_detected: false,
+    physical_on_button_pressed: false,
+    manual_mode_pressed: sensorData.manual_mode_active === 1,
+    plant_voltage_l1: 0,
+    plant_voltage_l2: 0,
+    plant_voltage_l3: 0,
+    plant_current_l1: 0,
+    plant_current_l2: 0,
+    plant_current_l3: 0,
+    motors,
+  };
+
+  return payload;
+};
+
 // MQTT Setup
 const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 let latestSensorData = {};
 
-// Subscribe to sensor topics from API
+// Cache for plant topics
+let cachedPlantTopics = [];
+
+// Subscribe to sensor topics from cached plant topics
 const subscribeToSensorTopics = async () => {
-  const plants = await loadPlantTopics();
-  if (!plants.length) {
-    console.error("No plant topics found, subscribing to default topic.");
+  if (!cachedPlantTopics.length) {
+    cachedPlantTopics = await loadPlantTopics();
   }
 
-  plants.forEach((plant) => {
+  if (!cachedPlantTopics.length) {
+    console.error("No plant topics found, subscribing to default topic.");
+    return;
+  }
+
+  cachedPlantTopics.forEach((plant) => {
     mqttClient.subscribe(plant.SENSOR_TOPIC, (err) => {
       if (err) {
         console.error(`Error subscribing to topic ${plant.SENSOR_TOPIC}:`, err.message);
@@ -105,96 +190,78 @@ const subscribeToSensorTopics = async () => {
   });
 };
 
-// Log runtime and sensor data to file every 30 seconds
+// Post sensor data to API every 30 seconds
 const logRuntimeAndSensorData = async () => {
   const timestamp = new Date().toISOString();
-  let logContent = `=== Runtime and Sensor Log (${timestamp}) ===\n`;
+  console.log(`[${timestamp}] Posting sensor data to API for all plants`);
 
-  const plants = await loadPlantTopics();
-  let hasData = false;
-
-  for (const plant of plants) {
+  for (const plant of cachedPlantTopics) {
     const plantId = plant.plant_id;
-    const plantName = plant.plant_name || "Unknown Plant";
-    const data = latestSensorData[plantId];
+    const sensorData = latestSensorData[plantId];
 
-    if (data) {
-      hasData = true;
-      const motorRuntimeSec = data.motor_runtime_sec || 0;
-      const totalRuntimeSec = data.total_runtime_sec || 0;
-      const formattedTotalRunTime = new Date(totalRuntimeSec * 1000).toISOString().substr(11, 8);
-
-      logContent += `Plant ID: ${plantId}, Plant Name: ${plantName}\n`;
-      logContent += `  Status: ${data.plant_status || "NA"}\n`;
-      logContent += `  Motors:\n`;
-      logContent += `    Motor 1 Status: ${data.motor1_status || "NA"}, Runtime: ${
-        data.motor1_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
-      }\n`;
-      logContent += `    Motor 2 Status: ${data.motor2_status || "NA"}, Runtime: ${
-        data.motor2_status === "ON" ? new Date(motorRuntimeSec * 1000).toISOString().substr(11, 8) : "00:00:00"
-      }\n`;
-      logContent += `  Total Plant Runtime: ${formattedTotalRunTime}\n`;
-
-      // Log sensor data
-      logContent += `  Sensors:\n`;
-      const sensorKeys = Object.keys(data).filter(key => 
-        ![
-          'plant_id', 'plant_status', 'motor1_status', 'motor2_status', 
-          'motor_runtime_sec', 'total_runtime_sec'
-        ].includes(key)
-      );
-      if (sensorKeys.length > 0) {
-        sensorKeys.forEach(key => {
-          const value = data[key] !== undefined && data[key] !== null ? data[key] : "NA";
-          const sensorName = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-          logContent += `    ${sensorName}: ${value}\n`;
-        });
-      } else {
-        logContent += `    No sensor data available\n`;
-      }
-      logContent += `----------------------------\n`;
+    if (!sensorData) {
+      console.log(`[${timestamp}] No sensor data for plant ${plantId}`);
+      continue;
     }
-  }
 
-  if (hasData) {
-    const logDir = path.join(__dirname, 'logs');
-    const logFile = path.join(logDir, 'runtime_sensor_log.txt');
-    
+    console.log(`[${timestamp}] Processing data for plant ${plantId}`, sensorData);
+
     try {
-      // Ensure logs directory exists
-      await fs.mkdir(logDir, { recursive: true });
-      await fs.appendFile(logFile, logContent);
-      console.log(`Runtime and sensor data appended to ${logFile} at ${timestamp}`);
+      const motorsFromApi = await fetchMotorData(plantId);
+      const payload = buildApiPayload(plantId, sensorData, motorsFromApi);
+      console.log(`[${timestamp}] Posting payload for plant ${plantId}:`, payload);
+
+      const response = await axios.post(
+        "https://water-pump.onrender.com/api/plantops",
+        payload,
+        process.env.API_TOKEN ? { headers: { Authorization: `Bearer ${process.env.API_TOKEN}` } } : {}
+      );
+      console.log(`[${timestamp}] Successfully posted data for plant ${plantId}:`, response.data);
     } catch (error) {
-      console.error("Error appending to runtime_sensor_log.txt:", error.message);
+      console.error(`[${timestamp}] Error posting data for plant ${plantId} to /api/plantops:`, error.message);
+      if (savedTokens.length > 0) {
+        const alert = {
+          notification: {
+            title: `⚠️ API Failure for Plant ${plantId}`,
+            body: `Failed to post data to /api/plantops: ${error.message}`,
+          },
+          tokens: savedTokens,
+        };
+        await admin.messaging().sendEachForMulticast(alert);
+        console.log(`[${timestamp}] Alert sent for API failure on plant ${plantId}`);
+      }
     }
   }
 };
 
+// Initialize plant topics and MQTT subscriptions on startup
+const initializeServer = async () => {
+  cachedPlantTopics = await loadPlantTopics();
+  await subscribeToSensorTopics();
+};
+
 mqttClient.on("connect", async () => {
   console.log("Connected to MQTT broker");
-  await subscribeToSensorTopics();
-  setInterval(logRuntimeAndSensorData, 30 * 1000);
+  await initializeServer();
+  setInterval(logRuntimeAndSensorData, 30 * 1000); // Run every 30 seconds
 });
 
 mqttClient.on("message", async (topic, message) => {
   try {
-    const plants = await loadPlantTopics();
-    const plant = plants.find((p) => p.SENSOR_TOPIC === topic);
+    const plant = cachedPlantTopics.find((p) => p.SENSOR_TOPIC === topic);
     if (!plant) {
-      console.warn(`No plant found for topic: ${topic}`);
+      console.warn(`[${new Date().toISOString()}] No plant found for topic: ${topic}`);
       return;
     }
 
     const plantId = plant.plant_id;
     const data = JSON.parse(message.toString());
+    console.log(`[${new Date().toISOString()}] Received data for plant ${plantId}:`, data);
 
     latestSensorData[plantId] = data;
     const motoBoundData = { id: plantId, sensordata: data };
 
     io.emit("sensor_data", { data: motoBoundData });
-
-    console.log(`Received data for plant ${plantId}:`, data);
 
     let motorStatus = "OFF";
     let motorNumber = 1;
@@ -224,42 +291,41 @@ mqttClient.on("message", async (topic, message) => {
       };
 
       await admin.messaging().sendEachForMulticast(chlorineAlert);
-      console.log(`🚨 Chlorine alert notification sent for plant ${plantId}.`);
+      console.log(`[${new Date().toISOString()}] Chlorine alert notification sent for plant ${plantId}`);
     }
   } catch (e) {
-    console.error("Error parsing MQTT message:", e.message);
+    console.error(`[${new Date().toISOString()}] Error parsing MQTT message:`, e.message);
   }
 });
 
 // Socket.IO Connection
 io.on("connection", (socket) => {
-  console.log("Frontend connected:", socket.id);
+  console.log(`[${new Date().toISOString()}] Frontend connected:`, socket.id);
 
   socket.emit("sensor_data", { data: latestSensorData });
 
   socket.on("motor_control", async (data) => {
-    console.log("Received motor_control:", data);
+    console.log(`[${new Date().toISOString()}] Received motor_control:`, data);
     const { command, plantId } = data;
 
     if (!plantId) {
-      console.warn("No plantId provided in motor_control message.");
+      console.warn(`[${new Date().toISOString()}] No plantId provided in motor_control message`);
       return socket.emit("error", { message: "plantId is required" });
     }
 
     if (!["ON", "OFF"].includes(command)) {
-      console.warn(`Invalid command received: ${command}`);
+      console.warn(`[${new Date().toISOString()}] Invalid command received: ${command}`);
       return socket.emit("error", { message: "Invalid command. Use 'ON' or 'OFF'" });
     }
 
     if (!mqttClient.connected) {
-      console.warn("MQTT client not connected, cannot publish.");
+      console.warn(`[${new Date().toISOString()}] MQTT client not connected, cannot publish`);
       return socket.emit("error", { message: "MQTT client not connected" });
     }
 
-    const plants = await loadPlantTopics();
-    const plant = plants.find((p) => p.plant_id.toString() === plantId.toString());
+    const plant = cachedPlantTopics.find((p) => p.plant_id.toString() === plantId.toString());
     if (!plant) {
-      console.warn(`No MOTOR_TOPIC found for plantId: ${plantId}`);
+      console.warn(`[${new Date().toISOString()}] No MOTOR_TOPIC found for plantId: ${plantId}`);
       return socket.emit("error", { message: `No plant found for plantId: ${plantId}` });
     }
 
@@ -268,10 +334,10 @@ io.on("connection", (socket) => {
 
     mqttClient.publish(motorTopic, payload, { qos: 1 }, (err) => {
       if (err) {
-        console.error(`Error publishing motor command to ${motorTopic}:`, err.message);
+        console.error(`[${new Date().toISOString()}] Error publishing motor command to ${motorTopic}:`, err.message);
         socket.emit("error", { message: `Failed to publish command to ${motorTopic}` });
       } else {
-        console.log(`Published motor command to ${motorTopic}:`, payload);
+        console.log(`[${new Date().toISOString()}] Published motor command to ${motorTopic}:`, payload);
         io.emit("motor_status_update", {
           plantId,
           command: payload,
@@ -282,16 +348,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log("Frontend disconnected:", socket.id);
+    console.log(`[${new Date().toISOString()}] Frontend disconnected:`, socket.id);
   });
-});
-
-// Prevent serving static files or log file
-app.use((req, res, next) => {
-  if (req.path.includes('runtime_sensor_log.txt')) {
-    return res.status(403).send('Access denied');
-  }
-  next();
 });
 
 // Start Server
@@ -299,5 +357,3 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-// download file removed
