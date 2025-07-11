@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable'; // Explicitly import autoTable
+import * as XLSX from 'xlsx';
 
 const SavedLog = () => {
   const [logData, setLogData] = useState([]);
@@ -9,15 +12,13 @@ const SavedLog = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [recordsPerPage] = useState(10); // Configurable records per page
+  const [recordsPerPage] = useState(10);
 
-  // Fetch plant names from API
   useEffect(() => {
     const fetchPlantNames = async () => {
       try {
         const response = await axios.get("https://water-pump.onrender.com/api/plants");
         const plants = Array.isArray(response.data) ? response.data : [];
-        console.log("Fetched plant names:", plants);
         const names = plants.reduce((acc, plant) => ({
           ...acc,
           [plant.plant_id]: plant.plant_name || `Unknown Plant ${plant.plant_id}`,
@@ -28,25 +29,19 @@ const SavedLog = () => {
         setPlantNames({});
       }
     };
-
     fetchPlantNames();
   }, []);
 
-  // Fetch plant operation data based on date range
   const fetchPlantData = async () => {
     if (!startDate || !endDate) return;
-
     setLoading(true);
     setError(null);
-    setCurrentPage(1); // Reset to first page on new fetch
+    setCurrentPage(1);
     try {
       const response = await axios.get(
         `https://water-pump.onrender.com/api/plantops/filter?start=${startDate}&end=${endDate}`
       );
       const data = Array.isArray(response.data) ? response.data : [];
-      console.log("Fetched plant data:", data);
-
-      // Map API data to match existing logData structure
       const formattedData = data.map((item) => ({
         time: new Date(item.recorded_at).toLocaleTimeString('en-US', {
           hour12: false,
@@ -85,8 +80,7 @@ const SavedLog = () => {
           : '00:00:00',
         vaccum_switch_status: item.vaccum_switch_status === null ? 'NA' : item.vaccum_switch_status ? 'OK' : 'NOT OK',
       }));
-
-      setLogData(formattedData); // Store all data without limit
+      setLogData(formattedData);
     } catch (error) {
       console.error("Error fetching plant data:", error.message);
       setError("Failed to fetch data. Please try again.");
@@ -96,7 +90,6 @@ const SavedLog = () => {
     }
   };
 
-  // Format seconds to HH:MM:SS
   const formatTime = (seconds) => {
     if (!seconds || isNaN(seconds)) return "00:00:00";
     const hours = Math.floor(seconds / 3600).toString().padStart(2, "0");
@@ -105,7 +98,6 @@ const SavedLog = () => {
     return `${hours}:${minutes}:${secs}`;
   };
 
-  // Handle date input changes
   const handleDateChange = (e, type) => {
     const value = e.target.value;
     if (type === 'start') {
@@ -115,13 +107,11 @@ const SavedLog = () => {
     }
   };
 
-  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     fetchPlantData();
   };
 
-  // Pagination logic
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = logData.slice(indexOfFirstRecord, indexOfLastRecord);
@@ -129,13 +119,12 @@ const SavedLog = () => {
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
-    window.scrollTo(0, 0); // Scroll to top on page change
+    window.scrollTo(0, 0);
   };
 
-  // Generate page numbers with ellipsis for large page counts
   const getPageNumbers = () => {
     const pageNumbers = [];
-    const maxPageButtons = 5; // Show up to 5 page buttons at a time
+    const maxPageButtons = 5;
     const sideButtons = Math.floor((maxPageButtons - 1) / 2);
 
     if (totalPages <= maxPageButtons) {
@@ -145,7 +134,6 @@ const SavedLog = () => {
     } else {
       let startPage = Math.max(1, currentPage - sideButtons);
       let endPage = Math.min(totalPages, currentPage + sideButtons);
-
       if (endPage - startPage < maxPageButtons - 1) {
         if (startPage === 1) {
           endPage = maxPageButtons;
@@ -153,7 +141,6 @@ const SavedLog = () => {
           startPage = totalPages - (maxPageButtons - 1);
         }
       }
-
       if (startPage > 2) {
         pageNumbers.push(1);
         if (startPage > 3) pageNumbers.push('...');
@@ -166,20 +153,74 @@ const SavedLog = () => {
         pageNumbers.push(totalPages);
       }
     }
-
     return pageNumbers;
   };
 
-  // Dynamically determine headers
   const headers = logData.length > 0
     ? Object.keys(logData[0]).filter(key => key !== 'plantId' && key !== 'time' && key !== 'plantName')
     : [];
+
+  const downloadExcel = () => {
+    const worksheetData = logData.map(log => ({
+      Time: log.time,
+      'Plant ID': log.plantId,
+      'Plant Name': log.plantName,
+      ...headers.reduce((acc, header) => ({
+        ...acc,
+        [header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())]: log[header],
+      }), {}),
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Plant Data');
+    
+    const colWidths = headers.map(header => ({
+      wch: Math.max(
+        header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).length,
+        ...worksheetData.map(row => String(row[header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())] || '').length)
+      )
+    }));
+    worksheet['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 20 }, ...colWidths];
+    
+    XLSX.writeFile(workbook, `Plant_Data_${startDate}_to_${endDate}.xlsx`);
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF('landscape');
+    // Explicitly apply the autoTable plugin to the jsPDF instance
+    autoTable(doc, {
+      head: [['Time', 'Plant ID', 'Plant Name', ...headers.map(header => 
+        header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+      )]],
+      body: logData.map(log => [
+        log.time,
+        log.plantId,
+        log.plantName,
+        ...headers.map(header => log[header]),
+      ]),
+      startY: 40,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
+      columnStyles: {
+        0: { cellWidth: 20 },
+        1: { cellWidth: 15 },
+        2: { cellWidth: 30 },
+      },
+    });
+
+    doc.setFontSize(16);
+    doc.text('Plant Operation Data', 14, 22);
+    doc.setFontSize(12);
+    doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 32);
+
+    doc.save(`Plant_Data_${startDate}_to_${endDate}.pdf`);
+  };
 
   return (
     <div className="container mx-auto p-2 sm:p-4 bg-white rounded-md shadow-md lg:mt-10">
       <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-700">Data Log</h2>
 
-      {/* Date Range Form */}
       <form onSubmit={handleSubmit} className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4">
         <div className="flex flex-col">
           <label htmlFor="startDate" className="text-sm font-medium text-gray-700">Start Date</label>
@@ -210,11 +251,27 @@ const SavedLog = () => {
         </button>
       </form>
 
+      {logData.length > 0 && (
+        <div className="mb-4 flex gap-2">
+          <button
+            onClick={downloadExcel}
+            className="p-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600"
+          >
+            Download Excel
+          </button>
+          <button
+            onClick={downloadPDF}
+            className="p-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600"
+          >
+            Download PDF
+          </button>
+        </div>
+      )}
+
       {error && (
         <p className="text-center text-red-500 mb-4 text-sm sm:text-base">{error}</p>
       )}
 
-      {/* Desktop/Table View */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left border-collapse text-sm">
           <thead>
@@ -256,7 +313,6 @@ const SavedLog = () => {
         </table>
       </div>
 
-      {/* Mobile/Card View */}
       <div className="sm:hidden space-y-4">
         {currentRecords.map((log, index) => (
           <div key={index} className="border rounded-lg p-3 bg-gray-50">
@@ -292,7 +348,6 @@ const SavedLog = () => {
         ))}
       </div>
 
-      {/* Pagination Controls */}
       {logData.length > 0 && (
         <div className="mt-4 flex flex-col sm:flex-row justify-between items-center">
           <div className="text-sm text-gray-700 mb-2 sm:mb-0">
