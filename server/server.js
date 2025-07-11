@@ -117,7 +117,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
         last_motor_fault: "None",
       };
     })
-    .filter(motor => motor.is_running);
+    .filter(motor => motor.is_running); // Only include motors that are ON
 
   const generateCurrentTimestamp = () => {
     const now = new Date();
@@ -162,10 +162,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
 };
 
 // MQTT Setup
-const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883", {
-  clientId: `water-pump-server-${Math.random().toString(16).slice(3)}`,
-  clean: true,
-});
+const mqttClient = mqtt.connect("mqtt://test.mosquitto.org:1883");
 let latestSensorData = {};
 
 // Cache for plant topics
@@ -178,14 +175,7 @@ const subscribeToSensorTopics = async () => {
   }
 
   if (!cachedPlantTopics.length) {
-    console.error("No plant topics found. Skipping subscription.");
-    mqttClient.unsubscribe("#", (err) => {
-      if (err) {
-        console.error("Error unsubscribing from all topics:", err.message);
-      } else {
-        console.log("Unsubscribed from all topics due to empty plant topics.");
-      }
-    });
+    console.error("No plant topics found, subscribing to default topic.");
     return;
   }
 
@@ -204,11 +194,6 @@ const subscribeToSensorTopics = async () => {
 const logRuntimeAndSensorData = async () => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] Posting sensor data to API for all plants`);
-
-  if (!cachedPlantTopics.length) {
-    console.log(`[${timestamp}] No plant topics available. Skipping data posting.`);
-    return;
-  }
 
   for (const plant of cachedPlantTopics) {
     const plantId = plant.plant_id;
@@ -252,17 +237,13 @@ const logRuntimeAndSensorData = async () => {
 // Initialize plant topics and MQTT subscriptions on startup
 const initializeServer = async () => {
   cachedPlantTopics = await loadPlantTopics();
-  if (!cachedPlantTopics.length) {
-    console.warn("No plant topics loaded. Clearing latestSensorData.");
-    latestSensorData = {};
-  }
   await subscribeToSensorTopics();
 };
 
 mqttClient.on("connect", async () => {
   console.log("Connected to MQTT broker");
   await initializeServer();
-  setInterval(logRuntimeAndSensorData, 30 * 1000);
+  setInterval(logRuntimeAndSensorData, 30 * 1000); // Run every 30 seconds
 });
 
 mqttClient.on("message", async (topic, message) => {
@@ -321,11 +302,7 @@ mqttClient.on("message", async (topic, message) => {
 io.on("connection", (socket) => {
   console.log(`[${new Date().toISOString()}] Frontend connected:`, socket.id);
 
-  if (cachedPlantTopics.length) {
-    socket.emit("sensor_data", { data: latestSensorData });
-  } else {
-    socket.emit("error", { message: "No plant topics available. Please check server configuration." });
-  }
+  socket.emit("sensor_data", { data: latestSensorData });
 
   socket.on("motor_control", async (data) => {
     console.log(`[${new Date().toISOString()}] Received motor_control:`, data);
@@ -380,3 +357,5 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// befor edit
