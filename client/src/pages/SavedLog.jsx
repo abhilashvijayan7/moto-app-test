@@ -1,19 +1,52 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import axios from 'axios';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable'; // Explicitly import autoTable
-import * as XLSX from 'xlsx';
+import { Search, Filter, Calendar, ChevronDown } from 'lucide-react';
+import DataTable from '../components/DataTable';
+
+const PAGE_SIZE = 10;
 
 const SavedLog = () => {
-  const [logData, setLogData] = useState([]);
   const [plantNames, setPlantNames] = useState({});
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [recordsPerPage] = useState(10);
+  const [summaryType, setSummaryType] = useState('plant');
+  const [tableFilters, setTableFilters] = useState({
+    time: '',
+    plantId: '',
+    plantName: '',
+  });
 
+  const [plantSearch, setPlantSearch] = useState('');
+  const [isPlantDropdownOpen, setIsPlantDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const [data, setData] = useState([]);
+    const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const staticFields = [];
+
+  const dynamicFields = useMemo(() => {
+    if (!data.length) return [];
+    const allKeys = Object.keys(data[0]);
+    return allKeys.filter(key => !staticFields.includes(key));
+  }, [data]);
+
+  const staticColumns = staticFields.map(field => ({
+    label: field.charAt(0).toUpperCase() + field.slice(1),
+    accessor: field
+  }));
+
+  const dynamicColumns = dynamicFields.map(field => ({
+    label: field.charAt(0).toUpperCase() + field.slice(1),
+    accessor: field
+  }));
+
+  const columns = [...staticColumns, ...dynamicColumns];
+
+  // Fetch plant names
   useEffect(() => {
     const fetchPlantNames = async () => {
       try {
@@ -32,367 +65,201 @@ const SavedLog = () => {
     fetchPlantNames();
   }, []);
 
-  const fetchPlantData = async () => {
-    if (!startDate || !endDate) return;
-    setLoading(true);
-    setError(null);
-    setCurrentPage(1);
-    try {
-      const response = await axios.get(
-        `https://water-pump.onrender.com/api/plantops/filter?start=${startDate}&end=${endDate}`
-      );
-      const data = Array.isArray(response.data) ? response.data : [];
-      const formattedData = data.map((item) => ({
-        time: new Date(item.recorded_at).toLocaleTimeString('en-US', {
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }),
-        plantId: item.plant_id,
-        plantName: plantNames[item.plant_id] || item.plant_name || `Unknown Plant ${item.plant_id}`,
-        plant_status: item.plant_status || 'NA',
-        operational_mode: item.operational_mode || 'NA',
-        chlorine_cylinder_weight: item.chlorine_cylinder_weight || 'NA',
-        chlorine_gas_valve_status: item.chlorine_gas_valve_status ? 'ON' : 'OFF',
-        hocl_valve_status: item.hocl_valve_status ? 'ON' : 'OFF',
-        water_inflow_status: item.water_inflow_status ? 'ON' : 'OFF',
-        chlorine_leakage_detected: item.chlorine_leakage_detected ? 'YES' : 'NO',
-        manual_mode_pressed: item.manual_mode_pressed ? 'YES' : 'NO',
-        physical_on_button_pressed: item.physical_on_button_pressed ? 'YES' : 'NO',
-        plant_voltage_l1: item.plant_voltage_l1 || 'NA',
-        plant_voltage_l2: item.plant_voltage_l2 || 'NA',
-        plant_voltage_l3: item.plant_voltage_l3 || 'NA',
-        plant_current_l1: item.plant_current_l1 || 'NA',
-        plant_current_l2: item.plant_current_l2 || 'NA',
-        plant_current_l3: item.plant_current_l3 || 'NA',
-        residual_chlorine_plant: item.residual_chlorine_plant || 'NA',
-        residual_chlorine_farthest: item.residual_chlorine_farthest || 'NA',
-        water_level_glr: item.water_level_glr || 'NA',
-        water_level_oht: item.water_level_oht || 'NA',
-        last_fault_message: item.last_fault_message || 'NA',
-        plant_total_time: item.plant_total_time
-          ? formatTime(
-              item.plant_total_time.hours * 3600 +
-              item.plant_total_time.minutes * 60 +
-              item.plant_total_time.seconds
-            )
-          : '00:00:00',
-        vaccum_switch_status: item.vaccum_switch_status === null ? 'NA' : item.vaccum_switch_status ? 'OK' : 'NOT OK',
-      }));
-      setLogData(formattedData);
-    } catch (error) {
-      console.error("Error fetching plant data:", error.message);
-      setError("Failed to fetch data. Please try again.");
-      setLogData([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsPlantDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  const formatTime = (seconds) => {
-    if (!seconds || isNaN(seconds)) return "00:00:00";
-    const hours = Math.floor(seconds / 3600).toString().padStart(2, "0");
-    const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
-    const secs = (seconds % 60).toString().padStart(2, "0");
-    return `${hours}:${minutes}:${secs}`;
-  };
+  const fetchDataFromServer = useCallback(
+    async ({ page, pageSize }) => {
+      if (!tableFilters.plantId || !startDate || !endDate) return { data: [], totalCount: 0 };
+      setLoading(true);
+      setError('');
+      try {
+        const response = await fetch(
+          `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${pageSize}&offset=${(page - 1) * pageSize}`
+        );
+        if (!response.ok) throw new Error('Failed to load data.');
+        const json = await response.json();
+        setData(json.data);
+        setTotalCount(json.totalCount);
+        return { data: json.data, totalCount: json.totalCount };
+      } catch (err) {
+        setError(err.message || 'Something went wrong');
+        return { data: [], totalCount: 0 };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [tableFilters.plantId, startDate, endDate]
+  );
 
   const handleDateChange = (e, type) => {
     const value = e.target.value;
-    if (type === 'start') {
-      setStartDate(value);
-    } else {
-      setEndDate(value);
-    }
+    if (type === 'start') setStartDate(value);
+    else setEndDate(value);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    fetchPlantData();
+  const handleSummaryTypeChange = (e) => {
+    setSummaryType(e.target.value);
   };
 
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = logData.slice(indexOfFirstRecord, indexOfLastRecord);
-  const totalPages = Math.ceil(logData.length / recordsPerPage);
-
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    window.scrollTo(0, 0);
+  const handleTableFilterChange = (field, value) => {
+    setTableFilters((prev) => ({ ...prev, [field]: value }));
   };
 
-  const getPageNumbers = () => {
-    const pageNumbers = [];
-    const maxPageButtons = 5;
-    const sideButtons = Math.floor((maxPageButtons - 1) / 2);
-
-    if (totalPages <= maxPageButtons) {
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-      }
-    } else {
-      let startPage = Math.max(1, currentPage - sideButtons);
-      let endPage = Math.min(totalPages, currentPage + sideButtons);
-      if (endPage - startPage < maxPageButtons - 1) {
-        if (startPage === 1) {
-          endPage = maxPageButtons;
-        } else if (endPage === totalPages) {
-          startPage = totalPages - (maxPageButtons - 1);
-        }
-      }
-      if (startPage > 2) {
-        pageNumbers.push(1);
-        if (startPage > 3) pageNumbers.push('...');
-      }
-      for (let i = startPage; i <= endPage; i++) {
-        pageNumbers.push(i);
-      }
-      if (endPage < totalPages - 1) {
-        if (endPage < totalPages - 2) pageNumbers.push('...');
-        pageNumbers.push(totalPages);
-      }
-    }
-    return pageNumbers;
-  };
-
-  const headers = logData.length > 0
-    ? Object.keys(logData[0]).filter(key => key !== 'plantId' && key !== 'time' && key !== 'plantName')
-    : [];
-
-  const downloadExcel = () => {
-    const worksheetData = logData.map(log => ({
-      Time: log.time,
-      'Plant ID': log.plantId,
-      'Plant Name': log.plantName,
-      ...headers.reduce((acc, header) => ({
-        ...acc,
-        [header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())]: log[header],
-      }), {}),
+  const handlePlantSelect = (plantId, plantName) => {
+    setTableFilters((prev) => ({
+      ...prev,
+      plantId,
+      plantName,
     }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Plant Data');
-    
-    const colWidths = headers.map(header => ({
-      wch: Math.max(
-        header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).length,
-        ...worksheetData.map(row => String(row[header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())] || '').length)
-      )
-    }));
-    worksheet['!cols'] = [{ wch: 12 }, { wch: 10 }, { wch: 20 }, ...colWidths];
-    
-    XLSX.writeFile(workbook, `Plant_Data_${startDate}_to_${endDate}.xlsx`);
+    setPlantSearch('');
+    setIsPlantDropdownOpen(false);
   };
 
-  const downloadPDF = () => {
-    const doc = new jsPDF('landscape');
-    // Explicitly apply the autoTable plugin to the jsPDF instance
-    autoTable(doc, {
-      head: [['Time', 'Plant ID', 'Plant Name', ...headers.map(header => 
-        header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-      )]],
-      body: logData.map(log => [
-        log.time,
-        log.plantId,
-        log.plantName,
-        ...headers.map(header => log[header]),
-      ]),
-      startY: 40,
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [200, 200, 200], textColor: [0, 0, 0] },
-      columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 15 },
-        2: { cellWidth: 30 },
-      },
-    });
-
-    doc.setFontSize(16);
-    doc.text('Plant Operation Data', 14, 22);
-    doc.setFontSize(12);
-    doc.text(`Date Range: ${startDate} to ${endDate}`, 14, 32);
-
-    doc.save(`Plant_Data_${startDate}_to_${endDate}.pdf`);
-  };
+  const filteredPlants = Object.entries(plantNames).filter(([plantId, plantName]) =>
+    plantId.toLowerCase().includes(plantSearch.toLowerCase()) ||
+    plantName.toLowerCase().includes(plantSearch.toLowerCase())
+  );
 
   return (
-    <div className="container mx-auto p-2 sm:p-4 bg-white rounded-md shadow-md lg:mt-10">
-      <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-700">Data Log</h2>
+    <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px] lg:px-11 lg:w-full">
+      <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-4 lg:p-6 border-b border-gray-200">
+          <h2 className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+            Log
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <div className="relative">
+              <select
+                id="summaryType"
+                value={summaryType}
+                onChange={handleSummaryTypeChange}
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+              >
+                <option value="plant">Plant Log</option>
+                <option value="motor">Motor Summary</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
 
-      <form onSubmit={handleSubmit} className="mb-4 flex flex-col sm:flex-row gap-2 sm:gap-4">
-        <div className="flex flex-col">
-          <label htmlFor="startDate" className="text-sm font-medium text-gray-700">Start Date</label>
-          <input
-            type="date"
-            id="startDate"
-            value={startDate}
-            onChange={(e) => handleDateChange(e, 'start')}
-            className="p-2 border rounded-md text-sm"
-          />
-        </div>
-        <div className="flex flex-col">
-          <label htmlFor="endDate" className="text-sm font-medium text-gray-700">End Date</label>
-          <input
-            type="date"
-            id="endDate"
-            value={endDate}
-            onChange={(e) => handleDateChange(e, 'end')}
-            className="p-2 border rounded-md text-sm"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading || !startDate || !endDate}
-          className="p-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:bg-gray-400"
-        >
-          {loading ? 'Loading...' : 'Fetch Data'}
-        </button>
-      </form>
+            <div className="relative" ref={dropdownRef}>
+              <div
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent bg-white text-sm cursor-pointer flex items-center"
+                onClick={() => setIsPlantDropdownOpen(!isPlantDropdownOpen)}
+              >
+                <Search className="absolute left-3 w-4 h-4 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={plantSearch}
+                  onChange={(e) => {
+                    setPlantSearch(e.target.value);
+                    setIsPlantDropdownOpen(true);
+                  }}
+                  placeholder={tableFilters.plantName || "Search plants..."}
+                  className="w-full bg-transparent focus:outline-none text-sm"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                <ChevronDown className="absolute right-3 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+              {isPlantDropdownOpen && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {filteredPlants.length > 0 ? (
+                    filteredPlants.map(([plantId, plantName]) => (
+                      <div
+                        key={plantId}
+                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handlePlantSelect(plantId, plantName)}
+                      >
+                        {plantName} (ID: {plantId})
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-sm text-gray-500">
+                      No plants found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-      {logData.length > 0 && (
-        <div className="mb-4 flex gap-2">
-          <button
-            onClick={downloadExcel}
-            className="p-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600"
-          >
-            Download Excel
-          </button>
-          <button
-            onClick={downloadPDF}
-            className="p-2 bg-red-500 text-white rounded-md text-sm hover:bg-red-600"
-          >
-            Download PDF
-          </button>
-        </div>
-      )}
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+              <input
+                type="date"
+                id="startDate"
+                value={startDate}
+                onChange={(e) => handleDateChange(e, 'start')}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
 
-      {error && (
-        <p className="text-center text-red-500 mb-4 text-sm sm:text-base">{error}</p>
-      )}
-
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-1 sm:p-2 border">TIME</th>
-              <th className="p-1 sm:p-2 border">PLANT ID</th>
-              <th className="p-1 sm:p-2 border">PLANT NAME</th>
-              {headers.map((header, index) => (
-                <th key={index} className="p-1 sm:p-2 border">
-                  {header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {currentRecords.map((log, index) => (
-              <tr key={index} className="border-t">
-                <td className="p-1 sm:p-2 border text-gray-600">{log.time}</td>
-                <td className="p-1 sm:p-2 border">{log.plantId}</td>
-                <td className="p-1 sm:p-2 border">{log.plantName}</td>
-                {headers.map((header) => (
-                  <td key={header} className="p-1 sm:p-2 border">
-                    {(header.endsWith('_status') || header.includes('valve') || header === 'chlorine_leakage_detected' || 
-                      header === 'manual_mode_pressed' || header === 'physical_on_button_pressed') ? (
-                      <span className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium 
-                        ${log[header] === "ON" || log[header] === "YES" || log[header] === "OK" ? "bg-green-100 text-green-800" : 
-                          log[header] === "OFF" || log[header] === "NO" || log[header] === "NOT OK" ? "bg-red-100 text-red-800" : 
-                          "bg-gray-100 text-gray-800"}`}>
-                        {log[header]}
-                      </span>
-                    ) : (
-                      log[header]
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="sm:hidden space-y-4">
-        {currentRecords.map((log, index) => (
-          <div key={index} className="border rounded-lg p-3 bg-gray-50">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="font-semibold">Time:</div>
-              <div>{log.time}</div>
-              <div className="font-semibold">Plant ID:</div>
-              <div>{log.plantId}</div>
-              <div className="font-semibold">Plant Name:</div>
-              <div>{log.plantName}</div>
-              {headers.map((header) => (
-                <React.Fragment key={header}>
-                  <div className="font-semibold">
-                    {header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}:
-                  </div>
-                  <div>
-                    {(header.endsWith('_status') || header.includes('valve') || header === 'chlorine_leakage_detected' || 
-                      header === 'manual_mode_pressed' || header === 'physical_on_button_pressed') ? (
-                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium 
-                        ${log[header] === "ON" || log[header] === "YES" || log[header] === "OK" ? "bg-green-100 text-green-800" : 
-                          log[header] === "OFF" || log[header] === "NO" || log[header] === "NOT OK" ? "bg-red-100 text-red-800" : 
-                          "bg-gray-100 text-gray-800"}`}>
-                        {log[header]}
-                      </span>
-                    ) : (
-                      log[header]
-                    )}
-                  </div>
-                </React.Fragment>
-              ))}
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+              <input
+                type="date"
+                id="endDate"
+                value={endDate}
+                onChange={(e) => handleDateChange(e, 'end')}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
             </div>
           </div>
-        ))}
-      </div>
 
-      {logData.length > 0 && (
-        <div className="mt-4 flex flex-col sm:flex-row justify-between items-center">
-          <div className="text-sm text-gray-700 mb-2 sm:mb-0">
-            Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, logData.length)} of {logData.length} records
-          </div>
-          <div className="flex gap-2 items-center overflow-x-auto sm:overflow-x-visible">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:bg-gray-400"
-            >
-              Previous
-            </button>
-            {getPageNumbers().map((page, index) => (
-              <React.Fragment key={index}>
-                {page === '...' ? (
-                  <span className="px-3 py-2 text-sm text-gray-700">...</span>
-                ) : (
-                  <button
-                    onClick={() => handlePageChange(page)}
-                    className={`p-2 rounded-md text-sm ${currentPage === page ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                  >
-                    {page}
-                  </button>
-                )}
-              </React.Fragment>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="p-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 disabled:bg-gray-400"
-            >
-              Next
-            </button>
-          </div>
+          {/* <div className="mt-4 flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div className="relative w-full lg:w-80">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={tableFilters.time}
+                onChange={(e) => handleTableFilterChange('time', e.target.value)}
+                placeholder="Search by time"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
+            </div>
+          </div> */}
         </div>
-      )}
 
-      {logData.length === 0 && !loading && !error && (
-        <p className="text-center text-gray-500 mt-3 sm:mt-4 text-sm sm:text-base">
-          No log data available. Please select a date range and fetch data.
-        </p>
-      )}
+        {error && (
+          <p className="text-center text-red-500 py-4 text-sm">{error}</p>
+        )}
+
+       
+         
+          
+        
+      </div>
+       <div className="p-4">
+  
+     
+          <>
+          <DataTable
+            mode="server"
+            fetchData={fetchDataFromServer}
+            totalRows={totalPages * PAGE_SIZE}
+            columns={columns}
+            pageSizeOptions={[5, 10, 20]}
+          />
+          </>
+
+  
+  </div>
     </div>
+
+    
   );
 };
 
 export default SavedLog;
+
+
+// before over flow correction

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { useLocation } from 'react-router-dom';
@@ -121,88 +122,97 @@ const DataLog = () => {
     : [];
 
   return (
-    <div className="container mx-auto p-2 sm:p-4 bg-white rounded-md shadow-md lg:mt-10">
-      <h2 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-700">Data Log</h2>
-      
-      {/* Desktop/Table View */}
-      <div className="hidden sm:block overflow-x-auto">
-        <table className="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="p-1 sm:p-2 border">TIME</th>
-              <th className="p-1 sm:p-2 border">PLANT ID</th>
-              <th className="p-1 sm:p-2 border">PLANT NAME</th>
-              {headers.map((header, index) => (
-                <th key={index} className="p-1 sm:p-2 border">
-                  {header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {logData.map((log, index) => (
-              <tr key={index} className="border-t">
-                <td className="p-1 sm:p-2 border text-gray-600">{log.time}</td>
-                <td className="p-1 sm:p-2 border">{log.plantId}</td>
-                <td className="p-1 sm:p-2 border">{log.plantName}</td>
-                {headers.map((header) => (
-                  <td key={header} className="p-1 sm:p-2 border">
-                    {header.endsWith('_status') || header === 'chlorineGasValve' || header === 'hoclValve' || header === 'waterInletValve' ? (
-                      <span className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${log[header] === "ON" ? "bg-green-100 text-green-800" : log[header] === "OFF" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>
-                        {log[header]}
-                      </span>
-                    ) : (
-                      log[header]
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Mobile/Card View */}
-      <div className="sm:hidden space-y-4">
-        {logData.map((log, index) => (
-          <div key={index} className="border rounded-lg p-3 bg-gray-50">
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="font-semibold">Time:</div>
-              <div>{log.time}</div>
-              <div className="font-semibold">Plant ID:</div>
-              <div>{log.plantId}</div>
-              <div className="font-semibold">Plant Name:</div>
-              <div>{log.plantName}</div>
-              {headers.map((header) => (
-                <React.Fragment key={header}>
-                  <div className="font-semibold">
-                    {header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}:
+    <div className="min-h-screen p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-none lg:mx-0 lg:px-11">
+      <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="p-4 lg:p-6 border-b border-gray-200">
+          <h2 className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+            Data Log
+          </h2>
+          {/* Desktop/Table View */}
+          <div className="hidden sm:block overflow-x-auto">
+            <div className="min-w-full">
+              <div className="bg-gray-50 border-b border-gray-200">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 px-4 py-3 text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  {['Time', 'Plant ID', 'Plant Name', ...headers.map(header => header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))].map((header, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      {header}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {logData.length > 0 ? (
+                logData.map((log, index) => (
+                  <div key={index} className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 px-4 py-3 border-b border-gray-200 text-sm">
+                    <div>{log.time}</div>
+                    <div>{log.plantId}</div>
+                    <div>{log.plantName}</div>
+                    {headers.map((header) => (
+                      <div key={header}>
+                        {(header.endsWith('_status') || header === 'chlorineGasValve' || header === 'hoclValve' || header === 'waterInletValve' || header === 'vacuum_switch_ok' || header === 'manual_mode_active') ? (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
+                            ${log[header] === 'ON' || log[header] === 'OK' || log[header] === 'Manual' ? 'bg-green-100 text-green-800' : 
+                              log[header] === 'OFF' || log[header] === 'NOT OK' || log[header] === 'Auto' ? 'bg-red-100 text-red-800' : 
+                              'bg-gray-100 text-gray-800'}`}>
+                            {log[header]}
+                          </span>
+                        ) : (
+                          log[header]
+                        )}
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    {header.endsWith('_status') || header === 'chlorineGasValve' || header === 'hoclValve' || header === 'waterInletValve' ? (
-                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${log[header] === "ON" ? "bg-green-100 text-green-800" : log[header] === "OFF" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-800"}`}>
-                        {log[header]}
-                      </span>
-                    ) : (
-                      log[header]
-                    )}
-                  </div>
-                </React.Fragment>
-              ))}
+                ))
+              ) : (
+                <div className="text-center py-16 text-gray-500 text-sm">
+                  No log data available. Waiting for sensor updates...
+                </div>
+              )}
             </div>
           </div>
-        ))}
+          {/* Mobile/Card View */}
+          <div className="sm:hidden space-y-4 p-4">
+            {logData.length > 0 ? (
+              logData.map((log, index) => (
+                <div key={index} className="border rounded-lg p-3 bg-gray-50">
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="font-semibold">Time:</div>
+                    <div>{log.time}</div>
+                    <div className="font-semibold">Plant ID:</div>
+                    <div>{log.plantId}</div>
+                    <div className="font-semibold">Plant Name:</div>
+                    <div>{log.plantName}</div>
+                    {headers.map((header) => (
+                      <React.Fragment key={header}>
+                        <div className="font-semibold">
+                          {header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}:
+                        </div>
+                        <div>
+                          {(header.endsWith('_status') || header === 'chlorineGasValve' || header === 'hoclValve' || header === 'waterInletValve' || header === 'vacuum_switch_ok' || header === 'manual_mode_active') ? (
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium 
+                              ${log[header] === 'ON' || log[header] === 'OK' || log[header] === 'Manual' ? 'bg-green-100 text-green-800' : 
+                                log[header] === 'OFF' || log[header] === 'NOT OK' || log[header] === 'Auto' ? 'bg-red-100 text-red-800' : 
+                                'bg-gray-100 text-gray-800'}`}>
+                              {log[header]}
+                            </span>
+                          ) : (
+                            log[header]
+                          )}
+                        </div>
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-16 text-gray-500 text-sm">
+                No log data available. Waiting for sensor updates...
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-
-      {logData.length === 0 && (
-        <p className="text-center text-gray-500 mt-3 sm:mt-4 text-sm sm:text-base">
-          No log data available. Waiting for sensor updates...
-        </p>
-      )}
     </div>
   );
 };
 
 export default DataLog;
-
-// log after mobile responsive

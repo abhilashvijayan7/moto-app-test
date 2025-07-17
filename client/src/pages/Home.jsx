@@ -1,10 +1,4 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import icon from "../images/Icon.png";
@@ -29,8 +23,7 @@ const Home = () => {
   const [motorNumbers, setMotorNumbers] = useState({});
   const [isButtonDisabled, setIsButtonDisabled] = useState({});
   const [connectionStatusMoto, setConnectionStatusMoto] = useState({});
-  const [connectionStatusWaterPump, setConnectionStatusWaterPump] =
-    useState("connected");
+  const [connectionStatusWaterPump, setConnectionStatusWaterPump] = useState("connected");
   const [plantData, setPlantData] = useState([]);
   const [plantSensorData, setPlantSensorData] = useState([]);
   const [plantMotors, setPlantMotors] = useState({});
@@ -701,19 +694,17 @@ const Home = () => {
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
-        {/* Search Input with Sticky Behavior */}
-        <div className="sticky top-[80px] z-20 bg-[#FFFFFF] lg:top-[20px] lg:bg-transparent">
-          <div className="mb-6 lg:px-[22px] lg:flex lg:justify-end">
-            <div className="relative mt-9">
-              <MagnifyingGlassIcon className="absolute left-3 top-6.5 transform -translate-y-1/2 h-5 w-5 text-[#6B6B6B]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={handleSearchChange}
-                placeholder="Search plants by name..."
-                className="w-full pl-10 pr-4 py-3 border border-[#DADADA] rounded-[12px] text-[16px] text-[#4E4D4D] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] lg:w-[417px] lg:shadow-sm lg:mb-5"
-              />
-            </div>
+        {/* Search Input without Sticky Behavior */}
+        <div className="mb-6 lg:px-[22px]">
+          <div className="relative mt-9">
+            <MagnifyingGlassIcon className="absolute left-3 top-6.5 transform -translate-y-1/2 h-5 w-5 text-[#6B6B6B]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search plants by name..."
+              className="w-full pl-10 pr-4 py-3 border border-[#DADADA] rounded-[12px] text-[16px] text-[#4E4D4D] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] lg:w-[417px] lg:shadow-sm lg:mb-5"
+            />
           </div>
         </div>
         <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:pb-[110px]">
@@ -742,8 +733,6 @@ const Home = () => {
                     <p className="text-[#4E4D4D] text-[17px] font-[700] max-w-[70%] overflow-wrap-break-word">
                       {plant.plant_name || "Unknown Plant"}
                     </p>
-
-
                     <div className="flex flex-col items-center">
                       <button
                         id={plant.plant_id}
@@ -774,10 +763,7 @@ const Home = () => {
                         </p>
                       )}
                     </div>
-
-                    
                   </div>
-
                   {/* Connection, Status, and Mode */}
                   <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
                     <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
@@ -820,7 +806,6 @@ const Home = () => {
                       </p>
                     </div>
                   </div>
-
                   {/* Voltage and Current */}
                   <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
                     <div className="pr-[10px] max-w-[50%] text-center">
@@ -870,7 +855,6 @@ const Home = () => {
                       </p>
                     </div>
                   </div>
-
                   {/* Motor Section with Individual Timers */}
                   <div className="mb-[6px]">
                     <p className="text-[17px] text-[#4E4D4D] mb-[6px] font-[700]">
@@ -931,7 +915,6 @@ const Home = () => {
                         </div>
                       )}
                     </div>
-
                     {/* Total Time */}
                     {motors.length > 0 && (
                       <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
@@ -946,7 +929,6 @@ const Home = () => {
                       </div>
                     )}
                   </div>
-
                   {/* Sensors & Actuators */}
                   <div>
                     <p className="border-b border-b-[#208CD4] mb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
@@ -1023,3 +1005,5 @@ const Home = () => {
 };
 
 export default Home;
+
+// search fixed left
