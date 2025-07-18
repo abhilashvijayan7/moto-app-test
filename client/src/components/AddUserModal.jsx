@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
 
 const AddUserModal = ({ isOpen, onClose, name, user }) => {
-  // State to manage form inputs
+  // State for form inputs with camelCase keys
   const [formData, setFormData] = useState({
     dateOfJoining: "",
-    vendorType: "Admin",
-    vendorName: "",
+    userType: "Admin",
+    userName: "",
+    fullName: "",
     gender: "Male",
     dateOfBirth: "",
     designation: "",
@@ -14,34 +16,81 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
     location: "",
     contactNo: "",
     email: "",
-    timeInterval: "",
-    devices: "",
+    devices: [], // Array to store selected plant IDs
   });
 
-  // Pre-populate form with user data when in edit mode
+  // State for plants data and UI
+  const [plants, setPlants] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Mapping between UI label names and formData keys
+  const nameToKeyMap = {
+    "Date Of Joining": "dateOfJoining",
+    "User Type": "userType",
+    "User Name": "userName",
+    "Full Name": "fullName",
+    Gender: "gender",
+    "Date Of Birth": "dateOfBirth",
+    Designation: "designation",
+    Company: "company",
+    Address: "address",
+    Location: "location",
+    "Contact No": "contactNo",
+    Email: "email",
+    Plants: "devices",
+  };
+
+  // Fetch plants from API
+  useEffect(() => {
+    const fetchPlants = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await axios.get('https://water-pump.onrender.com/api/plants');
+        console.log("API Response:", response.data); // Debug API response
+        const plantData = Array.isArray(response.data) ? response.data : [];
+        setPlants(plantData);
+      } catch (error) {
+        console.error("Error fetching plants:", error);
+        setError("Failed to load plants. Please try again.");
+        setPlants([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (isOpen) {
+      fetchPlants();
+    }
+  }, [isOpen]);
+
+  // Pre-populate form for edit mode or reset for add mode
   useEffect(() => {
     if (user && name === "Edit User") {
+      console.log("User data for edit:", user); // Debug user data
       setFormData({
-        dateOfJoining: user.doj ? user.doj.split(" ")[0] : "", // Format date for input (YYYY-MM-DD)
-        vendorType: user.role || "Admin",
-        vendorName: user.companyName || "",
+        dateOfJoining: user.doj ? user.doj.split(" ")[0] : "",
+        userType: user.role || "Admin",
+        userName: user.companyName || "",
+        fullName: user.fullName || "",
         gender: user.gender || "Male",
-        dateOfBirth: user.dob ? user.dob.split(" ")[0] : "", // Format date for input
-        designation: "", // Not in user data, set as empty
+        dateOfBirth: user.dob ? user.dob.split(" ")[0] : "",
+        designation: "",
         company: user.company || "",
         address: user.home || "",
         location: user.location || "",
         contactNo: user.call || "",
         email: user.mail || "",
-        timeInterval: "", // Not in user data, set as empty
-        devices: "", // Not in user data, set as empty
+        devices: Array.isArray(user.devices) ? user.devices.map(String) : [], // Ensure string IDs
       });
     } else {
-      // Reset form for add mode
       setFormData({
         dateOfJoining: "",
-        vendorType: "Admin",
-        vendorName: "",
+        userType: "Admin",
+        userName: "",
+        fullName: "",
         gender: "Male",
         dateOfBirth: "",
         designation: "",
@@ -50,27 +99,70 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
         location: "",
         contactNo: "",
         email: "",
-        timeInterval: "",
-        devices: "",
+        devices: [],
       });
     }
   }, [user, name, isOpen]);
 
-  // Handle input changes
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const formDataKey = nameToKeyMap[name]; // Map UI name to formData key
+    setFormData((prev) => ({ ...prev, [formDataKey]: value }));
+  };
+
+  // Handle plant checkbox changes
+  const handleDeviceChange = (plantId) => {
+    const stringPlantId = String(plantId);
+    console.log("Toggling plant ID:", stringPlantId); // Debug selection
+    setFormData((prev) => {
+      const updatedDevices = prev.devices.includes(stringPlantId)
+        ? prev.devices.filter((id) => id !== stringPlantId)
+        : [...prev.devices, stringPlantId];
+      console.log("Updated devices:", updatedDevices); // Debug updated devices
+      return { ...prev, devices: updatedDevices };
+    });
+  };
+
+  // Toggle dropdown visibility
+  const toggleDropdown = () => {
+    setDropdownOpen((prev) => !prev);
+  };
+
+  // Get selected plant names for display
+  const getSelectedPlantNames = () => {
+    return formData.devices
+      .map((id) => {
+        const plant = plants.find((p) => String(p.plant_id) === id);
+        return plant ? plant.plant_name : null;
+      })
+      .filter(Boolean)
+      .join(", ") || "Select plants";
   };
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("Form submitted:", formData); // Debug form data
     if (name === "Edit User") {
-      console.log("Editing user:", { ...formData, id: user?.apiKey }); // Include user ID for edit
+      console.log("Editing user:", { ...formData, id: user?.apiKey });
     } else {
       console.log("Adding new user:", formData);
     }
-    onClose(); // Close modal after submission
+    onClose();
   };
 
   return (
@@ -107,7 +199,7 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                   </label>
                   <input
                     type="date"
-                    name="dateOfJoining"
+                    name="Date Of Joining"
                     value={formData.dateOfJoining}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
@@ -115,11 +207,11 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Vendor Type
+                    User Type
                   </label>
                   <select
-                    name="vendorType"
-                    value={formData.vendorType}
+                    name="User Type"
+                    value={formData.userType}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
                   >
@@ -129,12 +221,24 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Vendor Name
+                    User Name
                   </label>
                   <input
                     type="text"
-                    name="vendorName"
-                    value={formData.vendorName}
+                    name="User Name"
+                    value={formData.userName}
+                    onChange={handleChange}
+                    className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    name="Full Name"
+                    value={formData.fullName}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
                   />
@@ -144,7 +248,7 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                     Gender
                   </label>
                   <select
-                    name="gender"
+                    name="Gender"
                     value={formData.gender}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
@@ -159,7 +263,7 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                   </label>
                   <input
                     type="date"
-                    name="dateOfBirth"
+                    name="Date Of Birth"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
@@ -171,20 +275,8 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                   </label>
                   <input
                     type="text"
-                    name="designation"
+                    name="Designation"
                     value={formData.designation}
-                    onChange={handleChange}
-                    className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Company
-                  </label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={formData.company}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
                   />
@@ -194,11 +286,23 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
               <div className="flex-1">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
+                    Company
+                  </label>
+                  <input
+                    type="text"
+                    name="Company"
+                    value={formData.company}
+                    onChange={handleChange}
+                    className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
                     Address
                   </label>
                   <input
                     type="text"
-                    name="address"
+                    name="Address"
                     value={formData.address}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
@@ -210,7 +314,7 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                   </label>
                   <input
                     type="text"
-                    name="location"
+                    name="Location"
                     value={formData.location}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
@@ -222,7 +326,7 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                   </label>
                   <input
                     type="text"
-                    name="contactNo"
+                    name="Contact No"
                     value={formData.contactNo}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
@@ -234,7 +338,7 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                   </label>
                   <input
                     type="email"
-                    name="email"
+                    name="Email"
                     value={formData.email}
                     onChange={handleChange}
                     className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
@@ -242,27 +346,43 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Time Interval
+                    Plants
                   </label>
-                  <input
-                    type="text"
-                    name="timeInterval"
-                    value={formData.timeInterval}
-                    onChange={handleChange}
-                    className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Devices
-                  </label>
-                  <input
-                    type="text"
-                    name="devices"
-                    value={formData.devices}
-                    onChange={handleChange}
-                    className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2"
-                  />
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      type="button"
+                      onClick={toggleDropdown}
+                      className="mt-1 block w-full h-10 border border-[#DADADA] rounded-md px-3 py-2 text-left bg-white focus:outline-none truncate"
+                    >
+                      {getSelectedPlantNames()}
+                    </button>
+                    {dropdownOpen && (
+                      <div className="absolute z-20 mt-1 w-full bg-white border border-[#DADADA] rounded-md shadow-lg max-h-60 overflow-auto">
+                        {loading ? (
+                          <div className="p-2 text-gray-500">Loading plants...</div>
+                        ) : error ? (
+                          <div className="p-2 text-red-500">{error}</div>
+                        ) : plants.length === 0 ? (
+                          <div className="p-2 text-gray-500">No plants available</div>
+                        ) : (
+                          plants.map((plant) => (
+                            <label
+                              key={plant.plant_id}
+                              className="flex items-center p-2 hover:bg-gray-100 cursor-pointer"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={formData.devices.includes(String(plant.plant_id))}
+                                onChange={() => handleDeviceChange(plant.plant_id)}
+                                className="mr-2 h-4 w-4 text-[#208CD4] focus:ring-[#208CD4] border-gray-300 rounded"
+                              />
+                              <span>{plant.plant_name || "Unnamed Plant"}</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -270,7 +390,7 @@ const AddUserModal = ({ isOpen, onClose, name, user }) => {
               <button
                 type="submit"
                 onClick={handleSubmit}
-                className="bg-[#208CD4] text-white px-4 py-2 rounded-md hover:bg-[#1a6ea4]"
+                className="bg-[#208CD4] text-white px-4 py-2 rounded-md hover:bg-[#1a6ea4] focus:outline-none"
               >
                 {name === "Edit User" ? "Update" : "Submit"}
               </button>
