@@ -132,7 +132,7 @@ const SavedLog = () => {
   );
 
   return (
-    <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1480px] lg:px-11 lg:w-full lg:bg-white lg:rounded-xl">
+    <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1480px] lg:px-11 lg:py-11 lg:w-full lg:bg-white lg:rounded-xl">
       <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-4 lg:p-6 border-b border-gray-200">
           <h2 className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
