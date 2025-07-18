@@ -1,3 +1,4 @@
+
 import { NavLink } from "react-router-dom";
 import mainImage from "../images/image 3.png";
 import dashboard from "../images/dashboard.png";
@@ -15,20 +16,25 @@ import livelogs from "../images/livelogs.png";
 import savedlogs from "../images/saved-png.png";
 
 function Sidebar() {
+  const userType = localStorage.getItem("userType") || "normal";
+  const isRestrictedUser = userType === "normal" || userType === "regular";
+
   const menuItems = [
     { icon: dashboard, label: "Home", path: "/home" },
-    { icon: devices, label: "My Device", path: "/my-device" },
-    { icon: tv, label: "Device Manager", path: "/device-manager" },
-    { icon: icons8_plus_32, label: "New Plant", path: "/new-plant" },
-    { icon: deployed, label: "User Manager", path: "/user-manager" },
-
-    { icon: headset, label: "Support", path: "/support" },
-    { icon: technology, label: "Add Motor", path: "/add-motor" },
-    { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
-    { icon: topic, label: "Add Topic", path: "/topic" },
-    { icon: livelogs, label: "Live Log", path: "/log" },
-    { icon: savedlogs, label: "Saved Log", path: "/saved-log" },
-
+    ...(isRestrictedUser
+      ? []
+      : [
+          { icon: devices, label: "My Device", path: "/my-device" },
+          { icon: tv, label: "Device Manager", path: "/device-manager" },
+          { icon: icons8_plus_32, label: "New Plant", path: "/new-plant" },
+          { icon: deployed, label: "User Manager", path: "/user-manager" },
+          { icon: technology, label: "Add Motor", path: "/add-motor" },
+          { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
+          { icon: topic, label: "Add Topic", path: "/topic" },
+          { icon: livelogs, label: "Live Log", path: "/log" },
+          { icon: savedlogs, label: "Saved Log", path: "/saved-log" },
+          { icon: headset, label: "Support", path: "/support" },
+        ]),
     { icon: passkey, label: "Change Password", path: "/change-password" },
     { icon: logout, label: "Logout", path: "/logout" },
   ];
@@ -43,7 +49,7 @@ function Sidebar() {
           className="pt-[30px] ml-[5.5px] mb-[30px]"
         />
       </center>
-      <div className="mr-[10px] ml-[10px] flex flex-col justify-center ">
+      <div className="mr-[10px] ml-[10px] flex flex-col justify-center">
         {menuItems.map((item, index) => (
           <NavLink
             key={index}
@@ -68,5 +74,3 @@ function Sidebar() {
 }
 
 export default Sidebar;
-
-// icon added for live log

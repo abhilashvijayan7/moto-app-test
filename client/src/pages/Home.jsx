@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import icon from "../images/Icon.png";
+
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
-// Initialize two separate socket connections
+// Initialize socket connections
 const socketMoto = io("https://moto-app-test.onrender.com", {
   transports: ["websocket"],
 });
@@ -31,6 +33,10 @@ const Home = () => {
   const [error, setError] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const lastUpdateTimes = useRef({});
+  const userType = localStorage.getItem("userType") || "normal";
+  const isRestrictedUser = userType === "normal" || userType === "regular";
+  const canControlPlant = userType === "regular" || userType === "superAdmin";
+  const STATIC_PLANT_ID =  "15";
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -42,13 +48,17 @@ const Home = () => {
     [plantData]
   );
 
-  // Filter plants based on search query
+  // Filter plants based on user type and search query
   const filteredPlants = useMemo(() => {
-    if (!searchQuery.trim()) return plantData;
-    return plantData.filter((plant) =>
+    let plants = isRestrictedUser
+      ? plantData.filter((plant) => plant.plant_id === STATIC_PLANT_ID)
+      : plantData;
+
+    if (!searchQuery.trim()) return plants;
+    return plants.filter((plant) =>
       plant.plant_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [plantData, searchQuery]);
+  }, [plantData, searchQuery, isRestrictedUser]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -135,14 +145,14 @@ const Home = () => {
     }
   }, []);
 
-  // Fetch initial data (supports single plant or all plants)
+  // Fetch initial data
   const fetchInitialData = useCallback(
     async (plantId = null) => {
       try {
         let plants = [];
-        if (plantId) {
+        if (isRestrictedUser) {
           const response = await axios.get(
-            `https://water-pump.onrender.com/api/plants/${plantId}`
+            `https://water-pump.onrender.com/api/plants/${STATIC_PLANT_ID}`
           );
           plants = Array.isArray(response.data)
             ? response.data
@@ -156,19 +166,7 @@ const Home = () => {
           plants = Array.isArray(response.data) ? response.data : [];
         }
 
-        if (plantId) {
-          setPlantData((prev) => {
-            const existingPlant = prev.find((p) => p.plant_id === plantId);
-            if (existingPlant) {
-              return prev.map((p) =>
-                p.plant_id === plantId ? { ...p, ...plants[0] } : p
-              );
-            }
-            return [...prev, ...plants];
-          });
-        } else {
-          setPlantData(plants);
-        }
+        setPlantData(plants);
 
         const simplifiedPlants = plants.map((plant) => ({
           plant_id: plant.plant_id,
@@ -185,12 +183,12 @@ const Home = () => {
           ...prev,
           global: `Failed to fetch plant data: ${error.message}`,
         }));
-        if (!plantId) setPlantData([]);
+        setPlantData([]);
       } finally {
-        if (!plantId) setLoading(false);
+        setLoading(false);
       }
     },
-    [fetchSensorData, fetchMotorData]
+    [fetchSensorData, fetchMotorData, isRestrictedUser]
   );
 
   // Combine sensor data per plant
@@ -231,9 +229,10 @@ const Home = () => {
     }, {});
   }, [plantSensorData]);
 
-  // Toggle pump for a specific plant
+  // Toggle pump (regular and superAdmin only)
   const togglePump = useCallback(
     (plantId) => {
+      if (!canControlPlant) return;
       setIsButtonDisabled((prev) => ({ ...prev, [plantId]: true }));
 
       const sensor = getSensorForPlant(plantId);
@@ -263,7 +262,7 @@ const Home = () => {
 
       lastUpdateTimes.current[plantId] = Date.now();
     },
-    [motorStatuses, getSensorForPlant, getConnectionStatusForPlant]
+    [motorStatuses, getSensorForPlant, getConnectionStatusForPlant, canControlPlant]
   );
 
   // Memoize motor status keys
@@ -306,7 +305,7 @@ const Home = () => {
     return `motor ${workingOrder}`;
   }, []);
 
-  // Map motors from sensor data using fetched motor data
+  // Map motors from sensor data
   const getMappedMotorsForPlant = useCallback(
     (plantId) => {
       const sensor = getSensorForPlant(plantId);
@@ -346,7 +345,6 @@ const Home = () => {
       if (!motors.length) {
         return [];
       }
-      console.log("motors available", motors);
 
       if (connectionStatus === "Disconnected") {
         return motors.map((motor) => ({
@@ -361,7 +359,7 @@ const Home = () => {
     [getSensorForPlant, getConnectionStatusForPlant, plantMotors]
   );
 
-  // Calculate total runtime from sensor data
+  // Calculate total runtime
   const calculateTotalRunTime = useCallback(
     (plantId) => {
       const sensor = getSensorForPlant(plantId);
@@ -376,7 +374,6 @@ const Home = () => {
       const sensor = getSensorForPlant(plantId);
       const connectionStatus = getConnectionStatusForPlant(plantId);
       const plantSensors = groupedSensors[plantId] || [];
-      console.log("plant sensors", plantSensors);
 
       if (!plantSensors.length) {
         return [];
@@ -454,6 +451,7 @@ const Home = () => {
 
     const handleSensorDataMoto = async (data) => {
       const plantId = data.data.id;
+      if (isRestrictedUser && plantId !== STATIC_PLANT_ID) return;
       const sensorData = data.data.sensordata;
 
       setSensorMoto((prev) => ({
@@ -491,6 +489,7 @@ const Home = () => {
 
     const handleSensor = async (data) => {
       const plantId = data.plant_id;
+      if (isRestrictedUser && plantId !== STATIC_PLANT_ID) return;
       setSensorWaterPump(data);
       const plantStatus = data.plant_status;
       setIsButtonDisabled((prev) => ({
@@ -527,6 +526,9 @@ const Home = () => {
           (acc, plant) => ({ ...acc, [plant.plant_id]: "Disconnected" }),
           {}
         )
+      );
+      setIsButtonDisabled((prev) =>
+        Object.fromEntries(Object.keys(prev).map((id) => [id, true]))
       );
     };
 
@@ -570,7 +572,8 @@ const Home = () => {
     };
 
     const handleMotorStatusUpdate = (data) => {
-      const { plantId, command, timestamp } = data;
+      const { plantId, timestamp } = data;
+      if (isRestrictedUser && plantId !== STATIC_PLANT_ID) return;
       const sensor = getSensorForPlant(plantId);
       const plantStatus = sensor.plant_status;
       if (
@@ -578,10 +581,10 @@ const Home = () => {
         timestamp >= lastUpdateTimes.current[plantId]
       ) {
         if (
-          (command === "ON" && plantStatus === "RUNNING") ||
-          (command === "OFF" && plantStatus === "IDLE")
+          (data.command === "ON" && plantStatus === "RUNNING") ||
+          (data.command === "OFF" && plantStatus === "IDLE")
         ) {
-          setMotorStatuses((prev) => ({ ...prev, [plantId]: command }));
+          setMotorStatuses((prev) => ({ ...prev, [plantId]: data.command }));
           lastUpdateTimes.current[plantId] = timestamp;
         }
         setIsButtonDisabled((prev) => ({
@@ -629,21 +632,21 @@ const Home = () => {
       if (timeoutMoto) clearTimeout(timeoutMoto);
       if (timeoutWaterPump) clearTimeout(timeoutWaterPump);
     };
-  }, [sensorMoto, sensorWaterPump, plantData, getSensorForPlant, plantMotors]);
+  }, [sensorMoto, sensorWaterPump, plantData, getSensorForPlant, plantMotors, isRestrictedUser]);
 
-  // Initial data fetch on mount
+  // Initial data fetch
   useEffect(() => {
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // Refresh data for specific plant when sensorWaterPump changes
+  // Refresh data for specific plant
   useEffect(() => {
-    if (sensorWaterPump?.plant_id) {
+    if (sensorWaterPump?.plant_id && (!isRestrictedUser || sensorWaterPump.plant_id === STATIC_PLANT_ID)) {
       fetchInitialData(sensorWaterPump.plant_id);
     }
-  }, [sensorWaterPump, fetchInitialData]);
+  }, [sensorWaterPump, fetchInitialData, isRestrictedUser]);
 
-  // Initialize motorStatuses and motorNumbers for each plant
+  // Initialize motorStatuses and motorNumbers
   useEffect(() => {
     plantData.forEach((plant) => {
       const sensor = getSensorForPlant(plant.plant_id);
@@ -694,7 +697,6 @@ const Home = () => {
   return (
     <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
       <div className="flex-1 w-full">
-        {/* Search Input without Sticky Behavior */}
         <div className="mb-6 lg:px-[22px]">
           <div className="relative mt-9">
             <MagnifyingGlassIcon className="absolute left-3 top-6.5 transform -translate-y-1/2 h-5 w-5 text-[#6B6B6B]" />
@@ -733,38 +735,39 @@ const Home = () => {
                     <p className="text-[#4E4D4D] text-[17px] font-[700] max-w-[70%] overflow-wrap-break-word">
                       {plant.plant_name || "Unknown Plant"}
                     </p>
-                    <div className="flex flex-col items-center">
-                      <button
-                        id={plant.plant_id}
-                        onClick={() => togglePump(plant.plant_id)}
-                        disabled={
-                          isButtonDisabled[plant.plant_id] ||
-                          connectionStatus === "Disconnected"
-                        }
-                        className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
-                          isButtonDisabled[plant.plant_id] ||
-                          connectionStatus === "Disconnected"
-                            ? "bg-[#DADADA] cursor-not-allowed"
-                            : currentMotorStatus === "ON"
-                            ? "bg-[#EF5350]"
-                            : "bg-[#66BB6A]"
-                        }`}
-                      >
-                        <img
-                          src={icon}
-                          alt="Icon"
-                          className="w-[20px] h-[20px]"
-                        />
-                        {currentMotorStatus === "ON" ? "STOP" : "START"}
-                      </button>
-                      {error[plant.plant_id] && (
-                        <p className="text-red-500 text-sm mt-2">
-                          {error[plant.plant_id]}
-                        </p>
-                      )}
-                    </div>
+                    {canControlPlant && (
+                      <div className="flex flex-col items-center">
+                        <button
+                          id={plant.plant_id}
+                          onClick={() => togglePump(plant.plant_id)}
+                          disabled={
+                            isButtonDisabled[plant.plant_id] ||
+                            connectionStatus === "Disconnected"
+                          }
+                          className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
+                            isButtonDisabled[plant.plant_id] ||
+                            connectionStatus === "Disconnected"
+                              ? "bg-[#DADADA] cursor-not-allowed"
+                              : currentMotorStatus === "ON"
+                              ? "bg-[#EF5350]"
+                              : "bg-[#66BB6A]"
+                          }`}
+                        >
+                          <img
+                            src={icon}
+                            alt="Icon"
+                            className="w-[20px] h-[20px]"
+                          />
+                          {currentMotorStatus === "ON" ? "STOP" : "START"}
+                        </button>
+                        {error[plant.plant_id] && (
+                          <p className="text-red-500 text-sm mt-2">
+                            {error[plant.plant_id]}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  {/* Connection, Status, and Mode */}
                   <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
                     <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
                       <p>Connection</p>
@@ -806,7 +809,6 @@ const Home = () => {
                       </p>
                     </div>
                   </div>
-                  {/* Voltage and Current */}
                   <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
                     <div className="pr-[10px] max-w-[50%] text-center">
                       <p>V (V1/ V2/ V3)</p>
@@ -855,7 +857,6 @@ const Home = () => {
                       </p>
                     </div>
                   </div>
-                  {/* Motor Section with Individual Timers */}
                   <div className="mb-[6px]">
                     <p className="text-[17px] text-[#4E4D4D] mb-[6px] font-[700]">
                       Motor & Power
@@ -882,9 +883,7 @@ const Home = () => {
                                       {motor.motor_name}
                                     </p>
                                     <span className="text-[13px]">
-                                      (
-                                      {getMotorLabel(motor.motor_working_order)}
-                                      )
+                                      ({getMotorLabel(motor.motor_working_order)})
                                     </span>
                                   </div>
                                 </div>
@@ -915,7 +914,6 @@ const Home = () => {
                         </div>
                       )}
                     </div>
-                    {/* Total Time */}
                     {motors.length > 0 && (
                       <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
                         <p className="font-[700] text-[#4E4D4D]">Total Time</p>
@@ -929,7 +927,6 @@ const Home = () => {
                       </div>
                     )}
                   </div>
-                  {/* Sensors & Actuators */}
                   <div>
                     <p className="border-b border-b-[#208CD4] mb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
                       Sensors & Actuators
@@ -1005,5 +1002,3 @@ const Home = () => {
 };
 
 export default Home;
-
-// search fixed left

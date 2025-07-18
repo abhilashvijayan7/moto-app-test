@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import usePushNotifications from "./hooks/usePushNotifications";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
@@ -11,9 +12,10 @@ import NewPlant from "./pages/NewPlant";
 import AddMotor from "./pages/AddMotor";
 import AddSensor from "./pages/AddSensor";
 import Topic from "./pages/Topic";
-import Log from "./pages/Log"
+import Log from "./pages/Log";
 import LoginPage from "./pages/Login";
 import SavedLog from "./pages/SavedLog";
+
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
 }
@@ -26,12 +28,31 @@ function ChangePassword() {
 
 function Logout() {
   localStorage.removeItem("authToken");
-  return <Navigate to="/home" />;
+  localStorage.removeItem("userType");
+  localStorage.removeItem("plantId");
+  return <Navigate to="/login" />;
 }
+
+// ProtectedRoute Component
+const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
+  const isAuthenticated = !!localStorage.getItem("authToken");
+  const userType = localStorage.getItem("userType") || "normal";
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  if ((userType === "normal" || userType === "regular") && !allowedForRestrictedUser) {
+    return <Navigate to="/home" />;
+  }
+
+  return children;
+};
 
 function App() {
   usePushNotifications();
-  const isLoginPage = window.location.pathname === "/login";
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/login";
 
   return (
     <div className="flex flex-col lg:flex-row lg:bg-[#DADADA] min-h-screen">
@@ -40,24 +61,128 @@ function App() {
         {!isLoginPage && <Header />}
         <div className="flex-1">
           <Routes>
-            <Route path="/home" element={<Home />} />
-            <Route path="/motor" element={<Motor />} />
-            <Route path="/my-device" element={<MyDevice />} />
-            <Route path="/device-manager" element={<DeviceManager />} />
-            <Route path="/user-manager" element={<UserManager />} />
-            <Route path="/new-plant" element={<NewPlant />} />
-            <Route path="/add-motor" element={<AddMotor />} />
-            <Route path="/add-sensor" element={<AddSensor />} />
-            <Route path="/topic" element={<Topic />} />
-            <Route path="/log" element={<Log />} />
             <Route path="/login" element={<LoginPage />} />
-                        <Route path="/saved-log" element={<SavedLog/>} />
-
-            <Route path="/support" element={<Support />} />
-            <Route path="/change-password" element={<ChangePassword />} />
-            <Route path="/logout" element={<Logout />} />
-            <Route path="/" element={<Navigate to="/home" />} />
-            <Route path="*" element={<MyDevice />} />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={true}>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/log"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={true}>
+                  <Log />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/change-password"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={true}>
+                  <ChangePassword />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/logout"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={true}>
+                  <Logout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/motor"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <Motor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-device"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <MyDevice />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/device-manager"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <DeviceManager />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user-manager"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <UserManager />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/new-plant"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <NewPlant />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/add-motor"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <AddMotor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/add-sensor"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <AddSensor />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/topic"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <Topic />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/saved-log"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <SavedLog />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/support"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <Support />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route
+              path="*"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={false}>
+                  <MyDevice />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </div>
       </div>
