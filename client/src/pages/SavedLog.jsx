@@ -3,8 +3,6 @@ import axios from 'axios';
 import { Search, Filter, Calendar, ChevronDown } from 'lucide-react';
 import DataTable from '../components/DataTable';
 
-const PAGE_SIZE = 10;
-
 const SavedLog = () => {
   const [plantNames, setPlantNames] = useState({});
   const [startDate, setStartDate] = useState('');
@@ -21,8 +19,7 @@ const SavedLog = () => {
   const dropdownRef = useRef(null);
 
   const [data, setData] = useState([]);
-    const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
+  const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -31,17 +28,17 @@ const SavedLog = () => {
   const dynamicFields = useMemo(() => {
     if (!data.length) return [];
     const allKeys = Object.keys(data[0]);
-    return allKeys.filter(key => !staticFields.includes(key));
+    return allKeys.filter((key) => !staticFields.includes(key));
   }, [data]);
 
-  const staticColumns = staticFields.map(field => ({
+  const staticColumns = staticFields.map((field) => ({
     label: field.charAt(0).toUpperCase() + field.slice(1),
-    accessor: field
+    accessor: field,
   }));
 
-  const dynamicColumns = dynamicFields.map(field => ({
+  const dynamicColumns = dynamicFields.map((field) => ({
     label: field.charAt(0).toUpperCase() + field.slice(1),
-    accessor: field
+    accessor: field,
   }));
 
   const columns = [...staticColumns, ...dynamicColumns];
@@ -50,15 +47,18 @@ const SavedLog = () => {
   useEffect(() => {
     const fetchPlantNames = async () => {
       try {
-        const response = await axios.get("https://water-pump.onrender.com/api/plants");
+        const response = await axios.get('https://water-pump.onrender.com/api/plants');
         const plants = Array.isArray(response.data) ? response.data : [];
-        const names = plants.reduce((acc, plant) => ({
-          ...acc,
-          [plant.plant_id]: plant.plant_name || `Unknown Plant ${plant.plant_id}`,
-        }), {});
+        const names = plants.reduce(
+          (acc, plant) => ({
+            ...acc,
+            [plant.plant_id]: plant.plant_name || `Unknown Plant ${plant.plant_id}`,
+          }),
+          {}
+        );
         setPlantNames(names);
       } catch (error) {
-        console.error("Error fetching plant names:", error.message);
+        console.error('Error fetching plant names:', error.message);
         setPlantNames({});
       }
     };
@@ -90,7 +90,7 @@ const SavedLog = () => {
         if (!response.ok) throw new Error('Failed to load data.');
         const json = await response.json();
         setData(json.data);
-        setTotalCount(json.totalCount);
+        setTotalRows(json.totalCount);
         return { data: json.data, totalCount: json.totalCount };
       } catch (err) {
         setError(err.message || 'Something went wrong');
@@ -126,18 +126,17 @@ const SavedLog = () => {
     setIsPlantDropdownOpen(false);
   };
 
-  const filteredPlants = Object.entries(plantNames).filter(([plantId, plantName]) =>
-    plantId.toLowerCase().includes(plantSearch.toLowerCase()) ||
-    plantName.toLowerCase().includes(plantSearch.toLowerCase())
+  const filteredPlants = Object.entries(plantNames).filter(
+    ([plantId, plantName]) =>
+      plantId.toLowerCase().includes(plantSearch.toLowerCase()) ||
+      plantName.toLowerCase().includes(plantSearch.toLowerCase())
   );
 
   return (
     <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1480px] lg:px-11 lg:py-11 lg:w-full lg:bg-white lg:rounded-xl">
       <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="p-4 lg:p-6 border-b border-gray-200">
-          <h2 className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
-            Log
-          </h2>
+          <h2 className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">Log</h2>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="relative">
               <select
@@ -165,7 +164,7 @@ const SavedLog = () => {
                     setPlantSearch(e.target.value);
                     setIsPlantDropdownOpen(true);
                   }}
-                  placeholder={tableFilters.plantName || "Search plants..."}
+                  placeholder={tableFilters.plantName || 'Search plants...'}
                   className="w-full bg-transparent focus:outline-none text-sm"
                   onClick={(e) => e.stopPropagation()}
                 />
@@ -184,9 +183,7 @@ const SavedLog = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="px-4 py-2 text-sm text-gray-500">
-                      No plants found
-                    </div>
+                    <div className="px-4 py-2 text-sm text-gray-500">No plants found</div>
                   )}
                 </div>
               )}
@@ -214,52 +211,23 @@ const SavedLog = () => {
               />
             </div>
           </div>
-
-          {/* <div className="mt-4 flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="relative w-full lg:w-80">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={tableFilters.time}
-                onChange={(e) => handleTableFilterChange('time', e.target.value)}
-                placeholder="Search by time"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-            </div>
-          </div> */}
         </div>
 
-        {error && (
-          <p className="text-center text-red-500 py-4 text-sm">{error}</p>
-        )}
+        {error && <p className="text-center text-red-500 py-4 text-sm">{error}</p>}
 
-       
-         
-          
-        
-      </div>
-       <div className="p-4">
-  
-     
-          <>
+        <div className="p-4">
           <DataTable
             mode="server"
             fetchData={fetchDataFromServer}
-            totalRows={totalPages * PAGE_SIZE}
+            totalRows={totalRows}
             columns={columns}
-            pageSizeOptions={[5, 10, 20]}
+            pageSizeOptions={[5, 10, 15, 20, 50, 100]} // Added 5 to pageSizeOptions
+            defaultPageSize={5} // Set default page size to 5
           />
-          </>
-
-  
-  </div>
+        </div>
+      </div>
     </div>
-
-    
   );
 };
 
 export default SavedLog;
-
-
-// before over flow correction
