@@ -12,53 +12,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://moto-app-test-l63i.vercel.app",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
-// Configure CORS for Express
-app.use(cors({
-  origin: 'https://moto-app-test-l63i.vercel.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Handle preflight OPTIONS requests
-app.options('*', cors({
-  origin: 'https://moto-app-test-l63i.vercel.app',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
+app.use(cors());
 app.use(bodyParser.json());
-
-// Proxy routes to bypass CORS
-app.get('/api/proxy/planttopics', async (req, res) => {
-  try {
-    const response = await axios.get('https://water-pump.onrender.com/api/planttopics', {
-      headers: process.env.API_TOKEN ? { Authorization: `Bearer ${process.env.API_TOKEN}` } : {}
-    });
-    res.setHeader('Access-Control-Allow-Origin', 'https://moto-app-test-l63i.vercel.app');
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error proxying planttopics:', error.message);
-    res.status(500).json({ error: 'Failed to fetch plant topics' });
-  }
-});
-
-app.post('/api/proxy/plantops', async (req, res) => {
-  try {
-    const response = await axios.post('https://water-pump.onrender.com/api/plantops', req.body, {
-      headers: process.env.API_TOKEN ? { Authorization: `Bearer ${process.env.API_TOKEN}` } : {}
-    });
-    res.setHeader('Access-Control-Allow-Origin', 'https://moto-app-test-l63i.vercel.app');
-    res.json(response.data);
-  } catch (error) {
-    console.error('Error proxying plantops:', error.message);
-    res.status(500).json({ error: 'Failed to post plantops data' });
-  }
-});
 
 // Firebase Admin Setup
 const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
@@ -119,7 +79,6 @@ const loadPlantTopics = async () => {
       MOTOR_TOPIC: topic.motor_topic,
     }));
   } catch (error) {
-    vending-machine
     console.error("Error fetching plant topics from API:", error.message);
     return [];
   }
@@ -398,3 +357,5 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// perfectgggggg
