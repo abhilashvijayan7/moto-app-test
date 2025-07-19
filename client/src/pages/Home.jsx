@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
+axios.defaults.withCredentials = true;
 import icon from "../images/Icon.png";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
