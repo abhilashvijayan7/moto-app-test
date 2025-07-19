@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import cheveron_right from "../images/cheveron-right.png";
 import add from "../images/add.png";
 import image from "../images/image.png";
@@ -15,15 +15,16 @@ import humidity_low from "../images/humidity_low.png";
 import location_on from "../images/location_on.png";
 import encrypted from "../images/encrypted.png";
 import AddUserModal from "../components/AddUserModal";
-
 import UploadComponent from '../components/UploadComponent';
-
 
 function UserManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("add"); // Track modal mode: "add" or "edit"
-  const [selectedUser, setSelectedUser] = useState(null); // Track selected user for editing
-    const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [modalMode, setModalMode] = useState("add");
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; // 4 cards per row, 2 rows per page
 
   const handleOpenUpload = () => {
     setIsUploadOpen(true);
@@ -45,7 +46,7 @@ function UserManager() {
       home: "123 Main St",
       company: "KRP Aqua Tech",
       location: "City A",
-      apiKey: "API12345",
+      assignedPlant: "Plant A1",
     },
     {
       companyName: "Aqua Solutions 2",
@@ -58,7 +59,7 @@ function UserManager() {
       home: "456 Elm St",
       company: "Aqua Solutions",
       location: "City B",
-      apiKey: "API67890",
+      assignedPlant: "Plant B2",
     },
     {
       companyName: "Water Tech 3",
@@ -71,7 +72,7 @@ function UserManager() {
       home: "789 Oak St",
       company: "Water Tech",
       location: "City C",
-      apiKey: "API11223",
+      assignedPlant: "Plant C3",
     },
     {
       companyName: "Hydro Dynamics 4",
@@ -84,7 +85,7 @@ function UserManager() {
       home: "101 Pine St",
       company: "Hydro Dynamics",
       location: "City D",
-      apiKey: "API44556",
+      assignedPlant: "Plant D4",
     },
     {
       companyName: "Pure Flow 5",
@@ -97,7 +98,7 @@ function UserManager() {
       home: "202 Birch St",
       company: "Pure Flow",
       location: "City E",
-      apiKey: "API77889",
+      assignedPlant: "Plant E5",
     },
     {
       companyName: "Aqua Innovations 6",
@@ -110,7 +111,7 @@ function UserManager() {
       home: "303 Cedar St",
       company: "Aqua Innovations",
       location: "City F",
-      apiKey: "API99001",
+      assignedPlant: "Plant F6",
     },
   ];
 
@@ -132,9 +133,31 @@ function UserManager() {
     setSelectedUser(null);
   };
 
+  // Search implementation
+  const filteredData = useMemo(() => {
+    return mockedCardData.filter((card) =>
+      Object.values(card).some((value) =>
+        value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [searchQuery]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredData.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredData, currentPage]);
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
   return (
     <div>
-      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px] lg:px-11 lg:w-full">
+      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
         <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
           <div>
             <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
@@ -150,8 +173,10 @@ function UserManager() {
           <div className="flex gap-1 mb-[24px] lg:h-12">
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search users..."
               className="border border-[#DADADA] rounded px-2 py-1 w-[287.4px] lg:bg-[#FFFFFF80]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button
               onClick={handleOpenAddModal}
@@ -163,23 +188,27 @@ function UserManager() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 bg-[#FFFFFF] p-4 rounded-xl">
-          {mockedCardData.map((card, cardIndex) => (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 bg-[#FFFFFF] p-4 rounded-xl">
+          {paginatedData.map((card, cardIndex) => (
             <div
-              className="card-div font-[400] text-[14px] border-1 border-[#DADADA] rounded-lg px-[16px] py-[24px]"
+              className="card-div font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px]"
               key={cardIndex}
             >
               <div className="flex justify-between border-b border-[#208CD4] pb-[16px]">
-                <div className="flex items-center gap-2 ">
+                <div className="flex items-center gap-2">
                   <img src={image} alt="" className="w-[42px] h-[42px]" />
-                  <p className="text-[#4E4D4D] font-[700] text-[20px]">
+                  <p className="text-[#4E4D4D] font-[700] text-[20px] break-words max-w-[200px]">
                     {card.companyName}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <img src={component_11} alt="" className="w-[56px] h-[42px]"         onClick={handleOpenUpload}
-/>
+                  <img
+                    src={component_11}
+                    alt=""
+                    className="w-[56px] h-[42px]"
+                    onClick={handleOpenUpload}
+                  />
                   <img
                     src={component_13}
                     alt="Edit"
@@ -199,11 +228,11 @@ function UserManager() {
                 ].map((item, detailIndex) => (
                   <div
                     key={detailIndex}
-                    className="flex border-b border-[#DADADA] py-[12px]"
+                    className="flex border-b border-[#DADADA] py-[16px] min-h-[60px]"
                   >
                     <div className="flex items-center w-[46%] gap-0.5">
                       <img src={item.icon} alt="" className="w-[24px] h-[24px]" />
-                      <p>{item.value}</p>
+                      <p className="break-words max-w-[90%]">{item.value}</p>
                     </div>
                     <div className="flex items-center gap-0.5">
                       <img
@@ -221,16 +250,16 @@ function UserManager() {
                         alt=""
                         className="w-[24px] h-[24px]"
                       />
-                      <p>
+                      <p className="break-words max-w-[90%]">
                         {detailIndex === 0
-                          ? `DOB : ${card.dob}`
+                          ? `DOB: ${card.dob}`
                           : detailIndex === 1
-                          ? `DOJ : ${card.doj}`
+                          ? `DOJ: ${card.doj}`
                           : detailIndex === 2
                           ? card.gender
                           : detailIndex === 3
                           ? card.company
-                          : `API Key : ${card.apiKey}`}
+                          : `Assigned Plant: ${card.assignedPlant}`}
                       </p>
                     </div>
                   </div>
@@ -239,6 +268,35 @@ function UserManager() {
             </div>
           ))}
         </div>
+
+        {/* Pagination Controls */}
+        <div className="flex justify-center items-center gap-2 mt-4">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300"
+          >
+            Previous
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`px-3 py-1 rounded ${
+                currentPage === page ? "bg-[#208CD4] text-white" : "bg-gray-100"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300"
+          >
+            Next
+          </button>
+        </div>
       </div>
       <AddUserModal
         isOpen={isModalOpen}
@@ -246,8 +304,7 @@ function UserManager() {
         name={modalMode === "add" ? "Add New User" : "Edit User"}
         user={selectedUser}
       />
-            <UploadComponent isOpen={isUploadOpen} onClose={handleCloseUpload} />
-
+      <UploadComponent isOpen={isUploadOpen} onClose={handleCloseUpload} />
     </div>
   );
 }
