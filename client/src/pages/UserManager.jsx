@@ -54,7 +54,7 @@ function UserManager() {
       call: "234-567-8901",
       doj: "23-06-2025",
       mail: "editor1@aqua2.com",
-      gender: "Female",
+      gender: "others",
       home: "456 Elm St",
       company: "Aqua Solutions",
       location: "City B",
@@ -164,6 +164,7 @@ function UserManager() {
           <div>
             <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
               User Manager
+              1234
             </p>
           </div>
 
