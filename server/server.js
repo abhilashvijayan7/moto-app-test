@@ -10,34 +10,14 @@ const axios = require("axios");
 
 const app = express();
 const server = http.createServer(app);
-
-// Define allowed origins
-const allowedOrigins = ['https://moto-app-test-l63i.vercel.app', 'http://localhost:5173'];
-
-// Configure CORS for Express
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-  })
-);
-
-// Configure Socket.IO with CORS
 const io = new Server(server, {
   cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST'],
-    credentials: true,
+    origin: "*",
+    methods: ["GET", "POST"],
   },
 });
 
+app.use(cors());
 app.use(bodyParser.json());
 
 // Firebase Admin Setup
@@ -58,14 +38,14 @@ app.post("/save-token", (req, res) => {
   const { token } = req.body.data;
   if (token && !savedTokens.includes(token)) {
     savedTokens.push(token);
-    console.log(`[${new Date().toISOString()}] Token saved:`, token);
+    console.log("Token saved:", token);
   }
   res.sendStatus(200);
 });
 
 app.get("/send", async (req, res) => {
   if (!savedTokens.length) {
-    return res.status(400).send({ success: false, message: "No device tokens saved." });
+    res.status(400).send({ success: false, message: "No device tokens saved." });
   }
 
   const message = {
@@ -78,11 +58,11 @@ app.get("/send", async (req, res) => {
 
   try {
     const response = await admin.messaging().sendEachForMulticast(message);
-    console.log(`[${new Date().toISOString()}] Successfully sent message:`, response);
+    console.log("Successfully sent message:", response);
     res.json({ success: true, response });
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error sending message:`, error.message);
-    res.status(500).json({ success: false, error: error.message });
+    console.error("Error sending message:", error);
+    res.status(500).json({ success: false, error });
   }
 });
 
@@ -91,7 +71,7 @@ const loadPlantTopics = async () => {
   try {
     const response = await axios.get("https://water-pump.onrender.com/api/planttopics");
     const topics = response.data;
-    console.log(`[${new Date().toISOString()}] Loaded plant topics from API:`, topics);
+    console.log("Loaded plant topics from API:", topics);
     return topics.map(topic => ({
       plant_id: topic.plant_id,
       plant_name: `Plant ${topic.plant_id}`,
@@ -99,7 +79,7 @@ const loadPlantTopics = async () => {
       MOTOR_TOPIC: topic.motor_topic,
     }));
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error fetching plant topics from API:`, error.message);
+    console.error("Error fetching plant topics from API:", error.message);
     return [];
   }
 };
@@ -108,10 +88,9 @@ const loadPlantTopics = async () => {
 const fetchMotorData = async (plantId) => {
   try {
     const response = await axios.get(`https://water-pump.onrender.com/api/plantmotors/plant/${plantId}`);
-    console.log(`[${new Date().toISOString()}] Motor data for plant ${plantId}:`, response.data);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
-    console.error(`[${new Date().toISOString()}] Error fetching motor data for plant ${plantId}:`, error.message);
+    console.error(`Error fetching motor data for plant ${plantId}:`, error.message);
     return [];
   }
 };
@@ -138,7 +117,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
         last_motor_fault: "None",
       };
     })
-    .filter(motor => motor.is_running);
+    .filter(motor => motor.is_running); // Only include motors that are ON
 
   const generateCurrentTimestamp = () => {
     const now = new Date();
@@ -193,20 +172,19 @@ let cachedPlantTopics = [];
 const subscribeToSensorTopics = async () => {
   if (!cachedPlantTopics.length) {
     cachedPlantTopics = await loadPlantTopics();
-    console.log(`[${new Date().toISOString()}] Cached plant topics:`, cachedPlantTopics);
   }
 
   if (!cachedPlantTopics.length) {
-    console.error(`[${new Date().toISOString()}] No plant topics found, cannot subscribe.`);
+    console.error("No plant topics found, subscribing to default topic.");
     return;
   }
 
   cachedPlantTopics.forEach((plant) => {
     mqttClient.subscribe(plant.SENSOR_TOPIC, (err) => {
       if (err) {
-        console.error(`[${new Date().toISOString()}] Error subscribing to topic ${plant.SENSOR_TOPIC}:`, err.message);
+        console.error(`Error subscribing to topic ${plant.SENSOR_TOPIC}:`, err.message);
       } else {
-        console.log(`[${new Date().toISOString()}] Subscribed to topic: ${plant.SENSOR_TOPIC}`);
+        console.log(`Subscribed to topic: ${plant.SENSOR_TOPIC}`);
       }
     });
   });
@@ -226,7 +204,7 @@ const logRuntimeAndSensorData = async () => {
       continue;
     }
 
-    console.log(`[${timestamp}] Processing data for plant ${plantId}:`, sensorData);
+    console.log(`[${timestamp}] Processing data for plant ${plantId}`, sensorData);
 
     try {
       const motorsFromApi = await fetchMotorData(plantId);
@@ -263,9 +241,9 @@ const initializeServer = async () => {
 };
 
 mqttClient.on("connect", async () => {
-  console.log(`[${new Date().toISOString()}] Connected to MQTT broker`);
+  console.log("Connected to MQTT broker");
   await initializeServer();
-  setInterval(logRuntimeAndSensorData, 30 * 1000);
+  setInterval(logRuntimeAndSensorData, 30 * 1000); // Run every 30 seconds
 });
 
 mqttClient.on("message", async (topic, message) => {
@@ -278,12 +256,11 @@ mqttClient.on("message", async (topic, message) => {
 
     const plantId = plant.plant_id;
     const data = JSON.parse(message.toString());
-    console.log(`[${new Date().toISOString()}] Received MQTT data for plant ${plantId}:`, data);
+    console.log(`[${new Date().toISOString()}] Received data for plant ${plantId}:`, data);
 
     latestSensorData[plantId] = data;
     const motoBoundData = { id: plantId, sensordata: data };
 
-    console.log(`[${new Date().toISOString()}] Emitting sensor_data:`, motoBoundData);
     io.emit("sensor_data", { data: motoBoundData });
 
     let motorStatus = "OFF";
@@ -296,7 +273,6 @@ mqttClient.on("message", async (topic, message) => {
       motorNumber = 2;
     }
 
-    console.log(`[${new Date().toISOString()}] Emitting motor_status_update:`, { plantId, command: motorStatus, motorNumber });
     io.emit("motor_status_update", {
       plantId,
       command: motorStatus,
@@ -325,7 +301,7 @@ mqttClient.on("message", async (topic, message) => {
 // Socket.IO Connection
 io.on("connection", (socket) => {
   console.log(`[${new Date().toISOString()}] Frontend connected:`, socket.id);
-  console.log(`[${new Date().toISOString()}] Emitting initial sensor_data:`, latestSensorData);
+
   socket.emit("sensor_data", { data: latestSensorData });
 
   socket.on("motor_control", async (data) => {
@@ -376,19 +352,10 @@ io.on("connection", (socket) => {
   });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  if (err.message === 'Not allowed by CORS') {
-    console.error(`[${new Date().toISOString()}] CORS error:`, err.message);
-    res.status(403).json({ error: 'CORS policy violation' });
-  } else {
-    console.error(`[${new Date().toISOString()}] Server error:`, err.message);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
 // Start Server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
-  console.log(`[${new Date().toISOString()}] Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
+
+// perfectgggggg

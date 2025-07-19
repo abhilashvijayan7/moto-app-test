@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
-axios.defaults.withCredentials = true;
 import icon from "../images/Icon.png";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
@@ -66,6 +65,8 @@ const Home = () => {
     setSearchQuery(e.target.value);
   };
 
+
+
   // Fetch motor data for specific plants
   const fetchMotorData = useCallback(async (plants) => {
     if (!plants.length) return;
@@ -74,7 +75,8 @@ const Home = () => {
       const apiPromises = plants.map((plant) =>
         axios
           .get(
-            `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`
+            `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`,
+          { withCredentials: true }
           )
           .catch((error) => {
             console.error(
@@ -1003,3 +1005,6 @@ const Home = () => {
 };
 
 export default Home;
+
+
+// sghdfihlsadgfioasghdfojhasgdfiuhsd
