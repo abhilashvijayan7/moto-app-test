@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
+import { useLocation } from "react-router-dom"; // Add useLocation
 import icon from "../images/Icon.png";
-
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 // Initialize socket connections
@@ -33,10 +32,13 @@ const Home = () => {
   const [error, setError] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const lastUpdateTimes = useRef({});
+  const location = useLocation(); // Get location to access login response
   const userType = localStorage.getItem("userType") || "normal";
   const isRestrictedUser = userType === "normal" || userType === "regular";
   const canControlPlant = userType === "regular" || userType === "superAdmin";
-  const STATIC_PLANT_ID =  "15";
+
+  // Get plant ID from login response
+  const loginPlantId = location.state?.user?.plant_id || null;
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -50,15 +52,18 @@ const Home = () => {
 
   // Filter plants based on user type and search query
   const filteredPlants = useMemo(() => {
-    let plants = isRestrictedUser
-      ? plantData.filter((plant) => plant.plant_id === STATIC_PLANT_ID)
-      : plantData;
+    let plants = plantData;
+
+    if (isRestrictedUser && loginPlantId) {
+      // Restrict to the plant from login response
+      plants = plantData.filter((plant) => plant.plant_id === loginPlantId);
+    }
 
     if (!searchQuery.trim()) return plants;
     return plants.filter((plant) =>
       plant.plant_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [plantData, searchQuery, isRestrictedUser]);
+  }, [plantData, searchQuery, isRestrictedUser, loginPlantId]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -73,7 +78,8 @@ const Home = () => {
       const apiPromises = plants.map((plant) =>
         axios
           .get(
-            `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`
+            `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`,
+            { withCredentials: true } // Add withCredentials
           )
           .catch((error) => {
             console.error(
@@ -111,7 +117,8 @@ const Home = () => {
       const apiPromises = plants.map((plant) =>
         axios
           .get(
-            `https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`
+            `https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`,
+            { withCredentials: true } // Add withCredentials
           )
           .catch((error) => {
             console.error(
@@ -150,18 +157,22 @@ const Home = () => {
     async (plantId = null) => {
       try {
         let plants = [];
-        if (isRestrictedUser) {
+        if (isRestrictedUser && loginPlantId) {
+          // Fetch only the plant from login response
           const response = await axios.get(
-            `https://water-pump.onrender.com/api/plants/${STATIC_PLANT_ID}`
+            `https://water-pump.onrender.com/api/plants/${loginPlantId}`,
+            { withCredentials: true } // Add withCredentials
           );
           plants = Array.isArray(response.data)
             ? response.data
             : [response.data].filter(Boolean);
         } else {
+          // Fetch all plants for superAdmin
           setLoading(true);
           setError({});
           const response = await axios.get(
-            "https://water-pump.onrender.com/api/plants"
+            "https://water-pump.onrender.com/api/plants",
+            { withCredentials: true } // Add withCredentials
           );
           plants = Array.isArray(response.data) ? response.data : [];
         }
@@ -188,7 +199,7 @@ const Home = () => {
         setLoading(false);
       }
     },
-    [fetchSensorData, fetchMotorData, isRestrictedUser]
+    [fetchSensorData, fetchMotorData, isRestrictedUser, loginPlantId]
   );
 
   // Combine sensor data per plant
@@ -451,7 +462,7 @@ const Home = () => {
 
     const handleSensorDataMoto = async (data) => {
       const plantId = data.data.id;
-      if (isRestrictedUser && plantId !== STATIC_PLANT_ID) return;
+      if (isRestrictedUser && plantId !== loginPlantId) return; // Restrict to login plant
       const sensorData = data.data.sensordata;
 
       setSensorMoto((prev) => ({
@@ -489,7 +500,7 @@ const Home = () => {
 
     const handleSensor = async (data) => {
       const plantId = data.plant_id;
-      if (isRestrictedUser && plantId !== STATIC_PLANT_ID) return;
+      if (isRestrictedUser && plantId !== loginPlantId) return; // Restrict to login plant
       setSensorWaterPump(data);
       const plantStatus = data.plant_status;
       setIsButtonDisabled((prev) => ({
@@ -573,7 +584,7 @@ const Home = () => {
 
     const handleMotorStatusUpdate = (data) => {
       const { plantId, timestamp } = data;
-      if (isRestrictedUser && plantId !== STATIC_PLANT_ID) return;
+      if (isRestrictedUser && plantId !== loginPlantId) return; // Restrict to login plant
       const sensor = getSensorForPlant(plantId);
       const plantStatus = sensor.plant_status;
       if (
@@ -632,7 +643,15 @@ const Home = () => {
       if (timeoutMoto) clearTimeout(timeoutMoto);
       if (timeoutWaterPump) clearTimeout(timeoutWaterPump);
     };
-  }, [sensorMoto, sensorWaterPump, plantData, getSensorForPlant, plantMotors, isRestrictedUser]);
+  }, [
+    sensorMoto,
+    sensorWaterPump,
+    plantData,
+    getSensorForPlant,
+    plantMotors,
+    isRestrictedUser,
+    loginPlantId, // Add loginPlantId to dependencies
+  ]);
 
   // Initial data fetch
   useEffect(() => {
@@ -641,10 +660,13 @@ const Home = () => {
 
   // Refresh data for specific plant
   useEffect(() => {
-    if (sensorWaterPump?.plant_id && (!isRestrictedUser || sensorWaterPump.plant_id === STATIC_PLANT_ID)) {
+    if (
+      sensorWaterPump?.plant_id &&
+      (!isRestrictedUser || sensorWaterPump.plant_id === loginPlantId)
+    ) {
       fetchInitialData(sensorWaterPump.plant_id);
     }
-  }, [sensorWaterPump, fetchInitialData, isRestrictedUser]);
+  }, [sensorWaterPump, fetchInitialData, isRestrictedUser, loginPlantId]);
 
   // Initialize motorStatuses and motorNumbers
   useEffect(() => {
@@ -950,8 +972,8 @@ const Home = () => {
                                   : "NOT OK"
                                 : apidata.value == null ||
                                   connectionStatus === "Disconnected"
-                                ? "NA"
-                                : apidata.value;
+                                  ? "NA"
+                                  : apidata.value;
 
                               return (
                                 <div
@@ -1002,8 +1024,3 @@ const Home = () => {
 };
 
 export default Home;
-
-// perfectootototo
-
-
-// pushhhhhhhhhhhhhhhhhhhhhhhhhhh
