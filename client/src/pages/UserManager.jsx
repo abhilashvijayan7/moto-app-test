@@ -164,7 +164,6 @@ function UserManager() {
           <div>
             <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
               User Manager
-              1234
             </p>
           </div>
 

@@ -1,32 +1,51 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import draw2 from "../images/draw2.webp";
 
 const Login = () => {
   const [loginInput, setLoginInput] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (loginInput === "normal user" && password === "normal user") {
-      localStorage.setItem("authToken", "mock-token-normal");
-      localStorage.setItem("userType", "normal");
-      localStorage.setItem("plantId", "15");
-      navigate("/home");
-    } else if (loginInput === "regular user" && password === "regular user") {
-      localStorage.setItem("authToken", "mock-token-regular");
-      localStorage.setItem("userType", "regular");
-      localStorage.setItem("plantId", "15");
-      navigate("/home");
-    } else if (loginInput === "super admin" && password === "super admin") {
-      localStorage.setItem("authToken", "mock-token-superAdmin");
-      localStorage.setItem("userType", "superAdmin");
-      navigate("/home");
-    } else {
-      setError("Invalid username or password");
+    console.log("Login button clicked", { loginInput, password });
+    setError("");
+    setLoading(true);
+
+    try {
+      const response = await axios.post(
+        'https://water-pump.onrender.com/api/users/login',
+        {
+          username: loginInput,
+          password: password,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          withCredentials: true, // Added for CORS/auth compatibility
+        }
+      );
+
+      console.log("Login API Response:", response.data);
+      console.log("Navigating to /home with user data:", response.data);
+
+      // Navigate to /home with user data in state
+      navigate("/home", { state: { user: response.data } });
+    } catch (error) {
+      console.error("Login error:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      setError(error.response?.data?.message || "Failed to login. Please try again.");
+    } finally {
+      setLoading(false);
+      console.log("Login attempt completed, loading:", false);
     }
   };
 
@@ -53,6 +72,7 @@ const Login = () => {
                 value={loginInput}
                 onChange={(e) => setLoginInput(e.target.value)}
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                disabled={loading}
               />
             </div>
             <div className="mb-4">
@@ -66,13 +86,17 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                disabled={loading}
               />
             </div>
             <button
               onClick={handleLogin}
-              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+              disabled={loading}
+              className={`w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 ${
+                loading ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
             >
-              LOGIN
+              {loading ? "Logging in..." : "LOGIN"}
             </button>
           </div>
         </div>

@@ -6,7 +6,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   // State for form inputs with camelCase keys
   const [formData, setFormData] = useState({
     dateOfJoining: "",
-    userType: "Admin",
+    userType: "", // Will store role_id
     userName: "",
     fullName: "",
     password: "",
@@ -18,15 +18,17 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     location: "",
     contactNo: "",
     email: "",
-    devices: [], // Array to store selected plant IDs
+    devices: [],
   });
 
-  // State for plants data and UI
+  // State for plants, roles, and UI
   const [plants, setPlants] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState([]);
+  const [loadingPlants, setLoadingPlants] = useState(false);
+  const [loadingRoles, setLoadingRoles] = useState(false);
   const [error, setError] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState(""); // State for search
+  const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
 
   // Mapping between UI label names and formData keys
@@ -51,10 +53,10 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   useEffect(() => {
     const fetchPlants = async () => {
       try {
-        setLoading(true);
+        setLoadingPlants(true);
         setError(null);
         const response = await axios.get('https://water-pump.onrender.com/api/plants');
-        console.log("API Response:", response.data); // Debug API response
+        console.log("Plants API Response:", response.data);
         const plantData = Array.isArray(response.data) ? response.data : [];
         setPlants(plantData);
       } catch (error) {
@@ -62,7 +64,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         setError("Failed to load plants. Please try again.");
         setPlants([]);
       } finally {
-        setLoading(false);
+        setLoadingPlants(false);
       }
     };
     if (isOpen) {
@@ -70,18 +72,44 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     }
   }, [isOpen]);
 
-// kjsdhfkjhsdkjfhkjshdfkjsdhfkjshdfkjwsdf
+  // Fetch roles from API
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        setLoadingRoles(true);
+        setError(null);
+        const response = await axios.get('https://water-pump.onrender.com/api/roles');
+        console.log("Roles API Response:", response.data);
+        const roleData = Array.isArray(response.data) ? response.data : [];
+        setRoles(roleData);
+        if (roleData.length > 0) {
+          setFormData((prev) => ({ ...prev, userType: roleData[0].role_id.toString() }));
+        }
+      } catch (error) {
+        console.error("Error fetching roles:", error);
+        setError("Failed to load roles. Please try again.");
+        setRoles([]);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+    if (isOpen) {
+      fetchRoles();
+    }
+  }, [isOpen]);
 
   // Pre-populate form for edit mode or reset for add mode
   useEffect(() => {
     if (user && name === "Edit User") {
-      console.log("User data for edit:", user); // Debug user data
+      console.log("User data for edit:", user);
+      const selectedRole = roles.find((role) => role.role_name === user.role);
+      const roleId = selectedRole ? selectedRole.role_id.toString() : (roles.length > 0 ? roles[0].role_id.toString() : "");
       setFormData({
         dateOfJoining: user.doj ? user.doj.split(" ")[0] : "",
-        userType: user.role || "Admin",
+        userType: roleId,
         userName: user.companyName || "",
         fullName: user.fullName || "",
-        password: "", // Password not provided in user prop
+        password: "",
         gender: user.gender || "Male",
         dateOfBirth: user.dob ? user.dob.split(" ")[0] : "",
         designation: "",
@@ -90,12 +118,12 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         location: user.location || "",
         contactNo: user.call || "",
         email: user.mail || "",
-        devices: Array.isArray(user.devices) ? user.devices.map(String) : [], // Ensure string IDs
+        devices: Array.isArray(user.devices) ? user.devices.map(String) : [],
       });
     } else {
       setFormData({
         dateOfJoining: "",
-        userType: "Admin",
+        userType: roles.length > 0 ? roles[0].role_id.toString() : "",
         userName: "",
         fullName: "",
         password: "",
@@ -110,7 +138,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         devices: [],
       });
     }
-  }, [user, name, isOpen]);
+  }, [user, name, isOpen, roles]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -128,19 +156,19 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const formDataKey = nameToKeyMap[name]; // Map UI name to formData key
+    const formDataKey = nameToKeyMap[name];
     setFormData((prev) => ({ ...prev, [formDataKey]: value }));
   };
 
   // Handle plant checkbox changes
   const handleDeviceChange = (plantId) => {
     const stringPlantId = String(plantId);
-    console.log("Toggling plant ID:", stringPlantId); // Debug selection
+    console.log("Toggling plant ID:", stringPlantId);
     setFormData((prev) => {
       const updatedDevices = prev.devices.includes(stringPlantId)
         ? prev.devices.filter((id) => id !== stringPlantId)
         : [...prev.devices, stringPlantId];
-      console.log("Updated devices:", updatedDevices); // Debug updated devices
+      console.log("Updated devices:", updatedDevices);
       return { ...prev, devices: updatedDevices };
     });
   };
@@ -155,7 +183,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     setDropdownOpen((prev) => !prev);
   };
 
-  // Get selected plant names for display with truncation and count
+  // Get selected plant names for display
   const getSelectedPlantNames = () => {
     const selectedPlants = formData.devices
       .map((id) => {
@@ -175,7 +203,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     }
   };
 
-  // Filter and sort plants: checked first, then unchecked, filtered by search term
+  // Filter and sort plants
   const filteredAndSortedPlants = plants
     .filter((plant) =>
       plant.plant_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -192,7 +220,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Map formData to API expected format
     const payload = {
       username: formData.userName,
       password: formData.password,
@@ -205,18 +232,19 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       location: formData.location,
       contact_number: formData.contactNo,
       designation: formData.designation,
-      status: "Active", // Default status as per expected input
-      notes: "", // Optional: Add a field in formData if notes are needed
-      plant_ids: formData.devices.map(Number), // Convert string IDs to numbers
+      status: "Active",
+      notes: "",
+      plant_ids: formData.devices.map(Number),
+      role_id: Number(formData.userType),
     };
 
     try {
-      setLoading(true);
+      setLoadingPlants(true);
       setError(null);
 
       const url = name === "Edit User" && user?.apiKey
-        ? `https://water-pump.onrender.com/api/users/user/${user.apiKey}`
-        : 'https://water-pump.onrender.com/api/users/user';
+        ? `https://water-pump.onrender.com/api/users${user.apiKey}`
+        : 'https://water-pump.onrender.com/api/users';
 
       const method = name === "Edit User" ? 'PUT' : 'POST';
 
@@ -229,14 +257,14 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         },
       });
 
-      console.log(`${name} response:`, response.data); // Debug API response
-      onClose(); // Close modal on success
-      if (onSuccess) onSuccess(); // Notify parent component of success
+      console.log(`${name} response:`, response.data);
+      onClose();
+      if (onSuccess) onSuccess();
     } catch (error) {
       console.error(`${name} error:`, error);
       setError(error.response?.data?.message || `Failed to ${name.toLowerCase()}. Please try again.`);
     } finally {
-      setLoading(false);
+      setLoadingPlants(false);
     }
   };
 
@@ -248,7 +276,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
             <h2 className="text-[28px] font-[700] text-[#4D4D4D]">{name}</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 focus:outline-none"
+              className="text-gray-400 hover:text-gray-600 focus:outline-none"
             >
               <X className="w-4 h-4" />
             </button>
@@ -416,7 +444,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                             className="w-full py-1 px-2 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                           />
                         </div>
-                        {loading ? (
+                        {loadingPlants ? (
                           <div className="p-2 text-gray-500 text-sm">Loading plants...</div>
                         ) : error ? (
                           <div className="p-2 text-red-500 text-sm">{error}</div>
@@ -459,8 +487,17 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                         onChange={handleChange}
                         className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
                       >
-                        <option>Admin</option>
-                        <option>Renderer</option>
+                        {loadingRoles ? (
+                          <option value="">Loading roles...</option>
+                        ) : roles.length > 0 ? (
+                          roles.map((role) => (
+                            <option key={role.role_id} value={role.role_id}>
+                              {role.role_name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="">No roles available</option>
+                        )}
                       </select>
                     </div>
                   </div>
@@ -499,10 +536,10 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
               <button
                 type="submit"
                 onClick={handleSubmit}
-                disabled={loading}
-                className={`flex items-center gap-2 px-4 py-2 bg-[#208CD4] text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={loadingPlants}
+                className={`flex items-center gap-2 px-4 py-2 bg-[#208CD4] text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium ${loadingPlants ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                {loading ? "Processing..." : name === "Edit User" ? "Update" : "Submit"}
+                {loadingPlants ? "Processing..." : name === "Edit User" ? "Update" : "Submit"}
               </button>
             </div>
           </div>

@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import usePushNotifications from "./hooks/usePushNotifications";
 import Header from "./components/Header";
@@ -15,6 +14,7 @@ import Topic from "./pages/Topic";
 import Log from "./pages/Log";
 import LoginPage from "./pages/Login";
 import SavedLog from "./pages/SavedLog";
+import { useState } from "react";
 
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
@@ -27,16 +27,14 @@ function ChangePassword() {
 }
 
 function Logout() {
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("userType");
-  localStorage.removeItem("plantId");
   return <Navigate to="/login" />;
 }
 
 // ProtectedRoute Component
 const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
-  const isAuthenticated = !!localStorage.getItem("authToken");
-  const userType = localStorage.getItem("userType") || "normal";
+  const location = useLocation();
+  const isAuthenticated = !!location.state?.user;
+  const userType = location.state?.user?.role?.toLowerCase() || "normal";
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -53,10 +51,11 @@ function App() {
   usePushNotifications();
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
+  const user = location.state?.user || null;
 
   return (
     <div className="flex flex-col lg:flex-row lg:bg-[#DADADA] min-h-screen">
-      {!isLoginPage && <Sidebar />}
+      {!isLoginPage && <Sidebar userRole={user?.role?.toLowerCase() || "normal"} />}
       <div className="flex-1 flex flex-col">
         {!isLoginPage && <Header />}
         <div className="flex-1">
