@@ -14,7 +14,8 @@ import Topic from "./pages/Topic";
 import Log from "./pages/Log";
 import LoginPage from "./pages/Login";
 import SavedLog from "./pages/SavedLog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
@@ -31,20 +32,58 @@ function Logout() {
 }
 
 // ProtectedRoute Component
-const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
+const ProtectedRoute = ({ children, allowedForRestrictedUser, superAdminOnly }) => {
   const location = useLocation();
-  const isAuthenticated = !!location.state?.user;
-  const userType = location.state?.user?.role?.toLowerCase() || "normal";
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [sessionUser, setSessionUser] = useState(location.state?.user || null);
+  const userRole = sessionUser?.role?.toLowerCase() || "normal";
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const response = await axios.get(
+          "https://water-pump.onrender.com/api/users/session-check",
+          { withCredentials: true }
+        );
+        console.log("Session check response:", response.data);
+        if (response.data.loggedIn) {
+          setIsAuthenticated(true);
+          if (!sessionUser) {
+            setSessionUser(response.data.user);
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Session check error:", error.message);
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkSession();
+  }, [sessionUser]);
+
+  if (isAuthenticated === null) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg">Checking session...</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: location }} />;
   }
 
-  if ((userType === "normal" || userType === "regular") && !allowedForRestrictedUser) {
-    return <Navigate to="/home" />;
+  if (superAdminOnly && userRole !== "super admin") {
+    return <Navigate to="/home" state={{ user: sessionUser }} />;
   }
 
-  return children;
+  if ((userRole === "normal" || userRole === "regular") && !allowedForRestrictedUser) {
+    return <Navigate to="/home" state={{ user: sessionUser }} />;
+  }
+
+  return React.cloneElement(children, { user: sessionUser });
 };
 
 function App() {
@@ -78,6 +117,14 @@ function App() {
               }
             />
             <Route
+              path="/saved-log"
+              element={
+                <ProtectedRoute allowedForRestrictedUser={true}>
+                  <SavedLog />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/change-password"
               element={
                 <ProtectedRoute allowedForRestrictedUser={true}>
@@ -96,7 +143,7 @@ function App() {
             <Route
               path="/motor"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <Motor />
                 </ProtectedRoute>
               }
@@ -104,7 +151,7 @@ function App() {
             <Route
               path="/my-device"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <MyDevice />
                 </ProtectedRoute>
               }
@@ -112,7 +159,7 @@ function App() {
             <Route
               path="/device-manager"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <DeviceManager />
                 </ProtectedRoute>
               }
@@ -128,7 +175,7 @@ function App() {
             <Route
               path="/new-plant"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <NewPlant />
                 </ProtectedRoute>
               }
@@ -136,7 +183,7 @@ function App() {
             <Route
               path="/add-motor"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <AddMotor />
                 </ProtectedRoute>
               }
@@ -144,7 +191,7 @@ function App() {
             <Route
               path="/add-sensor"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <AddSensor />
                 </ProtectedRoute>
               }
@@ -152,23 +199,15 @@ function App() {
             <Route
               path="/topic"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <Topic />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/saved-log"
-              element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
-                  <SavedLog />
                 </ProtectedRoute>
               }
             />
             <Route
               path="/support"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <Support />
                 </ProtectedRoute>
               }
@@ -177,7 +216,7 @@ function App() {
             <Route
               path="*"
               element={
-                <ProtectedRoute allowedForRestrictedUser={false}>
+                <ProtectedRoute allowedForRestrictedUser={false} superAdminOnly={true}>
                   <MyDevice />
                 </ProtectedRoute>
               }

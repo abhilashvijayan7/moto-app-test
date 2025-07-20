@@ -34,7 +34,6 @@ const Login = () => {
       console.log("Login API Response:", response.data);
       console.log("Navigating to /home with user data:", response.data);
 
-      // Navigate to /home with user data in state
       navigate("/home", { state: { user: response.data } });
     } catch (error) {
       console.error("Login error:", {
