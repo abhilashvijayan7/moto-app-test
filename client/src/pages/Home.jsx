@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
-import { useLocation } from "react-router-dom"; // Add useLocation
+import { useLocation, useNavigate } from "react-router-dom";
 import icon from "../images/Icon.png";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
@@ -32,15 +32,27 @@ const Home = () => {
   const [error, setError] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const lastUpdateTimes = useRef({});
-  const location = useLocation(); // Get location to access login response
-  const userType = localStorage.getItem("userType") || "normal";
-  const isRestrictedUser = userType === "normal" || userType === "regular";
-  const canControlPlant = userType === "regular" || userType === "superAdmin";
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Get plant ID from login response
-  const loginPlantId = location.state?.user?.plant_id || null;
+  // Derive user role and permissions
+  const userRole = location.state?.user?.role?.toLowerCase() || "normal";
+  const isRestrictedUser = userRole === "normal" || userRole === "regular";
+  const canControlPlant = userRole === "regular" || userRole === "admin";
 
-  console.log("plannnnntttt",loginPlantId)
+  // Get plant IDs from login response
+  const loginPlantIds = useMemo(() => {
+    return location.state?.user?.userPlants?.map((plant) => plant.plant_id) || [];
+  }, [location.state]);
+
+  console.log("Allowed plant IDs:", loginPlantIds);
+
+  // Redirect to login if no user data
+  useEffect(() => {
+    if (!location.state?.user) {
+      navigate("/login");
+    }
+  }, [location.state, navigate]);
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -52,20 +64,13 @@ const Home = () => {
     [plantData]
   );
 
-  // Filter plants based on user type and search query
+  // Filter plants based on search query
   const filteredPlants = useMemo(() => {
-    let plants = plantData;
-
-    if (isRestrictedUser && loginPlantId) {
-      // Restrict to the plant from login response
-      plants = plantData.filter((plant) => plant.plant_id === loginPlantId);
-    }
-
-    if (!searchQuery.trim()) return plants;
-    return plants.filter((plant) =>
+    if (!searchQuery.trim()) return plantData;
+    return plantData.filter((plant) =>
       plant.plant_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
-  }, [plantData, searchQuery, isRestrictedUser, loginPlantId]);
+  }, [plantData, searchQuery]);
 
   // Handle search input change
   const handleSearchChange = (e) => {
@@ -81,7 +86,7 @@ const Home = () => {
         axios
           .get(
             `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`,
-            { withCredentials: true } // Add withCredentials
+            { withCredentials: true }
           )
           .catch((error) => {
             console.error(
@@ -120,7 +125,7 @@ const Home = () => {
         axios
           .get(
             `https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`,
-            { withCredentials: true } // Add withCredentials
+            { withCredentials: true }
           )
           .catch((error) => {
             console.error(
@@ -155,54 +160,51 @@ const Home = () => {
   }, []);
 
   // Fetch initial data
-  const fetchInitialData = useCallback(
-    async (plantId = null) => {
-      try {
-        let plants = [];
-        if (isRestrictedUser && loginPlantId) {
-          // Fetch only the plant from login response
-          const response = await axios.get(
-            `https://water-pump.onrender.com/api/plants/${loginPlantId}`,
-            { withCredentials: true } // Add withCredentials
-          );
-          plants = Array.isArray(response.data)
-            ? response.data
-            : [response.data].filter(Boolean);
-        } else {
-          // Fetch all plants for superAdmin
-          setLoading(true);
-          setError({});
-          const response = await axios.get(
-            "https://water-pump.onrender.com/api/plants",
-            { withCredentials: true } // Add withCredentials
-          );
-          plants = Array.isArray(response.data) ? response.data : [];
-        }
+  const fetchInitialData = useCallback(async () => {
+    if (!loginPlantIds.length) {
+      setError({ global: "No plants assigned to this user." });
+      setLoading(false);
+      return;
+    }
 
-        setPlantData(plants);
+    try {
+      setLoading(true);
+      setError({});
 
-        const simplifiedPlants = plants.map((plant) => ({
-          plant_id: plant.plant_id,
-          plant_name: plant.plant_name,
-        }));
+      // Fetch only the plants from userPlants
+      const apiPromises = loginPlantIds.map((plantId) =>
+        axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`, {
+          withCredentials: true,
+        })
+      );
+      const responses = await Promise.all(apiPromises);
+      const plants = responses
+        .map((response) => (Array.isArray(response.data) ? response.data : [response.data]))
+        .flat()
+        .filter(Boolean);
 
-        await Promise.all([
-          fetchSensorData(simplifiedPlants),
-          fetchMotorData(simplifiedPlants),
-        ]);
-      } catch (error) {
-        console.error("Error fetching initial data:", error);
-        setError((prev) => ({
-          ...prev,
-          global: `Failed to fetch plant data: ${error.message}`,
-        }));
-        setPlantData([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchSensorData, fetchMotorData, isRestrictedUser, loginPlantId]
-  );
+      setPlantData(plants);
+
+      const simplifiedPlants = plants.map((plant) => ({
+        plant_id: plant.plant_id,
+        plant_name: plant.plant_name,
+      }));
+
+      await Promise.all([
+        fetchSensorData(simplifiedPlants),
+        fetchMotorData(simplifiedPlants),
+      ]);
+    } catch (error) {
+      console.error("Error fetching initial data:", error);
+      setError((prev) => ({
+        ...prev,
+        global: `Failed to fetch plant data: ${error.message}`,
+      }));
+      setPlantData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchSensorData, fetchMotorData, loginPlantIds]);
 
   // Combine sensor data per plant
   const getSensorForPlant = useCallback(
@@ -242,7 +244,7 @@ const Home = () => {
     }, {});
   }, [plantSensorData]);
 
-  // Toggle pump (regular and superAdmin only)
+  // Toggle pump (regular and admin only)
   const togglePump = useCallback(
     (plantId) => {
       if (!canControlPlant) return;
@@ -454,7 +456,7 @@ const Home = () => {
         } else {
           setConnectionStatusWaterPump("Disconnected");
           setIsButtonDisabled((prev) =>
-            Object.fromEntries(Object.keys(prev).map((id) => [id, true]))
+            Object.fromEntries(loginPlantIds.map((id) => [id, true]))
           );
         }
       }, 10000);
@@ -464,7 +466,7 @@ const Home = () => {
 
     const handleSensorDataMoto = async (data) => {
       const plantId = data.data.id;
-      if (isRestrictedUser && plantId !== loginPlantId) return; // Restrict to login plant
+      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
       const sensorData = data.data.sensordata;
 
       setSensorMoto((prev) => ({
@@ -502,7 +504,7 @@ const Home = () => {
 
     const handleSensor = async (data) => {
       const plantId = data.plant_id;
-      if (isRestrictedUser && plantId !== loginPlantId) return; // Restrict to login plant
+      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
       setSensorWaterPump(data);
       const plantStatus = data.plant_status;
       setIsButtonDisabled((prev) => ({
@@ -535,13 +537,13 @@ const Home = () => {
 
     const handleConnectMoto = () => {
       setConnectionStatusMoto(
-        plantData.reduce(
-          (acc, plant) => ({ ...acc, [plant.plant_id]: "Disconnected" }),
+        loginPlantIds.reduce(
+          (acc, plantId) => ({ ...acc, [plantId]: "Disconnected" }),
           {}
         )
       );
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(Object.keys(prev).map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
@@ -551,20 +553,20 @@ const Home = () => {
 
     const handleDisconnectMoto = () => {
       setConnectionStatusMoto(
-        plantData.reduce(
-          (acc, plant) => ({ ...acc, [plant.plant_id]: "Disconnected" }),
+        loginPlantIds.reduce(
+          (acc, plantId) => ({ ...acc, [plantId]: "Disconnected" }),
           {}
         )
       );
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(Object.keys(prev).map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
     const handleDisconnectWaterPump = () => {
       setConnectionStatusWaterPump("Disconnected");
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(Object.keys(prev).map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
@@ -572,7 +574,7 @@ const Home = () => {
       console.error("Connection error for water-pump server:", error.message);
       setConnectionStatusWaterPump("Disconnected");
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(Object.keys(prev).map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
@@ -580,13 +582,14 @@ const Home = () => {
       console.error("Server error:", data.message);
       const plantIdMatch = data.message.match(/plantId: (\w+)/);
       const plantId = plantIdMatch ? plantIdMatch[1] : "global";
+      if (plantId !== "global" && !loginPlantIds.includes(plantId)) return;
       setError((prev) => ({ ...prev, [plantId]: data.message }));
       setIsButtonDisabled((prev) => ({ ...prev, [plantId]: true }));
     };
 
     const handleMotorStatusUpdate = (data) => {
       const { plantId, timestamp } = data;
-      if (isRestrictedUser && plantId !== loginPlantId) return; // Restrict to login plant
+      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
       const sensor = getSensorForPlant(plantId);
       const plantStatus = sensor.plant_status;
       if (
@@ -651,8 +654,7 @@ const Home = () => {
     plantData,
     getSensorForPlant,
     plantMotors,
-    isRestrictedUser,
-    loginPlantId, // Add loginPlantId to dependencies
+    loginPlantIds,
   ]);
 
   // Initial data fetch
@@ -662,13 +664,10 @@ const Home = () => {
 
   // Refresh data for specific plant
   useEffect(() => {
-    if (
-      sensorWaterPump?.plant_id &&
-      (!isRestrictedUser || sensorWaterPump.plant_id === loginPlantId)
-    ) {
-      fetchInitialData(sensorWaterPump.plant_id);
+    if (sensorWaterPump?.plant_id && loginPlantIds.includes(sensorWaterPump.plant_id)) {
+      fetchInitialData();
     }
-  }, [sensorWaterPump, fetchInitialData, isRestrictedUser, loginPlantId]);
+  }, [sensorWaterPump, fetchInitialData, loginPlantIds]);
 
   // Initialize motorStatuses and motorNumbers
   useEffect(() => {
@@ -1026,3 +1025,5 @@ const Home = () => {
 };
 
 export default Home;
+
+// ksjhdfkjshdfkjhsdfkhsdkfjhsdf

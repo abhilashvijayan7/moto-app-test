@@ -16,8 +16,6 @@ const Login = () => {
     setError("");
     setLoading(true);
 
-// sfsdfsdfsfsfsdfs
-
     try {
       const response = await axios.post(
         'https://water-pump.onrender.com/api/users/login',
@@ -29,7 +27,7 @@ const Login = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          withCredentials: true, // Added for CORS/auth compatibility
+          withCredentials: true,
         }
       );
 
@@ -108,3 +106,6 @@ const Login = () => {
 };
 
 export default Login;
+
+
+// lkjshfkjhsdfklhsfkjhs
