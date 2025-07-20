@@ -47,21 +47,30 @@ const ProtectedRoute = ({ children, allowedForRestrictedUser, superAdminOnly }) 
         );
         console.log("Session check response:", response.data);
         if (response.data.loggedIn) {
+          // Merge session-check user with location.state.user to retain userPlants
+          const mergedUser = {
+            ...response.data.user,
+            userPlants: location.state?.user?.userPlants || sessionUser?.userPlants || null,
+          };
+          console.log("Merged user data:", mergedUser);
+          setSessionUser(mergedUser);
           setIsAuthenticated(true);
-          if (!sessionUser) {
-            setSessionUser(response.data.user);
-          }
         } else {
+          console.warn("Session check failed: loggedIn is false");
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error("Session check error:", error.message);
+        console.error("Session check error:", {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+        });
         setIsAuthenticated(false);
       }
     };
 
     checkSession();
-  }, [sessionUser]);
+  }, [location.state, sessionUser]);
 
   if (isAuthenticated === null) {
     return (

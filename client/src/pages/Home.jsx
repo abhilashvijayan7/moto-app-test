@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import icon from "../images/Icon.png";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
@@ -46,13 +46,15 @@ const Home = ({ user }) => {
   }, [user, isSuperAdmin]);
 
   console.log("Allowed plant IDs:", isSuperAdmin ? "All plants" : loginPlantIds);
+  console.log("User data in Home:", user);
 
-  // Redirect to login if no user or (no userPlants and not Super Admin)
+  // Redirect to login only if no user
   useEffect(() => {
-    if (!user || (!isSuperAdmin && !user.userPlants)) {
+    if (!user) {
+      console.warn("No user data, redirecting to /login");
       navigate("/login");
     }
-  }, [user, isSuperAdmin, navigate]);
+  }, [user, navigate]);
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -191,6 +193,7 @@ const Home = ({ user }) => {
           .filter(Boolean);
       }
 
+      console.log("Fetched plants:", plants);
       setPlantData(plants);
 
       const simplifiedPlants = plants.map((plant) => ({
