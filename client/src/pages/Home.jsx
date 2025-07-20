@@ -17,6 +17,8 @@ const socketWaterPump = io("https://water-pump.onrender.com", {
   rejectUnauthorized: false,
 });
 
+// jgygygghjghg
+
 const Home = ({ user }) => {
   const [sensorMoto, setSensorMoto] = useState({});
   const [sensorWaterPump, setSensorWaterPump] = useState({});

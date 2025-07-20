@@ -14,9 +14,9 @@ import topic from "../images/topic2.png";
 import livelogs from "../images/livelogs.png";
 import savedlogs from "../images/saved-png.png";
 
-function Sidebar({ user }) {
-  const userType = user?.role?.toLowerCase() || "normal";
-  const isRestrictedUser = userType === "normal" || userType === "regular";
+function Sidebar({ userRole }) {
+  const normalizedRole = userRole ? userRole.toLowerCase() : "normal";
+  const isRestrictedUser = normalizedRole === "normal" || normalizedRole === "regular";
 
   const menuItems = [
     { icon: dashboard, label: "Home", path: "/home" },
