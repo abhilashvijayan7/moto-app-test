@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import icon from "../images/Icon.png";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
@@ -17,9 +17,7 @@ const socketWaterPump = io("https://water-pump.onrender.com", {
   rejectUnauthorized: false,
 });
 
-// jgygygghjghg
-
-const Home = ({ user }) => {
+const Home = () => {
   const [sensorMoto, setSensorMoto] = useState({});
   const [sensorWaterPump, setSensorWaterPump] = useState({});
   const [motorStatuses, setMotorStatuses] = useState({});
@@ -34,29 +32,27 @@ const Home = ({ user }) => {
   const [error, setError] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const lastUpdateTimes = useRef({});
+  const location = useLocation();
   const navigate = useNavigate();
 
   // Derive user role and permissions
-  const userRole = user?.role?.toLowerCase() || "normal";
-  const isSuperAdmin = userRole === "super admin";
+  const userRole = location.state?.user?.role?.toLowerCase() || "normal";
   const isRestrictedUser = userRole === "normal" || userRole === "regular";
   const canControlPlant = userRole === "regular" || userRole === "admin";
 
-  // Get plant IDs from userPlants (for non-Super Admin)
+  // Get plant IDs from login response
   const loginPlantIds = useMemo(() => {
-    return isSuperAdmin ? [] : (user?.userPlants?.map((plant) => plant.plant_id) || []);
-  }, [user, isSuperAdmin]);
+    return location.state?.user?.userPlants?.map((plant) => plant.plant_id) || [];
+  }, [location.state]);
 
-  console.log("Allowed plant IDs:", isSuperAdmin ? "All plants" : loginPlantIds);
-  console.log("User data in Home:", user);
+  console.log("Allowed plant IDs:", loginPlantIds);
 
-  // Redirect to login only if no user
+  // Redirect to login if no user data
   useEffect(() => {
-    if (!user) {
-      console.warn("No user data, redirecting to /login");
+    if (!location.state?.user) {
       navigate("/login");
     }
-  }, [user, navigate]);
+  }, [location.state, navigate]);
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -165,37 +161,28 @@ const Home = ({ user }) => {
 
   // Fetch initial data
   const fetchInitialData = useCallback(async () => {
+    if (!loginPlantIds.length) {
+      setError({ global: "No plants assigned to this user." });
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError({});
 
-      let plants = [];
-      if (isSuperAdmin) {
-        // Fetch all plants for Super Admin
-        const response = await axios.get("https://water-pump.onrender.com/api/plants", {
+      // Fetch only the plants from userPlants
+      const apiPromises = loginPlantIds.map((plantId) =>
+        axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`, {
           withCredentials: true,
-        });
-        plants = Array.isArray(response.data) ? response.data : [];
-      } else {
-        // Fetch only userPlants for other roles
-        if (!loginPlantIds.length) {
-          setError({ global: "No plants assigned to this user." });
-          setLoading(false);
-          return;
-        }
-        const apiPromises = loginPlantIds.map((plantId) =>
-          axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`, {
-            withCredentials: true,
-          })
-        );
-        const responses = await Promise.all(apiPromises);
-        plants = responses
-          .map((response) => (Array.isArray(response.data) ? response.data : [response.data]))
-          .flat()
-          .filter(Boolean);
-      }
+        })
+      );
+      const responses = await Promise.all(apiPromises);
+      const plants = responses
+        .map((response) => (Array.isArray(response.data) ? response.data : [response.data]))
+        .flat()
+        .filter(Boolean);
 
-      console.log("Fetched plants:", plants);
       setPlantData(plants);
 
       const simplifiedPlants = plants.map((plant) => ({
@@ -217,7 +204,7 @@ const Home = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  }, [fetchSensorData, fetchMotorData, loginPlantIds, isSuperAdmin]);
+  }, [fetchSensorData, fetchMotorData, loginPlantIds]);
 
   // Combine sensor data per plant
   const getSensorForPlant = useCallback(
@@ -257,7 +244,7 @@ const Home = ({ user }) => {
     }, {});
   }, [plantSensorData]);
 
-  // Toggle pump (Regular and Admin only)
+  // Toggle pump (regular and admin only)
   const togglePump = useCallback(
     (plantId) => {
       if (!canControlPlant) return;
@@ -469,9 +456,7 @@ const Home = ({ user }) => {
         } else {
           setConnectionStatusWaterPump("Disconnected");
           setIsButtonDisabled((prev) =>
-            Object.fromEntries(
-              (isSuperAdmin ? plantData.map(p => p.plant_id) : loginPlantIds).map((id) => [id, true])
-            )
+            Object.fromEntries(loginPlantIds.map((id) => [id, true]))
           );
         }
       }, 10000);
@@ -481,7 +466,7 @@ const Home = ({ user }) => {
 
     const handleSensorDataMoto = async (data) => {
       const plantId = data.data.id;
-      if (!isSuperAdmin && !loginPlantIds.includes(plantId)) return;
+      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
       const sensorData = data.data.sensordata;
 
       setSensorMoto((prev) => ({
@@ -519,7 +504,7 @@ const Home = ({ user }) => {
 
     const handleSensor = async (data) => {
       const plantId = data.plant_id;
-      if (!isSuperAdmin && !loginPlantIds.includes(plantId)) return;
+      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
       setSensorWaterPump(data);
       const plantStatus = data.plant_status;
       setIsButtonDisabled((prev) => ({
@@ -551,15 +536,14 @@ const Home = ({ user }) => {
     };
 
     const handleConnectMoto = () => {
-      const plantIds = isSuperAdmin ? plantData.map(p => p.plant_id) : loginPlantIds;
       setConnectionStatusMoto(
-        plantIds.reduce(
+        loginPlantIds.reduce(
           (acc, plantId) => ({ ...acc, [plantId]: "Disconnected" }),
           {}
         )
       );
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(plantIds.map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
@@ -568,32 +552,29 @@ const Home = ({ user }) => {
     };
 
     const handleDisconnectMoto = () => {
-      const plantIds = isSuperAdmin ? plantData.map(p => p.plant_id) : loginPlantIds;
       setConnectionStatusMoto(
-        plantIds.reduce(
+        loginPlantIds.reduce(
           (acc, plantId) => ({ ...acc, [plantId]: "Disconnected" }),
           {}
         )
       );
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(plantIds.map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
     const handleDisconnectWaterPump = () => {
-      const plantIds = isSuperAdmin ? plantData.map(p => p.plant_id) : loginPlantIds;
       setConnectionStatusWaterPump("Disconnected");
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(plantIds.map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
     const handleConnectErrorWaterPump = (error) => {
       console.error("Connection error for water-pump server:", error.message);
       setConnectionStatusWaterPump("Disconnected");
-      const plantIds = isSuperAdmin ? plantData.map(p => p.plant_id) : loginPlantIds;
       setIsButtonDisabled((prev) =>
-        Object.fromEntries(plantIds.map((id) => [id, true]))
+        Object.fromEntries(loginPlantIds.map((id) => [id, true]))
       );
     };
 
@@ -601,14 +582,14 @@ const Home = ({ user }) => {
       console.error("Server error:", data.message);
       const plantIdMatch = data.message.match(/plantId: (\w+)/);
       const plantId = plantIdMatch ? plantIdMatch[1] : "global";
-      if (plantId !== "global" && !isSuperAdmin && !loginPlantIds.includes(plantId)) return;
+      if (plantId !== "global" && !loginPlantIds.includes(plantId)) return;
       setError((prev) => ({ ...prev, [plantId]: data.message }));
       setIsButtonDisabled((prev) => ({ ...prev, [plantId]: true }));
     };
 
     const handleMotorStatusUpdate = (data) => {
       const { plantId, timestamp } = data;
-      if (!isSuperAdmin && !loginPlantIds.includes(plantId)) return;
+      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
       const sensor = getSensorForPlant(plantId);
       const plantStatus = sensor.plant_status;
       if (
@@ -674,7 +655,6 @@ const Home = ({ user }) => {
     getSensorForPlant,
     plantMotors,
     loginPlantIds,
-    isSuperAdmin,
   ]);
 
   // Initial data fetch
@@ -684,10 +664,10 @@ const Home = ({ user }) => {
 
   // Refresh data for specific plant
   useEffect(() => {
-    if (sensorWaterPump?.plant_id && (isSuperAdmin || loginPlantIds.includes(sensorWaterPump.plant_id))) {
+    if (sensorWaterPump?.plant_id && loginPlantIds.includes(sensorWaterPump.plant_id)) {
       fetchInitialData();
     }
-  }, [sensorWaterPump, fetchInitialData, loginPlantIds, isSuperAdmin]);
+  }, [sensorWaterPump, fetchInitialData, loginPlantIds]);
 
   // Initialize motorStatuses and motorNumbers
   useEffect(() => {
@@ -1045,3 +1025,4 @@ const Home = ({ user }) => {
 };
 
 export default Home;
+// jhvjhgghjvjghvjgv

@@ -16,6 +16,8 @@ const Login = () => {
     setError("");
     setLoading(true);
 
+// sfsdfsdfsfsfsdfs
+
     try {
       const response = await axios.post(
         'https://water-pump.onrender.com/api/users/login',
@@ -27,13 +29,14 @@ const Login = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          withCredentials: true,
+          withCredentials: true, // Added for CORS/auth compatibility
         }
       );
 
       console.log("Login API Response:", response.data);
       console.log("Navigating to /home with user data:", response.data);
 
+      // Navigate to /home with user data in state
       navigate("/home", { state: { user: response.data } });
     } catch (error) {
       console.error("Login error:", {
