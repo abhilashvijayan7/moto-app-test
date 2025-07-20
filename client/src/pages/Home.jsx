@@ -40,6 +40,8 @@ const Home = () => {
   // Get plant ID from login response
   const loginPlantId = location.state?.user?.plant_id || null;
 
+  console.log("plannnnntttt",loginPlantId)
+
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
     () =>
