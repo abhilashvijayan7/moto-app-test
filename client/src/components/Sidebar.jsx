@@ -1,56 +1,75 @@
-import React from "react";
 import { NavLink } from "react-router-dom";
+import mainImage from "../images/image 3.png";
+import dashboard from "../images/dashboard.png";
+import devices from "../images/devices.png";
+import tv from "../images/tv_options_input_settings.png";
+import deployed from "../images/deployed_code_account.png";
+import headset from "../images/headset_mic.png";
+import passkey from "../images/passkey.png";
+import logout from "../images/logout.png";
+import icons8_plus_32 from "../images/icons8-plus-32.png";
+import technology from "../images/technology_15876046.png";
+import sensor from "../images/sensor_16704590.png";
+import topic from "../images/topic2.png";
+import livelogs from "../images/livelogs.png";
+import savedlogs from "../images/saved-png.png";
 
-const Sidebar = ({ userRole }) => {
-  const isSuperAdmin = userRole === "super admin";
-  const isAdmin = userRole === "admin" || isSuperAdmin;
-  const isRegularOrNormal = userRole === "regular" || userRole === "normal" || isAdmin;
+function Sidebar({ user }) {
+  const userType = user?.role?.toLowerCase() || "normal";
+  const isRestrictedUser = userType === "normal" || userType === "regular";
 
   const menuItems = [
-    { path: "/home", label: "Home", showFor: isRegularOrNormal },
-    { path: "/user-manager", label: "User Manager", showFor: isAdmin },
-    { path: "/log", label: "Live Log", showFor: isAdmin },
-    { path: "/saved-log", label: "Saved Log", showFor: isAdmin },
-    { path: "/change-password", label: "Change Password", showFor: isRegularOrNormal },
-    { path: "/logout", label: "Logout", showFor: isRegularOrNormal },
-    { path: "/motor", label: "Motor", showFor: isSuperAdmin },
-    { path: "/my-device", label: "My Device", showFor: isSuperAdmin },
-    { path: "/device-manager", label: "Device Manager", showFor: isSuperAdmin },
-    { path: "/new-plant", label: "New Plant", showFor: isSuperAdmin },
-    { path: "/add-motor", label: "Add Motor", showFor: isSuperAdmin },
-    { path: "/add-sensor", label: "Add Sensor", showFor: isSuperAdmin },
-    { path: "/topic", label: "Topic", showFor: isSuperAdmin },
-    { path: "/support", label: "Support", showFor: isSuperAdmin },
+    { icon: dashboard, label: "Home", path: "/home" },
+    ...(isRestrictedUser
+      ? []
+      : [
+          { icon: devices, label: "My Device", path: "/my-device" },
+          { icon: tv, label: "Device Manager", path: "/device-manager" },
+          { icon: icons8_plus_32, label: "New Plant", path: "/new-plant" },
+          { icon: deployed, label: "User Manager", path: "/user-manager" },
+          { icon: technology, label: "Add Motor", path: "/add-motor" },
+          { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
+          { icon: topic, label: "Add Topic", path: "/topic" },
+          { icon: livelogs, label: "Live Log", path: "/log" },
+          { icon: savedlogs, label: "Saved Log", path: "/saved-log" },
+          { icon: headset, label: "Support", path: "/support" },
+        ]),
+    { icon: passkey, label: "Change Password", path: "/change-password" },
+    { icon: logout, label: "Logout", path: "/logout" },
   ];
 
   return (
-    <div className="w-full lg:w-[280px] bg-[#FFFFFF] lg:bg-[#F5F5F5] flex flex-col p-4 lg:p-6 h-auto lg:h-screen">
-      <div className="hidden lg:block mb-6">
-        <h1 className="text-[#4E4D4D] text-[24px] font-bold">Water Pump</h1>
+    <div className="left-side text-[#6B6B6B] w-[200px] bg-[#FFFFFF] shrink-0 hidden lg:block">
+      <center>
+        <img
+          src={mainImage}
+          alt="KRP Aquatech"
+          width="75%"
+          className="pt-[30px] ml-[5.5px] mb-[30px]"
+        />
+      </center>
+      <div className="mr-[10px] ml-[10px] flex flex-col justify-center">
+        {menuItems.map((item, index) => (
+          <NavLink
+            key={index}
+            to={item.path}
+            className={({ isActive }) =>
+              `flex py-[7px] pl-[10px] pr-[10px] gap-1 mb-[7px] ${
+                isActive ? "bg-[#f5f3f3] rounded-[8px]" : ""
+              }`
+            }
+          >
+            <div>
+              <img src={item.icon} alt="" className="w-[24px] h-[24px]" />
+            </div>
+            <div>
+              <p>{item.label}</p>
+            </div>
+          </NavLink>
+        ))}
       </div>
-      <nav className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-x-hidden">
-        {menuItems.map(
-          (item) =>
-            item.showFor && (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end
-                className={({ isActive }) =>
-                  `py-2 px-4 text-[16px] font-medium rounded-lg lg:mb-2 whitespace-nowrap lg:whitespace-normal ${
-                    isActive
-                      ? "bg-[#208CD4] text-[#FFFFFF]"
-                      : "text-[#4E4D4D] hover:bg-[#E0E0E0]"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            )
-        )}
-      </nav>
     </div>
   );
-};
+}
 
 export default Sidebar;
