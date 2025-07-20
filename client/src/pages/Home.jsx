@@ -65,8 +65,6 @@ const Home = () => {
     setSearchQuery(e.target.value);
   };
 
-
-
   // Fetch motor data for specific plants
   const fetchMotorData = useCallback(async (plants) => {
     if (!plants.length) return;
@@ -75,8 +73,7 @@ const Home = () => {
       const apiPromises = plants.map((plant) =>
         axios
           .get(
-            `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`,
-          { withCredentials: true }
+            `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`
           )
           .catch((error) => {
             console.error(
@@ -1006,5 +1003,7 @@ const Home = () => {
 
 export default Home;
 
+// perfectootototo
 
-// sghdfihlsadgfioasghdfojhasgdfiuhsd
+
+// pushhhhhhhhhhhhhhhhhhhhhhhhhhh
