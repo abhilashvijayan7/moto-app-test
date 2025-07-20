@@ -99,11 +99,10 @@ function App() {
   usePushNotifications();
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
-  const user = location.state?.user || null;
 
   return (
     <div className="flex flex-col lg:flex-row lg:bg-[#DADADA] min-h-screen">
-      {!isLoginPage && <Sidebar userRole={user?.role?.toLowerCase() || "normal"} />}
+      {!isLoginPage && <Sidebar userRole={location.state?.user?.role?.toLowerCase() || "normal"} />}
       <div className="flex-1 flex flex-col">
         {!isLoginPage && <Header />}
         <div className="flex-1">
