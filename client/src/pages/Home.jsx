@@ -38,7 +38,7 @@ const Home = ({ user }) => {
   // Derive user role and permissions
   const userRole = user?.role?.toLowerCase() || "normal";
   const isRestrictedUser = userRole === "normal" || userRole === "regular";
-  const canControlPlant = userRole === "regular" || userRole === "admin";
+  const canControlPlant = userRole === "super admin" || userRole === "admin" || userRole === "normal";
 
   // Get plant IDs from user prop
   const loginPlantIds = useMemo(() => {
@@ -1025,6 +1025,3 @@ const Home = ({ user }) => {
 };
 
 export default Home;
-
-
-// ksbdfkshdfkjhsdkjfhsd
