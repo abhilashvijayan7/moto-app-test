@@ -17,7 +17,7 @@ const socketWaterPump = io("https://water-pump.onrender.com", {
   rejectUnauthorized: false,
 });
 
-const Home = () => {
+const Home = ({ user }) => {
   const [sensorMoto, setSensorMoto] = useState({});
   const [sensorWaterPump, setSensorWaterPump] = useState({});
   const [motorStatuses, setMotorStatuses] = useState({});
@@ -36,23 +36,23 @@ const Home = () => {
   const navigate = useNavigate();
 
   // Derive user role and permissions
-  const userRole = location.state?.user?.role?.toLowerCase() || "normal";
+  const userRole = user?.role?.toLowerCase() || "normal";
   const isRestrictedUser = userRole === "normal" || userRole === "regular";
   const canControlPlant = userRole === "regular" || userRole === "admin";
 
-  // Get plant IDs from login response
+  // Get plant IDs from user prop
   const loginPlantIds = useMemo(() => {
-    return location.state?.user?.userPlants?.map((plant) => plant.plant_id) || [];
-  }, [location.state]);
+    return user?.userPlants?.map((plant) => plant.plant_id) || [];
+  }, [user]);
 
   console.log("Allowed plant IDs:", loginPlantIds);
 
   // Redirect to login if no user data
   useEffect(() => {
-    if (!location.state?.user) {
+    if (!user) {
       navigate("/login");
     }
-  }, [location.state, navigate]);
+  }, [user, navigate]);
 
   // Memoize simplified plant data
   const simplifiedPlantData = useMemo(
@@ -1027,5 +1027,4 @@ const Home = () => {
 export default Home;
 
 
-
-// homeeee
+// ksbdfkshdfkjhsdkjfhsd

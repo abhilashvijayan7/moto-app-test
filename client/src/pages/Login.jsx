@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import draw2 from "../images/draw2.webp";
+import draw2 from '../images/draw2.webp';
+import { UserContext } from '../context/UserContext';
 
 const Login = () => {
-  const [loginInput, setLoginInput] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [loginInput, setLoginInput] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useContext(UserContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Login button clicked", { loginInput, password });
-    setError("");
+    console.log('Login button clicked', { loginInput, password });
+    setError('');
     setLoading(true);
 
     try {
@@ -31,21 +33,19 @@ const Login = () => {
         }
       );
 
-      console.log("Login API Response:", response.data);
-      console.log("Navigating to /home with user data:", response.data);
-
-      // Navigate to /home with user data in state
-      navigate("/home", { state: { user: response.data } });
+      console.log('Login API Response:', response.data);
+      login(response.data); // Set user data in context
+      navigate('/home');
     } catch (error) {
-      console.error("Login error:", {
+      console.error('Login error:', {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
       });
-      setError(error.response?.data?.message || "Failed to login. Please try again.");
+      setError(error.response?.data?.message || 'Failed to login. Please try again.');
     } finally {
       setLoading(false);
-      console.log("Login attempt completed, loading:", false);
+      console.log('Login attempt completed, loading:', false);
     }
   };
 
@@ -60,7 +60,7 @@ const Login = () => {
           {error && (
             <div className="mb-4 text-red-500 text-sm text-center">{error}</div>
           )}
-          <div>
+          <div onSubmit={handleLogin}>
             <div className="mb-4">
               <label htmlFor="loginInput" className="block text-sm font-medium text-gray-700 mb-1">
                 Email or Username
@@ -73,6 +73,7 @@ const Login = () => {
                 onChange={(e) => setLoginInput(e.target.value)}
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                 disabled={loading}
+                required
               />
             </div>
             <div className="mb-4">
@@ -87,16 +88,18 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                 disabled={loading}
+                required
               />
             </div>
             <button
-              onClick={handleLogin}
+              type="submit"
               disabled={loading}
+              onClick={handleLogin}
               className={`w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 ${
                 loading ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             >
-              {loading ? "Logging in..." : "LOGIN"}
+              {loading ? 'Logging in...' : 'LOGIN'}
             </button>
           </div>
         </div>
@@ -106,6 +109,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
-// logeeeeee
