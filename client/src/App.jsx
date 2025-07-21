@@ -51,6 +51,8 @@ const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
         });
 
         console.log("resppppp", response.data)
+
+        // hgchgfhgfhgfhgfhgf
         setIsAuthenticated(response.data.loggedIn === true);
       } catch (error) {
         console.error("Session check error:", error);
