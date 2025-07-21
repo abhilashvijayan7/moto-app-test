@@ -14,7 +14,8 @@ import Topic from "./pages/Topic";
 import Log from "./pages/Log";
 import LoginPage from "./pages/Login";
 import SavedLog from "./pages/SavedLog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 function Support() {
   return <div className="p-6 text-[#4E4D4D] text-[24px]">Support Page</div>;
@@ -33,11 +34,39 @@ function Logout() {
 // ProtectedRoute Component
 const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
   const location = useLocation();
-  const isAuthenticated = !!location.state?.user;
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
   const userType = location.state?.user?.role?.toLowerCase() || "normal";
 
+  useEffect(() => {
+    // If user data is present in location.state, consider authenticated initially
+    // if (location.state?.user) {
+    //   setIsAuthenticated(true);
+    //   return;
+    // }
+
+    const checkSession = async () => {
+      try {
+        const response = await axios.get('https://water-pump.onrender.com/api/users/session/session-check', {
+          withCredentials: true,
+        });
+
+        console.log("resppppp", response.data)
+        setIsAuthenticated(response.data.loggedIn === true);
+      } catch (error) {
+        console.error("Session check error:", error);
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkSession();
+  }, [location.state]);
+
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>; // Display loading state while checking session
+  }
+
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: location }} />;
   }
 
   if ((userType === "normal" || userType === "regular") && !allowedForRestrictedUser) {
