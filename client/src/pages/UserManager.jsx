@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import axios from "axios";
 import add from "../images/add.png";
 import component_11 from "../images/Component 11.png";
 import component_13 from "../images/Component 13.png";
@@ -23,7 +24,49 @@ function UserManager() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8);
-  const itemsPerPageOptions = [4, 8, 12, 16];
+  const [apiData, setApiData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const itemsPerPageOptions = [ 8, 12, 16];
+
+  // Fetch data from API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get("https://water-pump.onrender.com/api/users");
+        
+        // Map API response to match your current data structure
+        const mappedData = response.data.map((user) => ({
+          companyName: user.full_name || user.username || "N/A",
+          role: user.designation || user.role || "N/A",
+          dob: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString('en-GB') : "N/A",
+          call: user.contact_number || "N/A",
+          doj: user.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : "N/A",
+          mail: user.email || "N/A",
+          gender: user.gender || "N/A",
+          home: user.address || "N/A",
+          company: user.company || "N/A",
+          location: user.location || "N/A",
+          assignedPlant: user.plant_ids && user.plant_ids.length > 0 
+            ? user.plant_ids.map(id => `Plant ${id}`).join(' ,') 
+            : "No plants assigned",
+        }));
+        
+        setApiData(mappedData);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching users:", err);
+        setError("Failed to fetch users. Please try again.");
+        // Keep empty array on error
+        setApiData([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const handleOpenUpload = () => {
     setIsUploadOpen(true);
@@ -32,87 +75,6 @@ function UserManager() {
   const handleCloseUpload = () => {
     setIsUploadOpen(false);
   };
-
-  const mockedCardData = [
-    {
-      companyName: "KRP Aqua Tech 1",
-      role: "Admin",
-      dob: "22-06-2025",
-      call: "123-456-7890",
-      doj: "22-06-2025",
-      mail: "admin1@krp.com",
-      gender: "Male",
-      home: "123 Main St",
-      company: "KRP Aqua Tech",
-      location: "City A",
-      assignedPlant: "Plant F6 , Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ",
-    },
-    {
-      companyName: "Aqua Solutions 2",
-      role: "Editor",
-      dob: "23-06-2025",
-      call: "234-567-8901",
-      doj: "23-06-2025",
-      mail: "editor1@aqua2.com",
-      gender: "others",
-      home: "456 Elm St",
-      company: "Aqua Solutions",
-      location: "City B",
-      assignedPlant: "Plant B2",
-    },
-    {
-      companyName: "Water Tech 3",
-      role: "Viewer",
-      dob: "24-06-2025",
-      call: "345-678-9012",
-      doj: "24-06-2025",
-      mail: "viewer1@watertech.com",
-      gender: "Male",
-      home: "789 Oak St",
-      company: "Water Tech",
-      location: "City C",
-      assignedPlant: " Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 , Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6",
-    },
-    {
-      companyName: "Hydro Dynamics 4",
-      role: "Manager",
-      dob: "25-06-2025",
-      call: "456-789-0123",
-      doj: "25-06-2025",
-      mail: "manager1@hydro.com",
-      gender: "Female",
-      home: "101 Pine St",
-      company: "Hydro Dynamics",
-      location: "City D",
-      assignedPlant: "Plant D4",
-    },
-    {
-      companyName: "Pure Flow 5",
-      role: "Admin",
-      dob: "26-06-2025",
-      call: "567-890-1234",
-      doj: "26-06-2025",
-      mail: "admin2@pureflow.com",
-      gender: "Male",
-      home: "202 Birch St",
-      company: "Pure Flow",
-      location: "City E",
-      assignedPlant: "Plant E5",
-    },
-    {
-      companyName: "Aqua Innovations 6",
-      role: "Editor",
-      dob: "27-06-2025",
-      call: "678-901-2345",
-      doj: "27-06-2025",
-      mail: "editor1@aquainno.com",
-      gender: "Female",
-      home: "303 Cedar St",
-      company: "Aqua Innovations",
-      location: "City F",
-      assignedPlant: "Plant F6 , Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,Plant F6 ,",
-    },
-  ];
 
   const handleOpenAddModal = () => {
     setModalMode("add");
@@ -138,12 +100,12 @@ function UserManager() {
   };
 
   const filteredData = useMemo(() => {
-    return mockedCardData.filter((card) =>
+    return apiData.filter((card) =>
       Object.values(card).some((value) =>
         value.toString().toLowerCase().includes(searchQuery.toLowerCase())
       )
     );
-  }, [searchQuery]);
+  }, [apiData, searchQuery]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = useMemo(() => {
@@ -156,6 +118,40 @@ function UserManager() {
       setCurrentPage(page);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
+        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
+          <div>
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+              User Manager
+            </p>
+          </div>
+        </div>
+        <div className="bg-[#FFFFFF] rounded-xl p-8 text-center">
+          <p>Loading users...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
+        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
+          <div>
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+              User Manager
+            </p>
+          </div>
+        </div>
+        <div className="bg-[#FFFFFF] rounded-xl p-8 text-center text-red-500">
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -308,4 +304,5 @@ function UserManager() {
 
 export default UserManager;
 
-// perfect of the perfect
+
+// dddom
