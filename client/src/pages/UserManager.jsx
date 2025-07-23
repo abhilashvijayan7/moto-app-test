@@ -27,38 +27,71 @@ function UserManager() {
   const [apiData, setApiData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const itemsPerPageOptions = [ 8, 12, 16];
+  const itemsPerPageOptions = [8, 12, 16];
+
+  // Format date to DD/MM/YYYY
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr || dateStr === "N/A") return "N/A";
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      console.log(`Invalid date for display:`, dateStr); // Debug: Log invalid date
+      return "N/A";
+    }
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   // Fetch data from API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("https://water-pump.onrender.com/api/users");
-        
-        // Map API response to match your current data structure
-        const mappedData = response.data.map((user) => ({
+        const response = await axios.get("https://water-pump.onrender.com/api/UserPlantAccess");
+        console.log("Raw UserPlantAccess response:", response.data); // Debug: Log raw response
+
+        // Fetch additional user details from /api/users/{id}
+        const users = await Promise.all(
+          response.data.map(async (user) => {
+            try {
+              const userDetails = await axios.get(`https://water-pump.onrender.com/api/users/${user.user_id}`);
+              console.log(`User details for ${user.user_id}:`, userDetails.data); // Debug: Log user details
+              return { ...user, date_of_joining: userDetails.data.date_of_joining };
+            } catch (err) {
+              console.error(`Error fetching details for user ${user.user_id}:`, err.response?.data || err.message);
+              return { ...user, date_of_joining: null };
+            }
+          })
+        );
+
+        // Map API response to match the current data structure
+        const mappedData = users.map((user) => ({
           companyName: user.full_name || user.username || "N/A",
-          role: user.designation || user.role || "N/A",
-          dob: user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString('en-GB') : "N/A",
+          role: user.designation || "N/A",
+          dob: user.date_of_birth
+            ? formatDisplayDate(user.date_of_birth)
+            : "N/A",
           call: user.contact_number || "N/A",
-          doj: user.created_at ? new Date(user.created_at).toLocaleDateString('en-GB') : "N/A",
+          doj: user.date_of_joining || "N/A", // Pass raw date_of_joining for AddUserModal
+          displayDoj: formatDisplayDate(user.date_of_joining), // Formatted for UI
           mail: user.email || "N/A",
           gender: user.gender || "N/A",
           home: user.address || "N/A",
           company: user.company || "N/A",
           location: user.location || "N/A",
-          assignedPlant: user.plant_ids && user.plant_ids.length > 0 
-            ? user.plant_ids.map(id => `Plant ${id}`).join(' ,') 
-            : "No plants assigned",
+          assignedPlant:
+            user.plants && user.plants.length > 0
+              ? user.plants.map((plant) => plant.plant_name).join(", ")
+              : "No plants assigned",
+          user_id: user.user_id, // Add user_id for PUT request
         }));
-        
+
         setApiData(mappedData);
         setError(null);
       } catch (err) {
-        console.error("Error fetching users:", err);
+        console.error("Error fetching users:", err.response?.data || err.message);
         setError("Failed to fetch users. Please try again.");
-        // Keep empty array on error
         setApiData([]);
       } finally {
         setLoading(false);
@@ -224,7 +257,11 @@ function UserManager() {
                         key={detailIndex}
                         className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
                       >
-                        <img src={item.icon} alt="" className="w-[24px] h-[24px]" />
+                        <img
+                          src={item.icon}
+                          alt=""
+                          className="w-[24px] h-[24px]"
+                        />
                         <p className="break-words max-w-[90%]">{item.value}</p>
                       </div>
                     ))}
@@ -232,16 +269,23 @@ function UserManager() {
                   <div>
                     {[
                       { icon: calendar_month, value: `DOB: ${card.dob}` },
-                      { icon: calendar_month_1, value: `DOJ: ${card.doj}` },
+                      { icon: calendar_month_1, value: `DOJ: ${card.displayDoj}` },
                       { icon: sentiment_satisfied, value: card.gender },
                       { icon: humidity_low, value: card.company },
-                      { icon: encrypted, value: `Assigned Plant: ${card.assignedPlant}` },
+                      {
+                        icon: encrypted,
+                        value: `Assigned Plant: ${card.assignedPlant}`,
+                      },
                     ].map((item, detailIndex) => (
                       <div
                         key={detailIndex}
                         className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
                       >
-                        <img src={item.icon} alt="" className="w-[24px] h-[24px]" />
+                        <img
+                          src={item.icon}
+                          alt=""
+                          className="w-[24px] h-[24px]"
+                        />
                         <p className="break-words max-w-[90%]">{item.value}</p>
                       </div>
                     ))}
@@ -264,7 +308,9 @@ function UserManager() {
                 key={page}
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 rounded ${
-                  currentPage === page ? "bg-[#208CD4] text-white" : "bg-gray-100 hover:bg-gray-200"
+                  currentPage === page
+                    ? "bg-[#208CD4] text-white"
+                    : "bg-gray-100 hover:bg-gray-200"
                 } transition-colors`}
               >
                 {page}
@@ -296,6 +342,7 @@ function UserManager() {
         onClose={handleCloseModal}
         name={modalMode === "add" ? "Add New User" : "Edit User"}
         user={selectedUser}
+        onSuccess={() => fetchUsers()} // Re-fetch users on success
       />
       <UploadComponent isOpen={isUploadOpen} onClose={handleCloseUpload} />
     </div>
@@ -304,5 +351,4 @@ function UserManager() {
 
 export default UserManager;
 
-
-// dddom
+// eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee

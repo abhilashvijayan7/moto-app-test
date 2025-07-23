@@ -56,7 +56,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         setLoadingPlants(true);
         setError(null);
         const response = await axios.get('https://water-pump.onrender.com/api/plants');
-        console.log("Plants API Response:", response.data);
         const plantData = Array.isArray(response.data) ? response.data : [];
         setPlants(plantData);
       } catch (error) {
@@ -79,10 +78,9 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         setLoadingRoles(true);
         setError(null);
         const response = await axios.get('https://water-pump.onrender.com/api/roles');
-        console.log("Roles API Response:", response.data);
         const roleData = Array.isArray(response.data) ? response.data : [];
         setRoles(roleData);
-        if (roleData.length > 0) {
+        if (roleData.length > 0 && name !== "Edit User") {
           setFormData((prev) => ({ ...prev, userType: roleData[0].role_id.toString() }));
         }
       } catch (error) {
@@ -96,30 +94,71 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     if (isOpen) {
       fetchRoles();
     }
-  }, [isOpen]);
+  }, [isOpen, name]);
 
   // Pre-populate form for edit mode or reset for add mode
   useEffect(() => {
     if (user && name === "Edit User") {
-      console.log("User data for edit:", user);
+      console.log("User data for edit:", user); // Debug: Log entire user object
+      console.log("Date of Joining (doj):", user.doj, "Date of Birth (dob):", user.dob); // Debug: Log specific date fields
+      console.log("Raw API fields:", { date_of_joining: user.date_of_joining, date_of_birth: user.date_of_birth }); // Debug: Check raw API fields
+      
       const selectedRole = roles.find((role) => role.role_name === user.role);
       const roleId = selectedRole ? selectedRole.role_id.toString() : (roles.length > 0 ? roles[0].role_id.toString() : "");
-      setFormData({
-        dateOfJoining: user.doj ? user.doj.split(" ")[0] : "",
+      // Parse assignedPlant to extract plant names and match with plant IDs
+      const assignedPlantNames = user.assignedPlant && user.assignedPlant !== "No plants assigned"
+        ? user.assignedPlant.split(", ").map(name => name.trim())
+        : [];
+      const assignedPlantIds = plants
+        .filter(plant => assignedPlantNames.includes(plant.plant_name))
+        .map(plant => String(plant.plant_id));
+
+      // Format dates to YYYY-MM-DD
+      const formatDate = (dateStr, field) => {
+        if (!dateStr || typeof dateStr !== "string" || dateStr === "N/A") {
+          console.log(`Invalid or missing date for ${field}:`, dateStr); // Debug: Log invalid date
+          return "";
+        }
+        let date;
+        if (dateStr.includes("/")) {
+          // Handle DD/MM/YYYY format from UserManager
+          const [day, month, year] = dateStr.split("/");
+          if (!day || !month || !year) {
+            console.log(`Invalid ${field} format:`, dateStr); // Debug: Log format issue
+            return "";
+          }
+          date = new Date(`${year}-${month}-${day}`);
+        } else {
+          // Handle YYYY-MM-DD, ISO, or other formats
+          date = new Date(dateStr);
+        }
+        if (isNaN(date.getTime())) {
+          console.log(`Failed to parse ${field}:`, dateStr); // Debug: Log parsing failure
+          return "";
+        }
+        const formattedDate = date.toISOString().split("T")[0]; // Convert to YYYY-MM-DD
+        console.log(`Formatted ${field}:`, dateStr, "->", formattedDate); // Debug: Log transformation
+        return formattedDate;
+      };
+
+      const newFormData = {
+        dateOfJoining: formatDate(user.doj, "dateOfJoining"), // Pre-fill with formatted doj
         userType: roleId,
-        userName: user.companyName || "",
-        fullName: user.fullName || "",
+        userName: user.companyName || user.username || "",
+        fullName: user.companyName || user.full_name || "", // Pre-fill with user.companyName or full_name
         password: "",
         gender: user.gender || "Male",
-        dateOfBirth: user.dob ? user.dob.split(" ")[0] : "",
-        designation: "",
+        dateOfBirth: formatDate(user.dob, "dateOfBirth"), // Pre-fill with formatted dob
+        designation: user.role || user.designation || "", // Pre-fill with user.role or designation
         company: user.company || "",
-        address: user.home || "",
+        address: user.home || user.address || "",
         location: user.location || "",
-        contactNo: user.call || "",
-        email: user.mail || "",
-        devices: Array.isArray(user.devices) ? user.devices.map(String) : [],
-      });
+        contactNo: user.call || user.contact_number || "",
+        email: user.mail || user.email || "",
+        devices: assignedPlantIds,
+      };
+      setFormData(newFormData);
+      console.log("formData after set:", newFormData); // Debug: Log formData
     } else {
       setFormData({
         dateOfJoining: "",
@@ -138,7 +177,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         devices: [],
       });
     }
-  }, [user, name, isOpen, roles]);
+  }, [user, name, isOpen, roles, plants]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -163,12 +202,10 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   // Handle plant checkbox changes
   const handleDeviceChange = (plantId) => {
     const stringPlantId = String(plantId);
-    console.log("Toggling plant ID:", stringPlantId);
     setFormData((prev) => {
       const updatedDevices = prev.devices.includes(stringPlantId)
         ? prev.devices.filter((id) => id !== stringPlantId)
         : [...prev.devices, stringPlantId];
-      console.log("Updated devices:", updatedDevices);
       return { ...prev, devices: updatedDevices };
     });
   };
@@ -236,14 +273,15 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       notes: "",
       plant_ids: formData.devices.map(Number),
       role_id: Number(formData.userType),
+      ...(name !== "Edit User" && { date_of_joining: formData.dateOfJoining }), // Use date_of_joining for add mode
     };
 
     try {
       setLoadingPlants(true);
       setError(null);
 
-      const url = name === "Edit User" && user?.apiKey
-        ? `https://water-pump.onrender.com/api/users${user.apiKey}`
+      const url = name === "Edit User" && user?.user_id
+        ? `https://water-pump.onrender.com/api/users/${user.user_id}`
         : 'https://water-pump.onrender.com/api/users';
 
       const method = name === "Edit User" ? 'PUT' : 'POST';
@@ -261,7 +299,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       onClose();
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error(`${name} error:`, error);
+      console.error(`${name} error:`, error.response?.data || error.message);
       setError(error.response?.data?.message || `Failed to ${name.toLowerCase()}. Please try again.`);
     } finally {
       setLoadingPlants(false);
@@ -472,66 +510,68 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                 </div>
               </div>
             </div>
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-[#4D4D4D]">Login Info</h3>
-              <div className="lg:grid lg:grid-cols-3 lg:gap-4">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      User Type
-                    </label>
-                    <div className="relative">
-                      <select
-                        name="User Type"
-                        value={formData.userType}
+            {name !== "Edit User" && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-[#4D4D4D]">Login Info</h3>
+                <div className="lg:grid lg:grid-cols-3 lg:gap-4">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600">
+                        User Type
+                      </label>
+                      <div className="relative">
+                        <select
+                          name="User Type"
+                          value={formData.userType}
+                          onChange={handleChange}
+                          className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                        >
+                          {loadingRoles ? (
+                            <option value="">Loading roles...</option>
+                          ) : roles.length > 0 ? (
+                            roles.map((role) => (
+                              <option key={role.role_id} value={role.role_id}>
+                                {role.role_name}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="">No roles available</option>
+                          )}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600">
+                        User Name
+                      </label>
+                      <input
+                        type="text"
+                        name="User Name"
+                        value={formData.userName}
                         onChange={handleChange}
-                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
-                      >
-                        {loadingRoles ? (
-                          <option value="">Loading roles...</option>
-                        ) : roles.length > 0 ? (
-                          roles.map((role) => (
-                            <option key={role.role_id} value={role.role_id}>
-                              {role.role_name}
-                            </option>
-                          ))
-                        ) : (
-                          <option value="">No roles available</option>
-                        )}
-                      </select>
+                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        name="Password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                      />
                     </div>
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      User Name
-                    </label>
-                    <input
-                      type="text"
-                      name="User Name"
-                      value={formData.userName}
-                      onChange={handleChange}
-                      className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      Password
-                    </label>
-                    <input
-                      type="password"
-                      name="Password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
-                  </div>
-                </div>
               </div>
-            </div>
+            )}
             <div className="flex justify-end mt-4">
               <button
                 type="submit"
@@ -550,3 +590,5 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
 };
 
 export default AddUserModal;
+
+// eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
