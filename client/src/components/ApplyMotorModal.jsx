@@ -865,3 +865,5 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
     </div>
   );
 }
+
+// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

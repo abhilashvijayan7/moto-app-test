@@ -5,6 +5,7 @@ export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   // Check session on mount to restore user data if available
   useEffect(() => {
@@ -19,6 +20,8 @@ export const UserProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Session check error:', error);
+      } finally {
+        setIsCheckingSession(false);
       }
     };
     checkSession();
@@ -26,6 +29,7 @@ export const UserProvider = ({ children }) => {
 
   const login = (userData) => {
     setUser(userData);
+    setIsCheckingSession(false);
   };
 
   const logout = async () => {
@@ -38,14 +42,17 @@ export const UserProvider = ({ children }) => {
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
+    } finally {
+      setIsCheckingSession(false);
     }
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, logout, isCheckingSession }}>
       {children}
     </UserContext.Provider>
   );
 };
 
-// kdjfkjshfkjhsdkjfhsdkjfhskjdf
+
+// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

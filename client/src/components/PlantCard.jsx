@@ -39,3 +39,5 @@ function PlantCard({ index }) {
 }
 
 export default PlantCard;
+
+// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

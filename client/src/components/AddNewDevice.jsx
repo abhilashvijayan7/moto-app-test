@@ -307,3 +307,5 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
     </div>
   );
 }
+
+// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

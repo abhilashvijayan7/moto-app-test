@@ -35,8 +35,13 @@ function Logout() {
 
 // ProtectedRoute Component
 const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
-  const { user } = useContext(UserContext);
+  const { user, isCheckingSession } = useContext(UserContext);
   const location = useLocation();
+
+  // Show loading state while checking session
+  if (isCheckingSession) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} />;
@@ -196,4 +201,4 @@ function App() {
 
 export default App;
 
-// jhdfgsdjhfgsjhdfgjhsdfgjhsdgfjhsdf
+// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
