@@ -1,20 +1,21 @@
-import React, { useState, useMemo, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useMemo, useEffect } from 'react';
+import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faCalendarDays, faPhone, faEnvelope, faHouse, faLocation, faBuilding, faCalendar, faVenusMars, faIndustry, faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
-import add from "../images/add.png";
-import component_11 from "../images/Component 11.png";
-import component_13 from "../images/Component 13.png";
-import AddUserModal from "../components/AddUserModal";
-import UploadComponent from "../components/UploadComponent";
+import { useLocation } from 'react-router-dom';
+import add from '../images/add.png';
+import component_11 from '../images/Component 11.png';
+import component_13 from '../images/Component 13.png';
+import AddUserModal from '../components/AddUserModal';
+import UploadComponent from '../components/UploadComponent';
 import UserConfirmation from '../components/UserConfirmation';
 
 function UserManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("add");
+  const [modalMode, setModalMode] = useState('add');
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8);
   const [apiData, setApiData] = useState([]);
@@ -23,17 +24,17 @@ function UserManager() {
   const itemsPerPageOptions = [8, 12, 16];
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState('activate');
+  const location = useLocation();
 
-  // Format date to DD/MM/YYYY
   const formatDisplayDate = (dateStr) => {
-    if (!dateStr || dateStr === "N/A") return "N/A";
+    if (!dateStr || dateStr === 'N/A') return 'N/A';
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) {
       console.log(`Invalid date for display:`, dateStr);
-      return "N/A";
+      return 'N/A';
     }
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}/${month}/${year}`;
   };
@@ -41,41 +42,36 @@ function UserManager() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("https://water-pump.onrender.com/api/UserPlantAccess");
-      console.log("UserPlantAccess Response:", response.data);
+      const response = await axios.get('https://water-pump.onrender.com/api/UserPlantAccess');
+      console.log('UserPlantAccess Response:', response.data);
 
       const mappedData = response.data.map((user) => ({
-        companyName: user.company || "N/A",
-        full_name: user.full_name || "N/A",
-        username: user.username || "N/A",
-        role: user.role_name || "N/A",
-        designation: user.designation || "N/A",
-        dob: user.date_of_birth
-          ? formatDisplayDate(user.date_of_birth)
-          : "N/A",
-        call: user.contact_number || "N/A",
-        doj: user.date_of_joining || "N/A",
-        displayDoj: user.date_of_joining
-          ? formatDisplayDate(user.date_of_joining)
-          : "N/A",
-        mail: user.email || "N/A",
-        gender: user.gender || "N/A",
-        home: user.address || "N/A",
-        company: user.company || "N/A",
-        location: user.location || "N/A",
-        assignedPlant:
-          user.plants && user.plants.length > 0
-            ? user.plants.map((plant) => plant.plant_name).join(", ")
-            : "No plants assigned",
+        companyName: user.company || 'N/A',
+        full_name: user.full_name || 'N/A',
+        username: user.username || 'N/A',
+        role: user.role_name || 'N/A',
+        designation: user.designation || 'N/A',
+        dob: user.date_of_birth ? formatDisplayDate(user.date_of_birth) : 'N/A',
+        call: user.contact_number || 'N/A',
+        doj: user.date_of_joining || 'N/A',
+        displayDoj: user.date_of_joining ? formatDisplayDate(user.date_of_joining) : 'N/A',
+        mail: user.email || 'N/A',
+        gender: user.gender || 'N/A',
+        home: user.address || 'N/A',
+        company: user.company || 'N/A',
+        location: user.location || 'N/A',
+        assignedPlant: user.plants && user.plants.length > 0
+          ? user.plants.map((plant) => plant.plant_name).join(', ')
+          : 'No plants assigned',
         user_id: user.user_id,
-        status: user.status
+        status: user.status,
       }));
 
       setApiData(mappedData);
       setError(null);
     } catch (err) {
-      console.error("Error fetching users:", err.response?.data || err.message);
-      setError("Failed to fetch users. Please try again.");
+      console.error('Error fetching users:', err.response?.data || err.message);
+      setError('Failed to fetch users. Please try again.');
       setApiData([]);
     } finally {
       setLoading(false);
@@ -84,7 +80,7 @@ function UserManager() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [location]); // Re-fetch users when location changes
 
   const handleOpenUpload = () => {
     setIsUploadOpen(true);
@@ -95,7 +91,7 @@ function UserManager() {
   };
 
   const handleOpenAddModal = () => {
-    setModalMode("add");
+    setModalMode('add');
     setSelectedUser(null);
     setIsModalOpen(true);
   };
@@ -113,20 +109,32 @@ function UserManager() {
   };
 
   const handleOpenEditModal = (user) => {
-    setModalMode("edit");
+    setModalMode('edit');
     setSelectedUser(user);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setModalMode("add");
+    setModalMode('add');
     setSelectedUser(null);
   };
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
+  };
+
+  const handleUserUpdate = (updatedUser) => {
+    if (modalMode === 'edit' && updatedUser) {
+      setApiData((prevData) =>
+        prevData.map((user) =>
+          user.user_id === updatedUser.user_id ? updatedUser : user
+        )
+      );
+    } else {
+      fetchUsers(); // Fetch users for add mode to ensure latest data
+    }
   };
 
   const filteredData = useMemo(() => {
@@ -183,18 +191,6 @@ function UserManager() {
     );
   }
 
-  const handleUserUpdate = (updatedUser) => {
-    if (modalMode === 'edit' && updatedUser) {
-      setApiData(prevData =>
-        prevData.map(user =>
-          user.user_id === updatedUser.user_id ? updatedUser : user
-        )
-      );
-    } else {
-      fetchUsers();
-    }
-  };
-
   return (
     <div>
       <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
@@ -204,7 +200,6 @@ function UserManager() {
               User Manager
             </p>
           </div>
-
           <div className="flex gap-2 mb-[24px] lg:h-12">
             <input
               type="text"
@@ -222,7 +217,6 @@ function UserManager() {
             </button>
           </div>
         </div>
-
         <div className="bg-[#FFFFFF] rounded-xl">
           <div className="columns-1 lg:columns-4 gap-4 p-4 rounded-xl">
             {paginatedData.map((card, cardIndex) => (
@@ -239,7 +233,6 @@ function UserManager() {
                       {card.role}
                     </p>
                   </div>
-
                   <div className="flex items-center gap-1">
                     <img
                       src={component_11}
@@ -255,12 +248,11 @@ function UserManager() {
                     />
                     <FontAwesomeIcon
                       icon={card?.status === 'Active' ? faCircleCheck : faCircleXmark}
-                      className={card?.status === 'Active' ? "text-green-500 text-xl" : "text-red-500 text-xl"}
+                      className={card?.status === 'Active' ? 'text-green-500 text-xl' : 'text-red-500 text-xl'}
                       onClick={() => handleOpen(card, card.status === 'Active' ? 'Inactive' : 'Active')}
                     />
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4 pt-[16px]">
                   <div>
                     {[
@@ -285,10 +277,7 @@ function UserManager() {
                       { icon: faCalendarDays, value: `DOJ: ${card.displayDoj}` },
                       { icon: faVenusMars, value: card.gender },
                       { icon: faBuilding, value: card.company },
-                      {
-                        icon: faIndustry,
-                        value: `Assigned Plant: ${card.assignedPlant}`,
-                      },
+                      { icon: faIndustry, value: `Assigned Plant: ${card.assignedPlant}` },
                     ].map((item, detailIndex) => (
                       <div
                         key={detailIndex}
@@ -303,7 +292,6 @@ function UserManager() {
               </div>
             ))}
           </div>
-
           <div className="col-span-1 lg:col-span-4 flex justify-center items-center gap-2 mt-4 pb-4">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
@@ -318,8 +306,8 @@ function UserManager() {
                 onClick={() => handlePageChange(page)}
                 className={`px-3 py-1 rounded ${
                   currentPage === page
-                    ? "bg-[#208CD4] text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
+                    ? 'bg-[#208CD4] text-white'
+                    : 'bg-gray-100 hover:bg-gray-200'
                 } transition-colors`}
               >
                 {page}
@@ -349,7 +337,7 @@ function UserManager() {
       <AddUserModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        name={modalMode === "add" ? "Add New User" : "Edit User"}
+        name={modalMode === 'add' ? 'Add New User' : 'Edit User'}
         user={selectedUser}
         onSuccess={handleUserUpdate}
       />
@@ -367,6 +355,5 @@ function UserManager() {
 }
 
 export default UserManager;
-
 
 // kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

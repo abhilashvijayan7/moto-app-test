@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
+  const navigate = useNavigate();
   // State for form inputs with camelCase keys
   const [formData, setFormData] = useState({
     dateOfJoining: "",
@@ -99,13 +101,12 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   // Pre-populate form for edit mode or reset for add mode
   useEffect(() => {
     if (user && name === "Edit User") {
-      console.log("User data for edit:", user); // Debug: Log entire user object
-      console.log("Date of Joining (doj):", user.doj, "Date of Birth (dob):", user.dob); // Debug: Log specific date fields
-      console.log("Raw API fields:", { date_of_joining: user.date_of_joining, date_of_birth: user.date_of_birth }); // Debug: Check raw API fields
-      
+      console.log("User data for edit:", user);
+      console.log("Date of Joining (doj):", user.doj, "Date of Birth (dob):", user.dob);
+      console.log("Raw API fields:", { date_of_joining: user.date_of_joining, date_of_birth: user.date_of_birth });
+
       const selectedRole = roles.find((role) => role.role_name === user.role);
       const roleId = selectedRole ? selectedRole.role_id.toString() : (roles.length > 0 ? roles[0].role_id.toString() : "");
-      // Parse assignedPlant to extract plant names and match with plant IDs
       const assignedPlantNames = user.assignedPlant && user.assignedPlant !== "No plants assigned"
         ? user.assignedPlant.split(", ").map(name => name.trim())
         : [];
@@ -113,44 +114,40 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         .filter(plant => assignedPlantNames.includes(plant.plant_name))
         .map(plant => String(plant.plant_id));
 
-      // Format dates to YYYY-MM-DD
       const formatDate = (dateStr, field) => {
         if (!dateStr || typeof dateStr !== "string" || dateStr === "N/A") {
-          console.log(`Invalid or missing date for ${field}:`, dateStr); // Debug: Log invalid date
+          console.log(`Invalid or missing date for ${field}:`, dateStr);
           return "";
         }
         let date;
         if (dateStr.includes("/")) {
-          // Handle DD/MM/YYYY format from UserManager
           const [day, month, year] = dateStr.split("/");
           if (!day || !month || !year) {
-            console.log(`Invalid ${field} format:`, dateStr); // Debug: Log format issue
+            console.log(`Invalid ${field} format:`, dateStr);
             return "";
           }
           date = new Date(`${year}-${month}-${day}`);
         } else {
-          // Handle YYYY-MM-DD, ISO, or other formats
           date = new Date(dateStr);
         }
         if (isNaN(date.getTime())) {
-          console.log(`Failed to parse ${field}:`, dateStr); // Debug: Log parsing failure
+          console.log(`Failed to parse ${field}:`, dateStr);
           return "";
         }
-        const formattedDate = date.toISOString().split("T")[0]; // Convert to YYYY-MM-DD
-        console.log(`Formatted ${field}:`, dateStr, "->", formattedDate); // Debug: Log transformation
+        const formattedDate = date.toISOString().split("T")[0];
+        console.log(`Formatted ${field}:`, dateStr, "->", formattedDate);
         return formattedDate;
       };
 
       const newFormData = {
-        dateOfJoining: formatDate(user.doj, "dateOfJoining"), // Pre-fill with formatted doj
+        dateOfJoining: formatDate(user.doj, "dateOfJoining"),
         userType: roleId,
-        userName:  user.username || "",
-        fullName:  user.full_name || "", 
-        companyName:  user.company || "",
+        userName: user.username || "",
+        fullName: user.full_name || "",
         password: "",
         gender: user.gender || "Male",
-        dateOfBirth: formatDate(user.dob, "dateOfBirth"), // Pre-fill with formatted dob
-        designation:  user.designation || "", // Pre-fill with user.role or designation
+        dateOfBirth: formatDate(user.dob, "dateOfBirth"),
+        designation: user.designation || "",
         company: user.company || "",
         address: user.home || user.address || "",
         location: user.location || "",
@@ -159,7 +156,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         devices: assignedPlantIds,
       };
       setFormData(newFormData);
-      console.log("formData after set:", newFormData); // Debug: Log formData
+      console.log("formData after set:", newFormData);
     } else {
       setFormData({
         dateOfJoining: "",
@@ -257,7 +254,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const payload = {
       username: formData.userName,
       password: formData.password,
@@ -275,7 +271,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       notes: "",
       plant_ids: formData.devices.map(Number),
       role_id: Number(formData.userType),
-      ...(name !== "Edit User" && { date_of_joining: formData.dateOfJoining }), // Use date_of_joining for add mode
     };
 
     try {
@@ -298,28 +293,50 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       });
 
       console.log(`${name} response:`, response.data);
-      onClose();
-      if (onSuccess) {
-        if (name === "Edit User") {
-          const updatedUser = {
-            ...user,
-            companyName: formData.company,
-            designation: formData.designation,
-            dob: formData.dateOfBirth,
-            call: formData.contactNo,
-            doj: formData.dateOfJoining,
-            displayDoj: new Date(formData.dateOfJoining).toLocaleDateString('en-GB'),
-            mail: formData.email,
-            gender: formData.gender,
-            home: formData.address,
-            company: formData.company,
-            location: formData.location,
-            assignedPlant: getSelectedPlantNames(),
-          };
-          onSuccess(updatedUser);
-        } else {
-          onSuccess();
+
+      // Format the response to match UserManager's apiData structure
+      const formatDisplayDate = (dateStr) => {
+        if (!dateStr || dateStr === "N/A") return "N/A";
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) {
+          console.log(`Invalid date for display:`, dateStr);
+          return "N/A";
         }
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      };
+
+      const updatedUser = {
+        companyName: response.data.company || formData.company || "N/A",
+        full_name: response.data.full_name || formData.fullName || "N/A",
+        username: response.data.username || formData.userName || "N/A",
+        role: roles.find((role) => role.role_id === Number(formData.userType))?.role_name || "N/A",
+        designation: response.data.designation || formData.designation || "N/A",
+        dob: response.data.date_of_birth ? formatDisplayDate(response.data.date_of_birth) : "N/A",
+        call: response.data.contact_number || formData.contactNo || "N/A",
+        doj: response.data.date_of_joining || formData.dateOfJoining || "N/A",
+        displayDoj: response.data.date_of_joining ? formatDisplayDate(response.data.date_of_joining) : "N/A",
+        mail: response.data.email || formData.email || "N/A",
+        gender: response.data.gender || formData.gender || "N/A",
+        home: response.data.address || formData.address || "N/A",
+        company: response.data.company || formData.company || "N/A",
+        location: response.data.location || formData.location || "N/A",
+        assignedPlant: formData.devices.length > 0
+          ? formData.devices
+              .map((id) => plants.find((p) => String(p.plant_id) === id)?.plant_name)
+              .filter(Boolean)
+              .join(", ") || "No plants assigned"
+          : "No plants assigned",
+        user_id: response.data.user_id || user?.user_id,
+        status: response.data.status || "Active",
+      };
+
+      onSuccess(updatedUser); // Call onSuccess with formatted user data
+      onClose(); // Close modal
+      if (name === "Add New User") {
+        navigate('/user-manager'); // Redirect after onSuccess
       }
     } catch (error) {
       console.error(`${name} error:`, error.response?.data || error.message);
