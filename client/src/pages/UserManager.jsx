@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCalendarDays, faPhone, faEnvelope, faHouse, faLocation, faBuilding, faCalendar, faVenusMars, faIndustry, faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCalendarDays, faPhone, faEnvelope, faHouse, faLocation, faBuilding, faCalendar, faVenusMars, faIndustry, faCircleCheck, faCircleXmark, faKey } from '@fortawesome/free-solid-svg-icons';
 import { useLocation } from 'react-router-dom';
+import { UserContext } from '../context/UserContext';
 import add from '../images/add.png';
 import component_11 from '../images/Component 11.png';
 import component_13 from '../images/Component 13.png';
@@ -15,6 +16,7 @@ function UserManager() {
   const [modalMode, setModalMode] = useState('add');
   const [selectedUser, setSelectedUser] = useState(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(8);
@@ -25,6 +27,9 @@ function UserManager() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState('activate');
   const location = useLocation();
+  const { user } = useContext(UserContext);
+  const [newPassword, setNewPassword] = useState('');
+  const [message, setMessage] = useState('');
 
   const formatDisplayDate = (dateStr) => {
     if (!dateStr || dateStr === 'N/A') return 'N/A';
@@ -80,7 +85,7 @@ function UserManager() {
 
   useEffect(() => {
     fetchUsers();
-  }, [location]); // Re-fetch users when location changes
+  }, [location]);
 
   const handleOpenUpload = () => {
     setIsUploadOpen(true);
@@ -100,6 +105,19 @@ function UserManager() {
     setSelectedUser(user);
     setActionType(action);
     setShowConfirm(true);
+  };
+
+  const handleOpenResetPassword = (user) => {
+    setSelectedUser(user);
+    setIsResetPasswordOpen(true);
+    setMessage('');
+  };
+
+  const handleCloseResetPassword = () => {
+    setIsResetPasswordOpen(false);
+    setSelectedUser(null);
+    setNewPassword('');
+    setMessage('');
   };
 
   const handleConfirm = () => {
@@ -133,7 +151,7 @@ function UserManager() {
         )
       );
     } else {
-      fetchUsers(); // Fetch users for add mode to ensure latest data
+      fetchUsers();
     }
   };
 
@@ -154,6 +172,58 @@ function UserManager() {
   const handlePageChange = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
+    }
+  };
+
+  const shouldShowResetIcon = (cardRole) => {
+    console.log('Current user:', user);
+    console.log('Checking reset icon for role:', cardRole);
+    if (!user || !user.role) {
+      console.log('No user or role, hiding reset icon');
+      return false;
+    }
+    const currentRole = user.role.toLowerCase();
+    const allowedRolesForSuperAdmin = ['admin', 'normal', 'regular'];
+    const allowedRolesForAdmin = ['normal', 'regular'];
+
+    if (currentRole === 'super admin') {
+      return allowedRolesForSuperAdmin.includes(cardRole.toLowerCase());
+    } else if (currentRole === 'admin') {
+      return allowedRolesForAdmin.includes(cardRole.toLowerCase());
+    }
+    console.log('User role not Super Admin or Admin, hiding reset icon');
+    return false;
+  };
+
+  const handleResetPasswordConfirm = async () => {
+    if (!newPassword) {
+      setMessage('Please enter a new password.');
+      return;
+    }
+    try {
+      const response = await axios.post(
+        'https://water-pump.onrender.com/api/users/reset-password',
+        {
+          target_user_id: selectedUser.user_id,
+          new_password: newPassword,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        }
+      );
+      setMessage('Password reset successful.');
+      console.log(`Password reset successful for ${selectedUser?.full_name}:`, response.data);
+      setTimeout(() => {
+        setIsResetPasswordOpen(false);
+        setSelectedUser(null);
+        setNewPassword('');
+        setMessage('');
+      }, 1500);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to reset password. Please try again.';
+      setMessage(errorMessage);
+      console.error('Password reset failed:', err.response?.data || err.message);
     }
   };
 
@@ -207,7 +277,7 @@ function UserManager() {
               className="border border-[#DADADA] rounded px-2 py-1 w-[287.4px] lg:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-            />
+ decisionmaking />
             <button
               onClick={handleOpenAddModal}
               className="bg-[#208CD4] flex items-center gap-2 px-3 py-1 rounded-sm hover:bg-[#1b7bb9] transition-colors"
@@ -251,6 +321,13 @@ function UserManager() {
                       className={card?.status === 'Active' ? 'text-green-500 text-xl' : 'text-red-500 text-xl'}
                       onClick={() => handleOpen(card, card.status === 'Active' ? 'Inactive' : 'Active')}
                     />
+                    {shouldShowResetIcon(card.role) && (
+                      <FontAwesomeIcon
+                        icon={faKey}
+                        className="text-yellow-500 text-xl cursor-pointer"
+                        onClick={() => handleOpenResetPassword(card)}
+                      />
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-[16px]">
@@ -350,6 +427,48 @@ function UserManager() {
         user={selectedUser}
         userName={selectedUser?.full_name}
       />
+      {isResetPasswordOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[400px]">
+            <h2 className="text-xl font-bold mb-4">Reset Password</h2>
+            <p className="mb-4">
+              Reset password for {selectedUser?.full_name} ({selectedUser?.username})
+            </p>
+            <div className="mb-4">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                New Password
+              </label>
+              <input
+                type="password"
+                id="newPassword"
+                placeholder="Enter new password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
+              />
+            </div>
+            {message && (
+              <p className={`mb-4 text-sm ${message.includes('success') ? 'text-green-500' : 'text-red-500'}`}>
+                {message}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={handleCloseResetPassword}
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetPasswordConfirm}
+                className="px-4 py-2 bg-[#208CD4] text-white rounded hover:bg-[#1b7bb9] transition-colors"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
