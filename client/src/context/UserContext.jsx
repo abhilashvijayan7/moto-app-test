@@ -15,6 +15,8 @@ export const UserProvider = ({ children }) => {
           'https://water-pump.onrender.com/api/users/session/session-check',
           { withCredentials: true }
         );
+
+         console.log("hsjfhsdjhjsdhf",response.data)
         if (response.data.loggedIn === true && response.data.user) {
           setUser(response.data.user);
         }

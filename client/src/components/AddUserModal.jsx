@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   const navigate = useNavigate();
-  // State for form inputs with camelCase keys
   const [formData, setFormData] = useState({
     dateOfJoining: "",
-    userType: "", // Will store role_id
+    userType: "",
     userName: "",
     fullName: "",
     password: "",
@@ -22,8 +22,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     email: "",
     devices: [],
   });
-
-  // State for plants, roles, and UI
   const [plants, setPlants] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loadingPlants, setLoadingPlants] = useState(false);
@@ -33,7 +31,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
 
-  // Mapping between UI label names and formData keys
   const nameToKeyMap = {
     "Date Of Joining": "dateOfJoining",
     "User Type": "userType",
@@ -51,7 +48,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     Plants: "devices",
   };
 
-  // Fetch plants from API
   useEffect(() => {
     const fetchPlants = async () => {
       try {
@@ -73,7 +69,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     }
   }, [isOpen]);
 
-  // Fetch roles from API
   useEffect(() => {
     const fetchRoles = async () => {
       try {
@@ -98,13 +93,8 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     }
   }, [isOpen, name]);
 
-  // Pre-populate form for edit mode or reset for add mode
   useEffect(() => {
     if (user && name === "Edit User") {
-      console.log("User data for edit:", user);
-      console.log("Date of Joining (doj):", user.doj, "Date of Birth (dob):", user.dob);
-      console.log("Raw API fields:", { date_of_joining: user.date_of_joining, date_of_birth: user.date_of_birth });
-
       const selectedRole = roles.find((role) => role.role_name === user.role);
       const roleId = selectedRole ? selectedRole.role_id.toString() : (roles.length > 0 ? roles[0].role_id.toString() : "");
       const assignedPlantNames = user.assignedPlant && user.assignedPlant !== "No plants assigned"
@@ -134,12 +124,10 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
           console.log(`Failed to parse ${field}:`, dateStr);
           return "";
         }
-        const formattedDate = date.toISOString().split("T")[0];
-        console.log(`Formatted ${field}:`, dateStr, "->", formattedDate);
-        return formattedDate;
+        return date.toISOString().split("T")[0];
       };
 
-      const newFormData = {
+      setFormData({
         dateOfJoining: formatDate(user.doj, "dateOfJoining"),
         userType: roleId,
         userName: user.username || "",
@@ -154,9 +142,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         contactNo: user.call || user.contact_number || "",
         email: user.mail || user.email || "",
         devices: assignedPlantIds,
-      };
-      setFormData(newFormData);
-      console.log("formData after set:", newFormData);
+      });
     } else {
       setFormData({
         dateOfJoining: "",
@@ -177,7 +163,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     }
   }, [user, name, isOpen, roles, plants]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -190,14 +175,12 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     };
   }, []);
 
-  // Handle text input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     const formDataKey = nameToKeyMap[name];
     setFormData((prev) => ({ ...prev, [formDataKey]: value }));
   };
 
-  // Handle plant checkbox changes
   const handleDeviceChange = (plantId) => {
     const stringPlantId = String(plantId);
     setFormData((prev) => {
@@ -208,17 +191,14 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     });
   };
 
-  // Handle search input changes
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
-  // Toggle dropdown visibility
   const toggleDropdown = () => {
     setDropdownOpen((prev) => !prev);
   };
 
-  // Get selected plant names for display
   const getSelectedPlantNames = () => {
     const selectedPlants = formData.devices
       .map((id) => {
@@ -238,7 +218,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     }
   };
 
-  // Filter and sort plants
   const filteredAndSortedPlants = plants
     .filter((plant) =>
       plant.plant_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -251,7 +230,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       return 0;
     });
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     const payload = {
@@ -280,7 +258,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       const url = name === "Edit User" && user?.user_id
         ? `https://water-pump.onrender.com/api/users/${user.user_id}`
         : 'https://water-pump.onrender.com/api/users';
-
       const method = name === "Edit User" ? 'PUT' : 'POST';
 
       const response = await axios({
@@ -292,9 +269,6 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         },
       });
 
-      console.log(`${name} response:`, response.data);
-
-      // Format the response to match UserManager's apiData structure
       const formatDisplayDate = (dateStr) => {
         if (!dateStr || dateStr === "N/A") return "N/A";
         const date = new Date(dateStr);
@@ -333,14 +307,16 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         status: response.data.status || "Active",
       };
 
-      onSuccess(updatedUser); // Call onSuccess with formatted user data
-      onClose(); // Close modal
+      onSuccess(updatedUser);
+      toast.success(name === "Edit User" ? "User updated successfully!" : "User added successfully!");
+      onClose();
       if (name === "Add New User") {
-        navigate('/user-manager'); // Redirect after onSuccess
+        navigate('/user-manager');
       }
     } catch (error) {
       console.error(`${name} error:`, error.response?.data || error.message);
       setError(error.response?.data?.message || `Failed to ${name.toLowerCase()}. Please try again.`);
+      toast.error(error.response?.data?.message || `Failed to ${name.toLowerCase()}.`);
     } finally {
       setLoadingPlants(false);
     }
@@ -351,9 +327,9 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-md shadow-sm border border-[#DADADA] p-4 lg:p-6 w-full max-w-[480px] lg:max-w-6xl">
           <div className="flex justify-between items-center mb-4">
-           <div className="flex items-center gap-2"> 
-            <h2 className="text-[28px] font-[500] text-[#4D4D4D]">{name}  </h2>
-            <h6 className="text-sm text-gray-500">{formData.userName}</h6>
+            <div className="flex items-center gap-2">
+              <h2 className="text-[28px] font-[500] text-[#4D4D4D]">{name}</h2>
+              <h6 className="text-sm text-gray-500">{formData.userName}</h6>
             </div>
             <button
               onClick={onClose}
@@ -633,5 +609,3 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
 };
 
 export default AddUserModal;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

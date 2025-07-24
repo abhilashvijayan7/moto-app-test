@@ -1,5 +1,7 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import usePushNotifications from './hooks/usePushNotifications';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -33,12 +35,10 @@ function Logout() {
   return <Navigate to="/login" />;
 }
 
-// ProtectedRoute Component
 const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
   const { user, isCheckingSession } = useContext(UserContext);
   const location = useLocation();
 
-  // Show loading state while checking session
   if (isCheckingSession) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
@@ -59,7 +59,6 @@ function App() {
   usePushNotifications();
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';
-  const { user } = useContext(UserContext) || {};
 
   return (
     <UserProvider>
@@ -195,10 +194,20 @@ function App() {
           </div>
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </UserProvider>
   );
 }
 
 export default App;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
