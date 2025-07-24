@@ -1,20 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
 import axios from "axios";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faUser,faCalendarDays,faPhone,faEnvelope,faHouse,faLocation,faBuilding, faCalendar, faGenderless, faVenusMars, faIndustry, faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import add from "../images/add.png";
 import component_11 from "../images/Component 11.png";
 import component_13 from "../images/Component 13.png";
-import group from "../images/group.png";
-import calendar_month from "../images/calendar_month.png";
-import call from "../images/call.png";
-import calendar_month_1 from "../images/calendar_month (1).png";
-import mail from "../images/mail.png";
-import sentiment_satisfied from "../images/sentiment_satisfied.png";
-import home from "../images/home.png";
-import humidity_low from "../images/humidity_low.png";
-import location_on from "../images/location_on.png";
-import encrypted from "../images/encrypted.png";
 import AddUserModal from "../components/AddUserModal";
 import UploadComponent from "../components/UploadComponent";
+import UserConfirmation from '../components/UserConfirmation';
 
 function UserManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,6 +21,10 @@ function UserManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const itemsPerPageOptions = [8, 12, 16];
+
+const [showConfirm, setShowConfirm] = useState(false);
+  const [actionType, setActionType] = useState('activate');
+
 
   // Format date to DD/MM/YYYY
   const formatDisplayDate = (dateStr) => {
@@ -43,61 +40,58 @@ function UserManager() {
     return `${day}/${month}/${year}`;
   };
 
+
+const fetchUsers = async () => {
+  try {
+    setLoading(true);
+
+    // Fetch all user data with plant access
+    const response = await axios.get("https://water-pump.onrender.com/api/UserPlantAccess");
+    console.log("UserPlantAccess Response:", response.data); // Optional: Debug log
+
+    // Map response to desired format
+    const mappedData = response.data.map((user) => ({
+      companyName: user.company || "N/A",
+      full_name: user.full_name || "N/A",
+      username: user.username || "N/A",
+      role: user.role || "N/A",
+      designation: user.designation || "N/A",
+      dob: user.date_of_birth
+        ? formatDisplayDate(user.date_of_birth)
+        : "N/A",
+      call: user.contact_number || "N/A",
+      doj: user.date_of_joining || "N/A", // Raw for modal edit if needed
+      displayDoj: user.date_of_joining
+        ? formatDisplayDate(user.date_of_joining)
+        : "N/A", // Formatted for UI display
+      mail: user.email || "N/A",
+      gender: user.gender || "N/A",
+      home: user.address || "N/A",
+      company: user.company || "N/A",
+      location: user.location || "N/A",
+      assignedPlant:
+        user.plants && user.plants.length > 0
+          ? user.plants.map((plant) => plant.plant_name).join(", ")
+          : "No plants assigned",
+      user_id: user.user_id, // Needed for PUT requests
+      status: user.status
+    }));
+
+    // Update state
+    setApiData(mappedData);
+    setError(null);
+  } catch (err) {
+    console.error("Error fetching users:", err.response?.data || err.message);
+    setError("Failed to fetch users. Please try again.");
+    setApiData([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
   // Fetch data from API
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("https://water-pump.onrender.com/api/UserPlantAccess");
-        console.log("Raw UserPlantAccess response:", response.data); // Debug: Log raw response
-
-        // Fetch additional user details from /api/users/{id}
-        const users = await Promise.all(
-          response.data.map(async (user) => {
-            try {
-              const userDetails = await axios.get(`https://water-pump.onrender.com/api/users/${user.user_id}`);
-              console.log(`User details for ${user.user_id}:`, userDetails.data); // Debug: Log user details
-              return { ...user, date_of_joining: userDetails.data.date_of_joining };
-            } catch (err) {
-              console.error(`Error fetching details for user ${user.user_id}:`, err.response?.data || err.message);
-              return { ...user, date_of_joining: null };
-            }
-          })
-        );
-
-        // Map API response to match the current data structure
-        const mappedData = users.map((user) => ({
-          companyName: user.full_name || user.username || "N/A",
-          role: user.designation || "N/A",
-          dob: user.date_of_birth
-            ? formatDisplayDate(user.date_of_birth)
-            : "N/A",
-          call: user.contact_number || "N/A",
-          doj: user.date_of_joining || "N/A", // Pass raw date_of_joining for AddUserModal
-          displayDoj: formatDisplayDate(user.date_of_joining), // Formatted for UI
-          mail: user.email || "N/A",
-          gender: user.gender || "N/A",
-          home: user.address || "N/A",
-          company: user.company || "N/A",
-          location: user.location || "N/A",
-          assignedPlant:
-            user.plants && user.plants.length > 0
-              ? user.plants.map((plant) => plant.plant_name).join(", ")
-              : "No plants assigned",
-          user_id: user.user_id, // Add user_id for PUT request
-        }));
-
-        setApiData(mappedData);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching users:", err.response?.data || err.message);
-        setError("Failed to fetch users. Please try again.");
-        setApiData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
 
@@ -113,6 +107,18 @@ function UserManager() {
     setModalMode("add");
     setSelectedUser(null);
     setIsModalOpen(true);
+  };
+
+  const handleOpen = (user, action) => {
+    setSelectedUser(user);
+    setActionType(action);
+    setShowConfirm(true);
+  };
+  const handleConfirm = () => {
+    // 🔄 Call your API to activate/deactivate the user
+    console.log(`${actionType} confirmed for`, selectedUser);
+    setShowConfirm(false);
+    fetchUsers();
   };
 
   const handleOpenEditModal = (user) => {
@@ -186,6 +192,18 @@ function UserManager() {
     );
   }
 
+  const handleUserUpdate = (updatedUser) => {
+    if (modalMode === 'edit' && updatedUser) {
+      setApiData(prevData =>
+        prevData.map(user =>
+          user.user_id === updatedUser.user_id ? updatedUser : user
+        )
+      );
+    } else {
+      fetchUsers();
+    }
+  };
+
   return (
     <div>
       <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
@@ -224,7 +242,7 @@ function UserManager() {
                 <div className="flex justify-between border-b border-[#208CD4] pb-[16px]">
                   <div className="flex items-center gap-2">
                     <p className="text-[#4E4D4D] font-[600] text-[16px] break-words max-w-[200px]">
-                      {card.companyName}
+                      {card.full_name}
                     </p>
                   </div>
 
@@ -232,48 +250,47 @@ function UserManager() {
                     <img
                       src={component_11}
                       alt=""
-                      className="w-[56px] h-[42px]"
+                      className="w-[36px] h-[32px]"
                       onClick={handleOpenUpload}
                     />
+                    
                     <img
                       src={component_13}
                       alt="Edit"
-                      className="w-[56px] h-[42px] cursor-pointer"
+                      className="w-[36px] h-[32px] cursor-pointer"
                       onClick={() => handleOpenEditModal(card)}
                     />
+
+                 <FontAwesomeIcon icon={card?.status==='Active'? faCircleCheck : faCircleXmark} className={card?.status === 'Active' ? "text-green-500 text-xl" : "text-red-500 text-xl"} onClick={() => handleOpen(card, card.status === 'Active' ? 'Inactive' : 'Active')} />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 pt-[16px]">
                   <div>
                     {[
-                      { icon: group, value: card.role },
-                      { icon: call, value: card.call },
-                      { icon: mail, value: card.mail },
-                      { icon: home, value: card.home },
-                      { icon: location_on, value: card.location },
+                      { icon: faUser, value: card.designation },
+                      { icon: faPhone, value: card.call },
+                      { icon: faEnvelope, value: card.mail },
+                      { icon: faHouse, value: card.home },
+                      { icon: faLocation, value: card.location },
                     ].map((item, detailIndex) => (
                       <div
                         key={detailIndex}
                         className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
                       >
-                        <img
-                          src={item.icon}
-                          alt=""
-                          className="w-[24px] h-[24px]"
-                        />
+                        <FontAwesomeIcon icon={item.icon} className="text-blue-400 text-xl" />
                         <p className="break-words max-w-[90%]">{item.value}</p>
                       </div>
                     ))}
                   </div>
                   <div>
                     {[
-                      { icon: calendar_month, value: `DOB: ${card.dob}` },
-                      { icon: calendar_month_1, value: `DOJ: ${card.displayDoj}` },
-                      { icon: sentiment_satisfied, value: card.gender },
-                      { icon: humidity_low, value: card.company },
+                      { icon: faCalendarDays, value: `DOB: ${card.dob}` },
+                      { icon: faCalendarDays, value: `DOJ: ${card.displayDoj}` },
+                      { icon: faVenusMars, value: card.gender },
+                      { icon: faBuilding, value: card.company },
                       {
-                        icon: encrypted,
+                        icon: faIndustry,
                         value: `Assigned Plant: ${card.assignedPlant}`,
                       },
                     ].map((item, detailIndex) => (
@@ -281,11 +298,7 @@ function UserManager() {
                         key={detailIndex}
                         className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
                       >
-                        <img
-                          src={item.icon}
-                          alt=""
-                          className="w-[24px] h-[24px]"
-                        />
+                         <FontAwesomeIcon icon={item.icon} className="text-blue-400 text-xl" />
                         <p className="break-words max-w-[90%]">{item.value}</p>
                       </div>
                     ))}
@@ -342,13 +355,19 @@ function UserManager() {
         onClose={handleCloseModal}
         name={modalMode === "add" ? "Add New User" : "Edit User"}
         user={selectedUser}
-        onSuccess={() => fetchUsers()} // Re-fetch users on success
+        onSuccess={handleUserUpdate}
       />
       <UploadComponent isOpen={isUploadOpen} onClose={handleCloseUpload} />
+       <UserConfirmation
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleConfirm}
+        actionType={actionType}
+         user={selectedUser}
+        userName={selectedUser?.full_name}
+      />
     </div>
   );
 }
 
 export default UserManager;
-
-// eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee

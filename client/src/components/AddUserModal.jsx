@@ -144,12 +144,13 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       const newFormData = {
         dateOfJoining: formatDate(user.doj, "dateOfJoining"), // Pre-fill with formatted doj
         userType: roleId,
-        userName: user.companyName || user.username || "",
-        fullName: user.companyName || user.full_name || "", // Pre-fill with user.companyName or full_name
+        userName:  user.username || "",
+        fullName:  user.full_name || "", 
+        companyName:  user.company || "",
         password: "",
         gender: user.gender || "Male",
         dateOfBirth: formatDate(user.dob, "dateOfBirth"), // Pre-fill with formatted dob
-        designation: user.role || user.designation || "", // Pre-fill with user.role or designation
+        designation:  user.designation || "", // Pre-fill with user.role or designation
         company: user.company || "",
         address: user.home || user.address || "",
         location: user.location || "",
@@ -262,6 +263,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       password: formData.password,
       email: formData.email,
       full_name: formData.fullName,
+      date_of_joining: formData.dateOfJoining,
       date_of_birth: formData.dateOfBirth,
       gender: formData.gender,
       company: formData.company,
@@ -297,7 +299,28 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
 
       console.log(`${name} response:`, response.data);
       onClose();
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        if (name === "Edit User") {
+          const updatedUser = {
+            ...user,
+            companyName: formData.company,
+            designation: formData.designation,
+            dob: formData.dateOfBirth,
+            call: formData.contactNo,
+            doj: formData.dateOfJoining,
+            displayDoj: new Date(formData.dateOfJoining).toLocaleDateString('en-GB'),
+            mail: formData.email,
+            gender: formData.gender,
+            home: formData.address,
+            company: formData.company,
+            location: formData.location,
+            assignedPlant: getSelectedPlantNames(),
+          };
+          onSuccess(updatedUser);
+        } else {
+          onSuccess();
+        }
+      }
     } catch (error) {
       console.error(`${name} error:`, error.response?.data || error.message);
       setError(error.response?.data?.message || `Failed to ${name.toLowerCase()}. Please try again.`);
@@ -311,7 +334,10 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-md shadow-sm border border-[#DADADA] p-4 lg:p-6 w-full max-w-[480px] lg:max-w-6xl">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-[28px] font-[700] text-[#4D4D4D]">{name}</h2>
+           <div className="flex items-center gap-2"> 
+            <h2 className="text-[28px] font-[500] text-[#4D4D4D]">{name}  </h2>
+            <h6 className="text-sm text-gray-500">{formData.userName}</h6>
+            </div>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 focus:outline-none"
