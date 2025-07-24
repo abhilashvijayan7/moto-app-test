@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser,faCalendarDays,faPhone,faEnvelope,faHouse,faLocation,faBuilding, faCalendar, faGenderless, faVenusMars, faIndustry, faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import { faUser, faCalendarDays, faPhone, faEnvelope, faHouse, faLocation, faBuilding, faCalendar, faVenusMars, faIndustry, faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import add from "../images/add.png";
 import component_11 from "../images/Component 11.png";
 import component_13 from "../images/Component 13.png";
@@ -21,17 +21,15 @@ function UserManager() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const itemsPerPageOptions = [8, 12, 16];
-
-const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState('activate');
-
 
   // Format date to DD/MM/YYYY
   const formatDisplayDate = (dateStr) => {
     if (!dateStr || dateStr === "N/A") return "N/A";
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) {
-      console.log(`Invalid date for display:`, dateStr); // Debug: Log invalid date
+      console.log(`Invalid date for display:`, dateStr);
       return "N/A";
     }
     const day = String(date.getDate()).padStart(2, "0");
@@ -40,57 +38,50 @@ const [showConfirm, setShowConfirm] = useState(false);
     return `${day}/${month}/${year}`;
   };
 
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("https://water-pump.onrender.com/api/UserPlantAccess");
+      console.log("UserPlantAccess Response:", response.data);
 
-const fetchUsers = async () => {
-  try {
-    setLoading(true);
+      const mappedData = response.data.map((user) => ({
+        companyName: user.company || "N/A",
+        full_name: user.full_name || "N/A",
+        username: user.username || "N/A",
+        role: user.role_name || "N/A",
+        designation: user.designation || "N/A",
+        dob: user.date_of_birth
+          ? formatDisplayDate(user.date_of_birth)
+          : "N/A",
+        call: user.contact_number || "N/A",
+        doj: user.date_of_joining || "N/A",
+        displayDoj: user.date_of_joining
+          ? formatDisplayDate(user.date_of_joining)
+          : "N/A",
+        mail: user.email || "N/A",
+        gender: user.gender || "N/A",
+        home: user.address || "N/A",
+        company: user.company || "N/A",
+        location: user.location || "N/A",
+        assignedPlant:
+          user.plants && user.plants.length > 0
+            ? user.plants.map((plant) => plant.plant_name).join(", ")
+            : "No plants assigned",
+        user_id: user.user_id,
+        status: user.status
+      }));
 
-    // Fetch all user data with plant access
-    const response = await axios.get("https://water-pump.onrender.com/api/UserPlantAccess");
-    console.log("UserPlantAccess Response:", response.data); // Optional: Debug log
+      setApiData(mappedData);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching users:", err.response?.data || err.message);
+      setError("Failed to fetch users. Please try again.");
+      setApiData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Map response to desired format
-    const mappedData = response.data.map((user) => ({
-      companyName: user.company || "N/A",
-      full_name: user.full_name || "N/A",
-      username: user.username || "N/A",
-      role: user.role || "N/A",
-      designation: user.designation || "N/A",
-      dob: user.date_of_birth
-        ? formatDisplayDate(user.date_of_birth)
-        : "N/A",
-      call: user.contact_number || "N/A",
-      doj: user.date_of_joining || "N/A", // Raw for modal edit if needed
-      displayDoj: user.date_of_joining
-        ? formatDisplayDate(user.date_of_joining)
-        : "N/A", // Formatted for UI display
-      mail: user.email || "N/A",
-      gender: user.gender || "N/A",
-      home: user.address || "N/A",
-      company: user.company || "N/A",
-      location: user.location || "N/A",
-      assignedPlant:
-        user.plants && user.plants.length > 0
-          ? user.plants.map((plant) => plant.plant_name).join(", ")
-          : "No plants assigned",
-      user_id: user.user_id, // Needed for PUT requests
-      status: user.status
-    }));
-
-    // Update state
-    setApiData(mappedData);
-    setError(null);
-  } catch (err) {
-    console.error("Error fetching users:", err.response?.data || err.message);
-    setError("Failed to fetch users. Please try again.");
-    setApiData([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-  // Fetch data from API
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -114,8 +105,8 @@ const fetchUsers = async () => {
     setActionType(action);
     setShowConfirm(true);
   };
+
   const handleConfirm = () => {
-    // 🔄 Call your API to activate/deactivate the user
     console.log(`${actionType} confirmed for`, selectedUser);
     setShowConfirm(false);
     fetchUsers();
@@ -240,9 +231,12 @@ const fetchUsers = async () => {
                 key={cardIndex}
               >
                 <div className="flex justify-between border-b border-[#208CD4] pb-[16px]">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col">
                     <p className="text-[#4E4D4D] font-[600] text-[16px] break-words max-w-[200px]">
                       {card.full_name}
+                    </p>
+                    <p className="text-[#aba6a6] font-[500] text-[12px]">
+                      {card.role}
                     </p>
                   </div>
 
@@ -253,15 +247,17 @@ const fetchUsers = async () => {
                       className="w-[36px] h-[32px]"
                       onClick={handleOpenUpload}
                     />
-                    
                     <img
                       src={component_13}
                       alt="Edit"
                       className="w-[36px] h-[32px] cursor-pointer"
                       onClick={() => handleOpenEditModal(card)}
                     />
-
-                 <FontAwesomeIcon icon={card?.status==='Active'? faCircleCheck : faCircleXmark} className={card?.status === 'Active' ? "text-green-500 text-xl" : "text-red-500 text-xl"} onClick={() => handleOpen(card, card.status === 'Active' ? 'Inactive' : 'Active')} />
+                    <FontAwesomeIcon
+                      icon={card?.status === 'Active' ? faCircleCheck : faCircleXmark}
+                      className={card?.status === 'Active' ? "text-green-500 text-xl" : "text-red-500 text-xl"}
+                      onClick={() => handleOpen(card, card.status === 'Active' ? 'Inactive' : 'Active')}
+                    />
                   </div>
                 </div>
 
@@ -298,7 +294,7 @@ const fetchUsers = async () => {
                         key={detailIndex}
                         className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
                       >
-                         <FontAwesomeIcon icon={item.icon} className="text-blue-400 text-xl" />
+                        <FontAwesomeIcon icon={item.icon} className="text-blue-400 text-xl" />
                         <p className="break-words max-w-[90%]">{item.value}</p>
                       </div>
                     ))}
@@ -358,12 +354,12 @@ const fetchUsers = async () => {
         onSuccess={handleUserUpdate}
       />
       <UploadComponent isOpen={isUploadOpen} onClose={handleCloseUpload} />
-       <UserConfirmation
+      <UserConfirmation
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleConfirm}
         actionType={actionType}
-         user={selectedUser}
+        user={selectedUser}
         userName={selectedUser?.full_name}
       />
     </div>
