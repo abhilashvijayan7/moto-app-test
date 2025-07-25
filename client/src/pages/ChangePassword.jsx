@@ -155,7 +155,7 @@ function ChangePassword() {
 
     try {
       await axios.post(
-        'https://water-pump.onrender.com/api/user/change-password',
+        'https://water-pump.onrender.com/api/users/change-password',
         {
           current_password: currentPassword,
           new_password: newPassword,
