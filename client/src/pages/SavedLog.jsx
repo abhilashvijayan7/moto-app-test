@@ -23,21 +23,22 @@ const SavedLog = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Define static fields for motor summary
   const staticFields = [];
 
   const dynamicFields = useMemo(() => {
     if (!data.length) return [];
     const allKeys = Object.keys(data[0]);
     return allKeys.filter((key) => !staticFields.includes(key));
-  }, [data]);
+  }, [data, staticFields]);
 
   const staticColumns = staticFields.map((field) => ({
-    label: field.charAt(0).toUpperCase() + field.slice(1),
+    label: field === 'total_run_time' ? 'Total Run Time' : field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' '),
     accessor: field,
   }));
 
   const dynamicColumns = dynamicFields.map((field) => ({
-    label: field.charAt(0).toUpperCase() + field.slice(1),
+    label: field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' '),
     accessor: field,
   }));
 
@@ -78,29 +79,93 @@ const SavedLog = () => {
     };
   }, []);
 
-  const fetchDataFromServer = useCallback(
-    async ({ page, pageSize }) => {
-      if (!tableFilters.plantId || !startDate || !endDate) return { data: [], totalCount: 0 };
-      setLoading(true);
-      setError('');
-      try {
-        const response = await fetch(
-          `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${pageSize}&offset=${(page - 1) * pageSize}`
-        );
-        if (!response.ok) throw new Error('Failed to load data.');
-        const json = await response.json();
-        setData(json.data);
-        setTotalRows(json.totalCount);
-        return { data: json.data, totalCount: json.totalCount };
-      } catch (err) {
-        setError(err.message || 'Something went wrong');
-        return { data: [], totalCount: 0 };
-      } finally {
-        setLoading(false);
+  const fetchMotorSummary = async () => {
+    if (!tableFilters.plantId || !startDate || !endDate) {
+      setError('Please select a plant, start date, and end date.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      console.log('Fetching motor summary data for plant:', tableFilters.plantId, 'start:', startDate, 'end:', endDate);
+      const response = await fetch(
+        `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/summary?start=${startDate}&end=${endDate}`
+      );
+      if (!response.ok) throw new Error(`Failed to load motor summary data: ${response.status}`);
+      const json = await response.json();
+      console.log('Motor summary response:', json);
+
+      if (!Array.isArray(json)) {
+        console.error('Expected json to be an array, got:', json);
+        setError('Invalid data format received from server.');
+        setData([]);
+        setTotalRows(0);
+        return;
       }
-    },
-    [tableFilters.plantId, startDate, endDate]
-  );
+
+      const transformedData = json.map(item => ({
+        ...item,
+        total_run_time: `${item.total_run_time.hours || 0}h ${item.total_run_time.minutes || 0}m ${item.total_run_time.seconds || 0}s`
+      }));
+
+      setData(transformedData);
+      setTotalRows(transformedData.length);
+      console.log('Transformed motor summary data:', transformedData);
+    } catch (err) {
+      console.error('Error fetching motor summary:', err);
+      setError(err.message || 'Something went wrong while fetching motor summary data.');
+      setData([]);
+      setTotalRows(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPlantLog = async () => {
+    if (!tableFilters.plantId || !startDate || !endDate) {
+      setError('Please select a plant, start date, and end date.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      // Use a high limit to fetch all data in one request
+      const limit = 10000; // Large limit to fetch all records (adjust based on API limits)
+      const url = `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${limit}&offset=0`;
+      console.log('Fetching plant log data from:', url);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to load plant log data: ${response.status}`);
+      const json = await response.json();
+      console.log('Plant log response:', json);
+
+      if (!Array.isArray(json.data)) {
+        console.error('Expected json.data to be an array, got:', json.data);
+        setError('Invalid data format received from server.');
+        setData([]);
+        setTotalRows(0);
+        return;
+      }
+
+      setData(json.data);
+      setTotalRows(json.totalCount || json.data.length);
+      console.log('Plant log data:', json.data);
+    } catch (err) {
+      console.error('Error fetching plant log:', err);
+      setError(err.message || 'Something went wrong while fetching plant log data.');
+      setData([]);
+      setTotalRows(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (summaryType === 'motor') {
+      fetchMotorSummary();
+    } else {
+      fetchPlantLog();
+    }
+  };
 
   const handleDateChange = (e, type) => {
     const value = e.target.value;
@@ -110,6 +175,9 @@ const SavedLog = () => {
 
   const handleSummaryTypeChange = (e) => {
     setSummaryType(e.target.value);
+    setData([]);
+    setTotalRows(0);
+    setError('');
   };
 
   const handleTableFilterChange = (field, value) => {
@@ -131,6 +199,8 @@ const SavedLog = () => {
       plantId.toLowerCase().includes(plantSearch.toLowerCase()) ||
       plantName.toLowerCase().includes(plantSearch.toLowerCase())
   );
+
+  const isSubmitDisabled = !tableFilters.plantId || !startDate || !endDate;
 
   return (
     <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1480px] lg:px-11 lg:py-11 lg:w-full lg:bg-white lg:rounded-xl">
@@ -211,18 +281,31 @@ const SavedLog = () => {
               />
             </div>
           </div>
+
+          <div className="mt-4">
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitDisabled}
+              className={`px-4 py-2 rounded-md text-white ${
+                isSubmitDisabled ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+              }`}
+            >
+              Fetch {summaryType === 'motor' ? 'Motor Summary' : 'Plant Log'}
+            </button>
+          </div>
         </div>
 
         {error && <p className="text-center text-red-500 py-4 text-sm">{error}</p>}
 
+        {loading && <p className="text-center text-gray-500 py-4 text-sm">Loading...</p>}
+
         <div className="p-4">
           <DataTable
-            mode="server"
-            fetchData={fetchDataFromServer}
+            data={data}
             totalRows={totalRows}
             columns={columns}
-            pageSizeOptions={[5, 10, 15, 20, 50, 100]} // Added 5 to pageSizeOptions
-            defaultPageSize={5} // Set default page size to 5
+            pageSizeOptions={summaryType === 'motor' ? [5, 10, 20] : [5, 10, 15, 20, 50, 100]}
+            defaultPageSize={summaryType === 'motor' ? 5 : 5}
           />
         </div>
       </div>
