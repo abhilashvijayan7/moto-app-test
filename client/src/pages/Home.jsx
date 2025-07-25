@@ -42,10 +42,10 @@ const Home = ({ user }) => {
 
   // Get plant IDs from user prop
   const loginPlantIds = useMemo(() => {
-    return user?.userPlants?.map((plant) => plant.plant_id) || [];
+    const plantIds = user?.userPlants?.map((plant) => plant.plant_id) || [];
+    console.log("Allowed plant IDs:", plantIds);
+    return plantIds;
   }, [user]);
-
-  console.log("Allowed plant IDs:", loginPlantIds);
 
   // Redirect to login if no user data
   useEffect(() => {
@@ -110,6 +110,7 @@ const Home = ({ user }) => {
           return acc;
         }, {});
 
+      console.log("Received motor data:", motorData);
       setPlantMotors((prev) => ({ ...prev, ...motorData }));
     } catch (error) {
       console.error("Unexpected error during motor API calls:", error.message);
@@ -146,6 +147,7 @@ const Home = ({ user }) => {
         .map((response) => (Array.isArray(response.data) ? response.data : []))
         .flat();
 
+      console.log("Received sensor data:", sensorData);
       setPlantSensorData((prev) => {
         const updatedPlantIds = new Set(plants.map((plant) => plant.plant_id));
         const filteredPrev = prev.filter(
@@ -183,6 +185,7 @@ const Home = ({ user }) => {
         .flat()
         .filter(Boolean);
 
+      console.log("Received initial plant data:", plants);
       setPlantData(plants);
 
       const simplifiedPlants = plants.map((plant) => ({
@@ -275,6 +278,7 @@ const Home = ({ user }) => {
       socketMoto.emit("motor_control", { command: newStatus, plantId });
       socketWaterPump.emit("motor_control", { command: newStatus, plantId });
 
+      console.log("Toggling pump for plant:", plantId, "New status:", newStatus);
       lastUpdateTimes.current[plantId] = Date.now();
     },
     [motorStatuses, getSensorForPlant, getConnectionStatusForPlant, canControlPlant]
@@ -469,6 +473,7 @@ const Home = ({ user }) => {
       if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
       const sensorData = data.data.sensordata;
 
+      console.log("Received moto sensor data for plant:", plantId, sensorData);
       setSensorMoto((prev) => ({
         ...prev,
         [plantId]: sensorData,
@@ -505,6 +510,7 @@ const Home = ({ user }) => {
     const handleSensor = async (data) => {
       const plantId = data.plant_id;
       if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
+      console.log("Received water pump sensor data for plant:", plantId, data);
       setSensorWaterPump(data);
       const plantStatus = data.plant_status;
       setIsButtonDisabled((prev) => ({
@@ -608,6 +614,7 @@ const Home = ({ user }) => {
           [plantId]: !(plantStatus === "IDLE" || plantStatus === "RUNNING"),
         }));
       }
+      console.log("Received motor status update:", data);
     };
 
     socketMoto.on("motor_status_update", handleMotorStatusUpdate);
@@ -627,7 +634,7 @@ const Home = ({ user }) => {
     });
 
     socketWaterPump.on("test_connection_response", (data) => {
-      console.log("Received test_connection_response from water-pump:", data);
+      console.log("Received test connection response from water-pump:", data);
     });
 
     return () => {

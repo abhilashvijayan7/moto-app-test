@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 import usePushNotifications from './hooks/usePushNotifications';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -18,13 +17,10 @@ import Log from './pages/Log';
 import LoginPage from './pages/Login';
 import SavedLog from './pages/SavedLog';
 import { UserContext, UserProvider } from './context/UserContext';
+import ChangePassword from './pages/ChangePassword';
 
 function Support() {
   return <div className="p-6 text-gray-700 text-2xl">Support Page</div>;
-}
-
-function ChangePassword() {
-  return <div className="p-6 text-gray-700 text-2xl">Change Password Page</div>;
 }
 
 function Logout() {
@@ -48,6 +44,8 @@ const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
   }
 
   const userType = user?.role?.toLowerCase() || 'normal';
+  console.log('ProtectedRoute user:', user);
+
   if ((userType === 'normal' || userType === 'regular') && !allowedForRestrictedUser) {
     return <Navigate to="/home" />;
   }
@@ -194,17 +192,15 @@ function App() {
           </div>
         </div>
       </div>
-      <ToastContainer
+      <Toaster
         position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#fff',
+            color: '#000',
+          },
+        }}
       />
     </UserProvider>
   );

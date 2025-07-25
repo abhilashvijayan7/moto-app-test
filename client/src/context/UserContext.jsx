@@ -7,30 +7,46 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
 
-  // Check session on mount to restore user data if available
+  // Check session on mount to restore user data
   useEffect(() => {
-    const checkSession = async () => {
+    const restoreSession = async () => {
       try {
+        // Restore user from localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        }
+
+        // Validate session with backend
         const response = await axios.get(
           'https://water-pump.onrender.com/api/users/session/session-check',
           { withCredentials: true }
         );
 
-         console.log("hsjfhsdjhjsdhf",response.data)
+        console.log('Session check response:', response.data);
+
         if (response.data.loggedIn === true && response.data.user) {
           setUser(response.data.user);
+          localStorage.setItem('user', JSON.stringify(response.data.user));
+        } else {
+          setUser(null);
+          localStorage.removeItem('user');
         }
       } catch (error) {
-        console.error('Session check error:', error);
+        console.error('Session check error:', error.response?.data || error.message);
+        setUser(null);
+        localStorage.removeItem('user');
       } finally {
         setIsCheckingSession(false);
       }
     };
-    checkSession();
+
+    restoreSession();
   }, []);
 
   const login = (userData) => {
     setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
     setIsCheckingSession(false);
   };
 
@@ -42,19 +58,17 @@ export const UserProvider = ({ children }) => {
         { withCredentials: true }
       );
       setUser(null);
+      localStorage.removeItem('user');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout error:', error.response?.data || error.message);
     } finally {
       setIsCheckingSession(false);
     }
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout, isCheckingSession }}>
+    <UserContext.Provider value={{ user, setUser, login, logout, isCheckingSession }}>
       {children}
     </UserContext.Provider>
   );
 };
-
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
