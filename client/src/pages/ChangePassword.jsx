@@ -10,6 +10,7 @@ function ChangePassword() {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -141,14 +142,14 @@ function ChangePassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!newPassword || !confirmPassword) {
-      setMessage('Please fill in both password fields.');
-      toast.error('Please fill in both password fields.');
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setMessage('Please fill in all password fields.');
+      toast.error('Please fill in all password fields.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setMessage('Passwords do not match.');
-      toast.error('Passwords do not match.');
+      setMessage('New passwords do not match.');
+      toast.error('New passwords do not match.');
       return;
     }
 
@@ -157,6 +158,7 @@ function ChangePassword() {
         'https://water-pump.onrender.com/api/users/change-password',
         {
           userId: userData.user_id,
+          currentPassword,
           newPassword,
         },
         {
@@ -167,6 +169,7 @@ function ChangePassword() {
       setMessage('Password updated successfully.');
       toast.success('Password updated successfully.');
       setTimeout(() => {
+        setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
         setMessage('');
@@ -256,6 +259,28 @@ function ChangePassword() {
         <div className="bg-[#FFFFFF] rounded-xl p-6">
           <h2 className="text-xl font-bold mb-4">Update Password</h2>
           <form onSubmit={handleSubmit}>
+            {/* Dummy input to confuse autofill */}
+            <input
+              type="password"
+              style={{ display: 'none' }}
+              name="dummy-password"
+              autoComplete="new-password"
+            />
+            <div className="mb-4">
+              <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                Current Password
+              </label>
+              <input
+                type="password"
+                id="currentPassword"
+                name={`current-password-${Math.random().toString(36).substring(2)}`} // Random name to prevent autofill
+                placeholder="Enter current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                autoComplete="off"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
+              />
+            </div>
             <div className="mb-4">
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 New Password
