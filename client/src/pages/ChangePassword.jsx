@@ -155,11 +155,10 @@ function ChangePassword() {
 
     try {
       await axios.post(
-        'https://water-pump.onrender.com/api/users/change-password',
+        'https://water-pump.onrender.com/api/user/change-password',
         {
-          userId: userData.user_id,
-          currentPassword,
-          newPassword,
+          current_password: currentPassword,
+          new_password: newPassword,
         },
         {
           headers: { 'Content-Type': 'application/json' },
@@ -273,7 +272,7 @@ function ChangePassword() {
               <input
                 type="password"
                 id="currentPassword"
-                name={`current-password-${Math.random().toString(36).substring(2)}`} // Random name to prevent autofill
+                name={`current-password-${Math.random().toString(36).substring(2)}`}
                 placeholder="Enter current password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
