@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Search, Filter, Calendar, ChevronDown } from 'lucide-react';
+import { Search, Calendar, ChevronDown } from 'lucide-react';
 import DataTable from '../components/DataTable';
 
 const SavedLog = () => {
@@ -23,26 +23,14 @@ const SavedLog = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Define static fields for motor summary
-  const staticFields = [];
-
-  const dynamicFields = useMemo(() => {
+  // Generate columns dynamically from data keys
+  const columns = useMemo(() => {
     if (!data.length) return [];
-    const allKeys = Object.keys(data[0]);
-    return allKeys.filter((key) => !staticFields.includes(key));
-  }, [data, staticFields]);
-
-  const staticColumns = staticFields.map((field) => ({
-    label: field === 'total_run_time' ? 'Total Run Time' : field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' '),
-    accessor: field,
-  }));
-
-  const dynamicColumns = dynamicFields.map((field) => ({
-    label: field.charAt(0).toUpperCase() + field.slice(1).replace('_', ' '),
-    accessor: field,
-  }));
-
-  const columns = [...staticColumns, ...dynamicColumns];
+    return Object.keys(data[0]).map((key) => ({
+      label: key === 'total_run_time' ? 'Total Run Time' : key.charAt(0).toUpperCase() + key.slice(1).replace('_', ' '),
+      accessor: key,
+    }));
+  }, [data]);
 
   // Fetch plant names
   useEffect(() => {
@@ -129,8 +117,7 @@ const SavedLog = () => {
     setLoading(true);
     setError('');
     try {
-      // Use a high limit to fetch all data in one request
-      const limit = 10000; // Large limit to fetch all records (adjust based on API limits)
+      const limit = 10000; // Large limit to fetch all records
       const url = `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${limit}&offset=0`;
       console.log('Fetching plant log data from:', url);
       const response = await fetch(url);
@@ -169,8 +156,8 @@ const SavedLog = () => {
 
   const handleDateChange = (e, type) => {
     const value = e.target.value;
-    if (type === 'start') setStartDate(value);
-    else setEndDate(value);
+    if (type === 'startDate') setStartDate(value);
+    else if (type === 'endDate') setEndDate(value);
   };
 
   const handleSummaryTypeChange = (e) => {
@@ -178,10 +165,6 @@ const SavedLog = () => {
     setData([]);
     setTotalRows(0);
     setError('');
-  };
-
-  const handleTableFilterChange = (field, value) => {
-    setTableFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const handlePlantSelect = (plantId, plantName) => {
@@ -213,40 +196,40 @@ const SavedLog = () => {
                 id="summaryType"
                 value={summaryType}
                 onChange={handleSummaryTypeChange}
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 appearance-none bg-white text-sm text-gray-700"
               >
                 <option value="plant">Plant Log</option>
                 <option value="motor">Motor Summary</option>
               </select>
-              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-700 pointer-events-none" />
             </div>
 
             <div className="relative" ref={dropdownRef}>
               <div
-                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent bg-white text-sm cursor-pointer flex items-center"
+                className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-600 bg-white cursor-pointer flex items-center"
                 onClick={() => setIsPlantDropdownOpen(!isPlantDropdownOpen)}
               >
-                <Search className="absolute left-3 w-4 h-4 text-gray-400 pointer-events-none" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-700 pointer-events-none" />
                 <input
                   type="text"
                   value={plantSearch}
                   onChange={(e) => {
-                    setPlantSearch(e.target.value);
+                    setPlantSearch(e.target.value || '');
                     setIsPlantDropdownOpen(true);
                   }}
                   placeholder={tableFilters.plantName || 'Search plants...'}
-                  className="w-full bg-transparent focus:outline-none text-sm"
+                  className="w-full bg-transparent text-sm focus:outline-none text-gray-700"
                   onClick={(e) => e.stopPropagation()}
                 />
-                <ChevronDown className="absolute right-3 w-4 h-4 text-gray-400 pointer-events-none" />
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-700 pointer-events-none" />
               </div>
               {isPlantDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-md max-h-60 overflow-y-auto">
                   {filteredPlants.length > 0 ? (
                     filteredPlants.map(([plantId, plantName]) => (
                       <div
                         key={plantId}
-                        className="px-4 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
                         onClick={() => handlePlantSelect(plantId, plantName)}
                       >
                         {plantName} (ID: {plantId})
@@ -260,24 +243,24 @@ const SavedLog = () => {
             </div>
 
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-700 pointer-events-none z-10" />
               <input
                 type="date"
                 id="startDate"
                 value={startDate}
-                onChange={(e) => handleDateChange(e, 'start')}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                onChange={(e) => handleDateChange(e, 'startDate')}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
               />
             </div>
 
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-700 pointer-events-none z-10" />
               <input
                 type="date"
                 id="endDate"
                 value={endDate}
-                onChange={(e) => handleDateChange(e, 'end')}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                onChange={(e) => handleDateChange(e, 'endDate')}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
               />
             </div>
           </div>
@@ -285,12 +268,12 @@ const SavedLog = () => {
           <div className="mt-4">
             <button
               onClick={handleSubmit}
-              disabled={isSubmitDisabled}
-              className={`px-4 py-2 rounded-md text-white ${
-                isSubmitDisabled ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'
+              disabled={isSubmitDisabled || loading}
+              className={`px-4 py-2 rounded-md text-white font-semibold ${
+                isSubmitDisabled || loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
               }`}
             >
-              Fetch {summaryType === 'motor' ? 'Motor Summary' : 'Plant Log'}
+              {loading ? 'Loading...' : `Fetch ${summaryType === 'motor' ? 'Motor Summary' : 'Plant Log'}`}
             </button>
           </div>
         </div>
@@ -305,7 +288,25 @@ const SavedLog = () => {
             totalRows={totalRows}
             columns={columns}
             pageSizeOptions={summaryType === 'motor' ? [5, 10, 20] : [5, 10, 15, 20, 50, 100]}
-            defaultPageSize={summaryType === 'motor' ? 5 : 5}
+            defaultPageSize={5}
+            onExportCSV={
+              summaryType === 'plant'
+                ? () =>
+                    window.open(
+                      `https://water-pump.onrender.com/api/export/plantcsv/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+                      '_blank'
+                    )
+                : undefined
+            }
+            onExportExcel={
+              summaryType === 'plant'
+                ? () =>
+                    window.open(
+                      `https://water-pump.onrender.com/api/export/plantexcel/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+                      '_blank'
+                    )
+                : undefined
+            }
           />
         </div>
       </div>

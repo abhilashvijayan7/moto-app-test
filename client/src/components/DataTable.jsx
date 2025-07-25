@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import DropdownWithCheckboxes from './DropdownWithCheckboxes';
@@ -6,17 +7,16 @@ const DataTable = ({
   columns,
   data = [],
   pageSizeOptions = [5, 10, 20],
-  mode = 'client',         // 'client' | 'server'
-  fetchData,               // Function for server mode
-  totalRows = 0,           // Total rows for server mode
+  totalRows = 0,
+  defaultPageSize = 5,
+  onExportCSV,
+  onExportExcel,
 }) => {
   const [search, setSearch] = useState('');
-  const [pageSize, setPageSize] = useState(pageSizeOptions[0]);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [visibleColumns, setVisibleColumns] = useState(columns.map(col => col.accessor));
-  const [serverData, setServerData] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   // Update visible columns when columns change
   useEffect(() => {
@@ -24,14 +24,6 @@ const DataTable = ({
       setVisibleColumns(columns.map(col => col.accessor));
     }
   }, [columns]);
-
-  const toggleColumn = (accessor) => {
-    setVisibleColumns(prev =>
-      prev.includes(accessor)
-        ? prev.filter(col => col !== accessor)
-        : [...prev, accessor]
-    );
-  };
 
   const handleSort = (accessor) => {
     setCurrentPage(1);
@@ -67,41 +59,21 @@ const DataTable = ({
   }, [filteredData, sortConfig]);
 
   const currentData = useMemo(() => {
-    if (mode === 'server') return serverData;
     const start = (currentPage - 1) * pageSize;
     return sortedData.slice(start, start + pageSize);
-  }, [mode, serverData, sortedData, currentPage, pageSize]);
+  }, [sortedData, currentPage, pageSize]);
 
   const totalPages = useMemo(() => {
-    return mode === 'server'
-      ? Math.ceil(totalRows / pageSize)
-      : Math.ceil(filteredData.length / pageSize);
-  }, [mode, totalRows, pageSize, filteredData.length]);
+    return Math.ceil(totalRows / pageSize);
+  }, [totalRows, pageSize]);
 
-  // Fetch server data
-  useEffect(() => {
-    if (mode === 'server' && typeof fetchData === 'function') {
-      setLoading(true);
-      fetchData({
-        page: currentPage,
-        pageSize,
-        search,
-        sortKey: sortConfig.key,
-        sortOrder: sortConfig.direction,
-      }).then(result => {
-        setServerData(result?.data || []);
-      }).finally(() => setLoading(false));
-    }
-  }, [mode, fetchData, currentPage, pageSize, search, sortConfig]);
-
-  // CSV Export
+  // Client-side CSV Export
   const exportCSV = () => {
-    const exportSource = mode === 'server' ? serverData : sortedData;
     const csvHeader = columns
       .filter(col => visibleColumns.includes(col.accessor))
       .map(col => `"${col.label}"`)
       .join(',');
-    const csvRows = exportSource.map(row =>
+    const csvRows = sortedData.map(row =>
       columns
         .filter(col => visibleColumns.includes(col.accessor))
         .map(col => `"${row[col.accessor] ?? ''}"`)
@@ -118,10 +90,9 @@ const DataTable = ({
     document.body.removeChild(link);
   };
 
-  // Excel Export
+  // Client-side Excel Export
   const exportExcel = () => {
-    const exportSource = mode === 'server' ? serverData : sortedData;
-    const exportData = exportSource.map(row => {
+    const exportData = sortedData.map(row => {
       const rowData = {};
       columns
         .filter(col => visibleColumns.includes(col.accessor))
@@ -138,22 +109,24 @@ const DataTable = ({
 
   return (
     <div className="space-y-4">
-
       {/* Controls */}
       <div className="flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
         <input
           type="text"
           placeholder="Search..."
           value={search}
-          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-          className="border rounded-md px-3 py-2 w-full md:w-1/3"
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="border rounded-md px-3 py-2 w-full md:w-1/3 text-gray-700"
         />
 
         <DropdownWithCheckboxes
           buttonLabel="Select Columns"
           options={columns.map(col => ({
             value: col.accessor,
-            label: col.label
+            label: col.label,
           }))}
           selected={visibleColumns}
           onChange={setVisibleColumns}
@@ -162,18 +135,29 @@ const DataTable = ({
         <div className="flex flex-wrap items-center space-x-2">
           <select
             value={pageSize}
-            onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-            className="border rounded-md px-3 py-2"
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="border rounded-md px-3 py-2 text-gray-700"
           >
             {pageSizeOptions.map(size => (
               <option key={size} value={size}>{size} / page</option>
             ))}
           </select>
 
-          <button onClick={exportCSV} className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded shadow">
+          <button
+            onClick={() => (onExportCSV ? onExportCSV() : exportCSV())}
+            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!data.length}
+          >
             Export CSV
           </button>
-          <button onClick={exportExcel} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded shadow">
+          <button
+            onClick={() => (onExportExcel ? onExportExcel() : exportExcel())}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
+            disabled={!data.length}
+          >
             Export Excel
           </button>
         </div>
@@ -181,55 +165,51 @@ const DataTable = ({
 
       {/* Table */}
       <div className="overflow-x-auto bg-white rounded-xl shadow">
-        {loading ? (
-          <div className="p-5 text-center">Loading...</div>
-        ) : (
-          <table className="min-w-max w-full table-auto text-sm text-left text-gray-700">
-            <thead className="bg-gray-100 text-xs uppercase text-gray-500">
-              <tr>
+        <table className="min-w-max w-full table-auto text-sm text-left text-gray-700">
+          <thead className="bg-gray-100 text-xs uppercase text-gray-500">
+            <tr>
+              {columns
+                .filter(col => visibleColumns.includes(col.accessor))
+                .map(col => {
+                  const isSorted = sortConfig.key === col.accessor;
+                  return (
+                    <th
+                      key={col.accessor}
+                      onClick={() => handleSort(col.accessor)}
+                      className="px-4 py-3 cursor-pointer select-none whitespace-nowrap"
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{col.label}</span>
+                        {isSorted && (
+                          <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
+            </tr>
+          </thead>
+          <tbody>
+            {currentData.map((row, idx) => (
+              <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
                 {columns
                   .filter(col => visibleColumns.includes(col.accessor))
-                  .map(col => {
-                    const isSorted = sortConfig.key === col.accessor;
-                    return (
-                      <th
-                        key={col.accessor}
-                        onClick={() => handleSort(col.accessor)}
-                        className="px-4 py-3 cursor-pointer select-none whitespace-nowrap"
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>{col.label}</span>
-                          {isSorted && (
-                            <span>{sortConfig.direction === 'asc' ? '▲' : '▼'}</span>
-                          )}
-                        </div>
-                      </th>
-                    );
-                  })}
+                  .map(col => (
+                    <td key={col.accessor} className="px-4 py-2 whitespace-nowrap">
+                      {row[col.accessor]}
+                    </td>
+                  ))}
               </tr>
-            </thead>
-            <tbody>
-              {currentData.map((row, idx) => (
-                <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
-                  {columns
-                    .filter(col => visibleColumns.includes(col.accessor))
-                    .map(col => (
-                      <td key={col.accessor} className="px-4 py-2 whitespace-nowrap">
-                        {row[col.accessor]}
-                      </td>
-                    ))}
-                </tr>
-              ))}
-              {currentData.length === 0 && (
-                <tr>
-                  <td colSpan={visibleColumns.length} className="text-center py-4 text-gray-500">
-                    No data found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
+            ))}
+            {currentData.length === 0 && (
+              <tr>
+                <td colSpan={visibleColumns.length} className="text-center py-4 text-gray-500">
+                  No data found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Pagination */}
@@ -237,7 +217,7 @@ const DataTable = ({
         <button
           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
           disabled={currentPage === 1}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           Previous
         </button>
@@ -245,7 +225,7 @@ const DataTable = ({
         <button
           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           Next
         </button>
