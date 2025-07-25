@@ -23,16 +23,17 @@ function Sidebar() {
   // Define all possible menu items
   const allMenuItems = [
     { icon: dashboard, label: 'Home', path: '/home' },
-    { icon: devices, label: 'My Device', path: '/my-device' },
-    { icon: tv, label: 'Device Manager', path: '/device-manager' },
+    // { icon: devices, label: 'My Device', path: '/my-device' },
+    // { icon: tv, label: 'Device Manager', path: '/device-manager' },
     { icon: icons8_plus_32, label: 'New Plant', path: '/new-plant' },
-    { icon: deployed, label: 'User Manager', path: '/user-manager' },
     { icon: technology, label: 'Add Motor', path: '/add-motor' },
     { icon: sensor, label: 'Add Sensor', path: '/add-sensor' },
     { icon: topic, label: 'Add Topic', path: '/topic' },
+        { icon: deployed, label: 'User Manager', path: '/user-manager' },
+
     { icon: livelogs, label: 'Live Log', path: '/log' },
     { icon: savedlogs, label: 'Saved Log', path: '/saved-log' },
-    { icon: headset, label: 'Support', path: '/support' },
+    // { icon: headset, label: 'Support', path: '/support' },
     { icon: passkey, label: 'Change Password', path: '/change-password' },
     { icon: logout, label: 'Logout', path: '/logout' },
   ];
