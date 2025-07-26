@@ -208,57 +208,9 @@ function ChangePassword() {
         </p>
       </div>
       <div className="bg-[#FFFFFF] rounded-xl p-4">
-        <div className="font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4">
-          <div className="border-b border-[#208CD4] pb-[16px]">
-            <p className="text-[#4E4D4D] font-[600] text-[16px] break-words">
-              {userData.full_name}
-            </p>
-            <p className="text-[#aba6a6] font-[500] text-[12px]">
-              {userData.role}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4 pt-[16px]">
-            <div>
-              {[
-                { label: 'Designation', value: userData.designation },
-                { label: 'Contact Number', value: userData.call },
-                { label: 'Email', value: userData.mail },
-                { label: 'Address', value: userData.home },
-                { label: 'Location', value: userData.location },
-              ].map((item, detailIndex) => (
-                <div
-                  key={detailIndex}
-                  className="py-[8px] min-h-[40px] border-b border-[#DADADA]"
-                >
-                  <p className="font-[500] text-[#4E4D4D]">{item.label}:</p>
-                  <p className="break-words max-w-[90%]">{item.value}</p>
-                </div>
-              ))}
-            </div>
-            <div>
-              {[
-                { label: 'Date of Birth', value: userData.dob },
-                { label: 'Date of Joining', value: userData.displayDoj },
-                { label: 'Gender', value: userData.gender },
-                { label: 'Company', value: userData.company },
-                { label: 'Assigned Plant', value: userData.assignedPlant },
-              ].map((item, detailIndex) => (
-                <div
-                  key={detailIndex}
-                  className="py-[8px] min-h-[40px] border-b border-[#DADADA]"
-                >
-                  <p className="font-[500] text-[#4E4D4D]">{item.label}:</p>
-                  <p className="break-words max-w-[90%]">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
         <div className="bg-[#FFFFFF] rounded-xl p-6">
           <h2 className="text-xl font-bold mb-4">Update Password</h2>
-          <form onSubmit={handleSubmit}>
-            {/* Dummy input to confuse autofill */}
+          <div>
             <input
               type="password"
               style={{ display: 'none' }}
@@ -315,13 +267,61 @@ function ChangePassword() {
             )}
             <div className="flex justify-end">
               <button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 className="px-4 py-2 bg-[#208CD4] text-white rounded hover:bg-[#1b7bb9] transition-colors"
               >
                 Update Password
               </button>
             </div>
-          </form>
+          </div>
+        </div>
+
+        <div className="font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4">
+          <div className="border-b border-[#208CD4] pb-[16px]">
+            <p className="text-[#4E4D4D] font-[600] text-[16px] break-words">
+              {userData.full_name}
+            </p>
+            <p className="text-[#aba6a6] font-[500] text-[12px]">
+              {userData.role}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-4 pt-[16px]">
+            <div>
+              {[
+                { label: 'Designation', value: userData.designation },
+                { label: 'Contact Number', value: userData.call },
+                { label: 'Email', value: userData.mail },
+                { label: 'Address', value: userData.home },
+                { label: 'Location', value: userData.location },
+              ].map((item, detailIndex) => (
+                <div
+                  key={detailIndex}
+                  className="py-[8px] min-h-[40px] border-b border-[#DADADA]"
+                >
+                  <p className="font-[500] text-[#4E4D4D]">{item.label}:</p>
+                  <p className="break-words max-w-[90%]">{item.value}</p>
+                </div>
+              ))}
+            </div>
+            <div>
+              {[
+                { label: 'Date of Birth', value: userData.dob },
+                { label: 'Date of Joining', value: userData.displayDoj },
+                { label: 'Gender', value: userData.gender },
+                { label: 'Company', value: userData.company },
+                { label: 'Assigned Plant', value: userData.assignedPlant },
+              ].map((item, detailIndex) => (
+                <div
+                  key={detailIndex}
+                  className="py-[8px] min-h-[40px] border-b border-[#DADADA]"
+                >
+                  <p className="font-[500] text-[#4E4D4D]">{item.label}:</p>
+                  <p className="break-words max-w-[90%]">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -329,5 +329,3 @@ function ChangePassword() {
 }
 
 export default ChangePassword;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
