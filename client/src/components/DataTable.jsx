@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import DropdownWithCheckboxes from './DropdownWithCheckboxes';
@@ -215,6 +214,13 @@ const DataTable = ({
       {/* Pagination */}
       <div className="flex justify-center items-center space-x-2">
         <button
+          onClick={() => setCurrentPage(1)}
+          disabled={currentPage === 1}
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          First
+        </button>
+        <button
           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
           disabled={currentPage === 1}
           className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
@@ -229,12 +235,17 @@ const DataTable = ({
         >
           Next
         </button>
+        <button
+          onClick={() => setCurrentPage(totalPages)}
+          disabled={currentPage === totalPages || totalPages === 0}
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          Last
+        </button>
       </div>
     </div>
   );
 };
 
 export default DataTable;
-
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+// kkdkdkkd

@@ -106,7 +106,7 @@ const DataLog = () => {
         return entry;
       }).filter(entry => entry !== null);
       setLogData((prev) => {
-        const updatedLog = [...newLogEntries, ...prev].slice(0, 10);
+        const updatedLog = [...newLogEntries, ...prev].slice(0, 40);
         console.log("Updated log entries:", updatedLog);
         return updatedLog;
       });

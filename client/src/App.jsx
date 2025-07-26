@@ -14,7 +14,7 @@ import NewPlant from './pages/NewPlant';
 import AddMotor from './pages/AddMotor';
 import AddSensor from './pages/AddSensor';
 import Topic from './pages/Topic';
-import Log from './pages/Log';
+import Log from './pages/LiveLog';
 import LoginPage from './pages/Login';
 import SavedLog from './pages/SavedLog';
 import { UserContext, UserProvider } from './context/UserContext';
