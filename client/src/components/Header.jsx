@@ -22,11 +22,11 @@ const Header = () => {
 
   const menuItems = [
     { icon: dashboard, label: "Home", path: "/home" },
-    { icon: devices, label: "My Device", path: "/my-device" },
-    { icon: tv, label: "Device Manager", path: "/device-manager" },
+    // { icon: devices, label: "My Device", path: "/my-device" },
+    // { icon: tv, label: "Device Manager", path: "/device-manager" },
     { icon: icons8_plus_32, label: "New Plant", path: "/new-plant" },
     { icon: deployed, label: "User Manager", path: "/user-manager" },
-    { icon: headset, label: "Support", path: "/support" },
+    // { icon: headset, label: "Support", path: "/support" },
     { icon: technology, label: "Add Motor", path: "/add-motor" },
     { icon: sensor, label: "Add Sensor", path: "/add-sensor" },
     { icon: topic, label: "Add Topic", path: "/topic" },
@@ -86,7 +86,7 @@ const Header = () => {
               <X className="w-[24px] h-[24px] text-gray-700" />
             </button>
           </div>
-          <nav className="flex flex-col gap-4 text-[#6B6B6B]">
+          <nav className="flex flex-col gap-1 text-[#6B6B6B]">
             {menuItems.map((item, index) => (
               <NavLink
                 key={index}

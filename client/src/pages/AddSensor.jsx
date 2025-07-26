@@ -380,7 +380,7 @@ function AddSensorAndMotor() {
   return (
     <div className="flex-1 bg-gray-50 min-h-screen">
       {/* Sensor Type Section */}
-      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px] lg:px-11 lg:w-full">
+      {/* <div className="max-w-[450px] mx-auto text-[#6B6B6B] py-6 lg:max-w-[1280px] lg:px-11 lg:w-full">
         <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
           <div>
             <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
@@ -395,9 +395,9 @@ function AddSensorAndMotor() {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B]  lg:max-w-[1280px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div>

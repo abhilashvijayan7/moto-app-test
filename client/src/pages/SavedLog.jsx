@@ -17,6 +17,8 @@ const SavedLog = () => {
   const [plantSearch, setPlantSearch] = useState('');
   const [isPlantDropdownOpen, setIsPlantDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const startDateRef = useRef(null); // Added ref for start date input
+  const endDateRef = useRef(null);   // Added ref for end date input
 
   const [data, setData] = useState([]);
   const [totalRows, setTotalRows] = useState(0);
@@ -57,7 +59,14 @@ const SavedLog = () => {
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        startDateRef.current &&
+        !startDateRef.current.contains(event.target) &&
+        endDateRef.current &&
+        !endDateRef.current.contains(event.target)
+      ) {
         setIsPlantDropdownOpen(false);
       }
     };
@@ -165,6 +174,14 @@ const SavedLog = () => {
     setData([]);
     setTotalRows(0);
     setError('');
+    setStartDate('');
+    setEndDate('');
+    setPlantSearch('');
+    setTableFilters({
+      time: '',
+      plantId: '',
+      plantName: '',
+    });
   };
 
   const handlePlantSelect = (plantId, plantName) => {
@@ -249,6 +266,7 @@ const SavedLog = () => {
                 id="startDate"
                 value={startDate}
                 onChange={(e) => handleDateChange(e, 'startDate')}
+                ref={startDateRef} // Added ref
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
               />
             </div>
@@ -260,6 +278,7 @@ const SavedLog = () => {
                 id="endDate"
                 value={endDate}
                 onChange={(e) => handleDateChange(e, 'endDate')}
+                ref={endDateRef} // Added ref
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
               />
             </div>

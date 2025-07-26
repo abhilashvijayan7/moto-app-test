@@ -232,6 +232,22 @@ export default function ApplyTopicPage() {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
+
+     {/* <div className="max-w-[450px] mx-auto text-[#6B6B6B]  lg:max-w-[1280px] lg:px-11 lg:w-full lg:mb-8">
+        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
+          <div>
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+              Add Topic
+            </p>
+            <div className="flex bg-gray-100 w-[140px] py-1 px-2 rounded-sm mb-[18px] items-center">
+              <p>Home</p>
+              <ChevronRight className="w-[20px] h-[20px] text-gray-500" />
+              <p className="text-[#208CD4]">{editingMotorId ? 'Edit Motor' : 'Add Motor'}</p>
+            </div>
+          </div>
+        </div>
+      </div> */}
+
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl p-6">
         {/* Page Header */}
         <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
