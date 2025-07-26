@@ -51,11 +51,11 @@ const Login = () => {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="flex w-full max-w-4xl bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="w-1/2">
+      <div className="flex flex-col sm:flex-row w-full max-w-4xl sm:mx-0 mx-3 bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="w-full sm:w-1/2">
           <img src={draw2} alt="Login Illustration" className="w-full h-full object-cover" />
         </div>
-        <div className="w-1/2 p-8">
+        <div className="w-full sm:w-1/2 p-8">
           <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
           {error && (
             <div className="mb-4 text-red-500 text-sm text-center">{error}</div>
@@ -110,4 +110,5 @@ const Login = () => {
 
 export default Login;
 
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
+
+// kjshdfkjhskjdfkjsgdfjkgshdjfghjgsdhjfgjhgjshdgfgkjhkjgds
