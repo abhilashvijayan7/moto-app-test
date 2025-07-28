@@ -11,6 +11,7 @@ import {
   faBuilding,
   faVenusMars,
   faIndustry,
+  faKey,
 } from "@fortawesome/free-solid-svg-icons";
 import { useLocation } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
@@ -145,11 +146,13 @@ function UserManager() {
   };
 
   const handleConfirm = (userId, newStatus) => {
+    // Optimistically update the UI
     setApiData((prevData) =>
       prevData.map((u) =>
         u.user_id === userId ? { ...u, status: newStatus } : u
       )
     );
+    // Delay fetch to handle eventual consistency
     setTimeout(() => fetchUsers(), 500);
   };
 
@@ -327,7 +330,7 @@ function UserManager() {
             {paginatedData.map((card, cardIndex) => (
               <div
                 className="card-div font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4 break-inside-avoid"
-                key={`${card.user_id}-${card.status}`}
+                key={`${card.user_id}-${card.status}`} // Force re-render on status change
               >
                 <div className="flex flex-col w-full border-b border-[#208CD4] pb-[16px]">
                   <div className="flex flex-col">
@@ -371,10 +374,9 @@ function UserManager() {
                     </div>
                     <div className="flex-1 flex justify-center">
                       {shouldShowResetIcon(card.role) && (
-                        <img
-                          src={password}
-                          alt="Reset Password"
-                          className="w-[36px] h-[32px] p-1 border border-blue-300 rounded"
+                        <FontAwesomeIcon
+                          icon={faKey}
+                          className="w-[36px] h-[32px] p-1 border border-blue-300 rounded text-xl"
                           style={{ color: "#F59E0B" }}
                           onClick={() => handleOpenResetPassword(card)}
                         />
@@ -542,3 +544,5 @@ function UserManager() {
 }
 
 export default UserManager;
+
+// bune
