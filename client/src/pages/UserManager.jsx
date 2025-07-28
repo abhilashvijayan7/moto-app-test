@@ -49,6 +49,7 @@ function UserManager() {
   const { user } = useContext(UserContext);
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
 
   const formatDisplayDate = (dateStr) => {
     if (!dateStr || dateStr === "N/A") return "N/A";
@@ -67,7 +68,8 @@ function UserManager() {
     try {
       setLoading(true);
       const response = await axios.get(
-        "https://water-pump.onrender.com/api/UserPlantAccess"
+        "https://water-pump.onrender.com/api/UserPlantAccess",
+        { withCredentials: true }
       );
       console.log("UserPlantAccess Response:", response.data);
 
@@ -128,6 +130,7 @@ function UserManager() {
   const handleOpen = (user, action) => {
     setSelectedUser(user);
     setActionType(action);
+    setStatusMessage("");
     setShowConfirm(true);
   };
 
@@ -145,11 +148,18 @@ function UserManager() {
   };
 
   const handleConfirm = async () => {
+    const newStatus = actionType === "Active" ? "Active" : "Inactive";
+    // Optimistically update the UI
+    const originalData = [...apiData];
+    setApiData((prevData) =>
+      prevData.map((u) =>
+        u.user_id === selectedUser.user_id ? { ...u, status: newStatus } : u
+      )
+    );
+
     try {
-      // Make API call to update user status
-      const newStatus = actionType === "Active" ? "Active" : "Inactive";
       await axios.put(
-        `https://water-pump.onrender.com/api/users/update-status`,
+        `https://water-pump.onrender.com/api/users/reset-status`,
         {
           user_id: selectedUser.user_id,
           status: newStatus,
@@ -159,16 +169,17 @@ function UserManager() {
           withCredentials: true,
         }
       );
+      setStatusMessage(`User status updated to ${newStatus} successfully.`);
       console.log(`${actionType} confirmed for`, selectedUser);
       setShowConfirm(false);
-      await fetchUsers(); // Refresh the user list
+      await fetchUsers(); // Refresh to confirm the change
     } catch (err) {
-      console.error(
-        "Error updating user status:",
-        err.response?.data || err.message
-      );
-      setError("Failed to update user status. Please try again.");
-      setShowConfirm(false);
+      // Revert optimistic update on error
+      setApiData(originalData);
+      const errorMessage =
+        err.response?.data?.message || "Failed to update user status. Please try again.";
+      console.error("Error resetting status:", err.response?.data || err.message);
+      setStatusMessage(errorMessage);
     }
   };
 
@@ -502,6 +513,7 @@ function UserManager() {
         actionType={actionType}
         user={selectedUser}
         userName={selectedUser?.full_name}
+        statusMessage={statusMessage}
       />
       {isResetPasswordOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
