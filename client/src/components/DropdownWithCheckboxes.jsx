@@ -11,6 +11,10 @@ const DropdownWithCheckboxes = ({
 
   const dropdownRef = useRef();
 
+  useEffect(() => {
+    setSelectedOptions(selected);
+  }, [selected]);
+
   const toggleDropdown = () => setIsOpen(!isOpen);
 
   const handleCheckboxChange = (value) => {

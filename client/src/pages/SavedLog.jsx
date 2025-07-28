@@ -126,25 +126,10 @@ const SavedLog = () => {
     setLoading(true);
     setError('');
     try {
-      const limit = 10000; // Large limit to fetch all records
-      const url = `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${limit}&offset=0`;
-      console.log('Fetching plant log data from:', url);
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Failed to load plant log data: ${response.status}`);
-      const json = await response.json();
-      console.log('Plant log response:', json);
-
-      if (!Array.isArray(json.data)) {
-        console.error('Expected json.data to be an array, got:', json.data);
-        setError('Invalid data format received from server.');
-        setData([]);
-        setTotalRows(0);
-        return;
-      }
-
-      setData(json.data);
-      setTotalRows(json.totalCount || json.data.length);
-      console.log('Plant log data:', json.data);
+      // Reuse the fetchData logic for the initial fetch
+      const { data: resultData, totalCount } = await fetchData({ page: 1, pageSize: 5 });
+      setData(resultData);
+      setTotalRows(totalCount);
     } catch (err) {
       console.error('Error fetching plant log:', err);
       setError(err.message || 'Something went wrong while fetching plant log data.');
@@ -201,6 +186,31 @@ const SavedLog = () => {
   );
 
   const isSubmitDisabled = !tableFilters.plantId || !startDate || !endDate;
+const fetchData = async ({ page, pageSize }) => {
+  if (!tableFilters.plantId || !startDate || !endDate) {
+    return { data: [], totalCount: 0 };
+  }
+
+  const offset = (page - 1) * pageSize;
+  const url = `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${pageSize}&offset=${offset}`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch paginated plant log');
+
+    const json = await response.json();
+    const resultData = Array.isArray(json.data) ? json.data : [];
+
+    return {
+      data: resultData,
+      totalCount: json.totalCount || resultData.length,
+    };
+  } catch (err) {
+    console.error('Error fetching paginated plant log:', err);
+    return { data: [], totalCount: 0 };
+  }
+};
+
 
   return (
     <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1480px] lg:px-11 lg:py-11 lg:w-full lg:bg-white lg:rounded-xl">
@@ -303,30 +313,32 @@ const SavedLog = () => {
 
         <div className="p-4">
           <DataTable
-            data={data}
-            totalRows={totalRows}
-            columns={columns}
-            pageSizeOptions={summaryType === 'motor' ? [5, 10, 20] : [5, 10, 15, 20, 50, 100]}
-            defaultPageSize={5}
-            onExportCSV={
-              summaryType === 'plant'
-                ? () =>
-                    window.open(
-                      `https://water-pump.onrender.com/api/export/plantcsv/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
-                      '_blank'
-                    )
-                : undefined
-            }
-            onExportExcel={
-              summaryType === 'plant'
-                ? () =>
-                    window.open(
-                      `https://water-pump.onrender.com/api/export/plantexcel/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
-                      '_blank'
-                    )
-                : undefined
-            }
-          />
+    mode={summaryType === 'plant' ? 'server' : 'client'}
+    fetchData={summaryType === 'plant' ? fetchData : undefined}
+    data={data}
+    totalRows={totalRows}
+    columns={columns}
+    pageSizeOptions={summaryType === 'motor' ? [5, 10, 20] : [5, 10, 15, 20, 50, 100]}
+    defaultPageSize={5}
+    onExportCSV={
+      summaryType === 'plant'
+        ? () =>
+            window.open(
+              `https://water-pump.onrender.com/api/export/plantcsv/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+              '_blank'
+            )
+        : undefined
+    }
+    onExportExcel={
+      summaryType === 'plant'
+        ? () =>
+            window.open(
+              `https://water-pump.onrender.com/api/export/plantexcel/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+              '_blank'
+            )
+        : undefined
+    }
+  />
         </div>
       </div>
     </div>
@@ -335,4 +347,3 @@ const SavedLog = () => {
 
 export default SavedLog;
 
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

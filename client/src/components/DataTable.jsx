@@ -10,22 +10,54 @@ const DataTable = ({
   defaultPageSize = 5,
   onExportCSV,
   onExportExcel,
+  mode = 'client', // NEW: 'client' or 'server'
+  fetchData = null, // NEW: fetch function for server mode
 }) => {
   const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [currentPage, setCurrentPage] = useState(1);
+  const [tableData, setTableData] = useState(data);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
-  const [visibleColumns, setVisibleColumns] = useState(columns.map(col => col.accessor));
+  const [visibleColumns, setVisibleColumns] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-  // Update visible columns when columns change
+  // Update visible columns when columns prop changes
   useEffect(() => {
-    if (columns.length > 0) {
-      setVisibleColumns(columns.map(col => col.accessor));
-    }
+    setVisibleColumns(columns.map(col => col.accessor));
   }, [columns]);
 
+  // Fetch paginated data for server mode
+  useEffect(() => {
+    if (mode === 'server' && typeof fetchData === 'function') {
+      setLoading(true);
+      setProgress(0);
+
+      // Simulate progress for fetching data
+      const timer = setInterval(() => {
+        setProgress(oldProgress => {
+          if (oldProgress === 100) {
+            clearInterval(timer);
+            return 100;
+          }
+          const diff = Math.random() * 10;
+          return Math.min(oldProgress + diff, 100);
+        });
+      }, 200);
+
+      fetchData({ page: currentPage, pageSize })
+        .then(({ data, totalCount }) => {
+          setTableData(data);
+          setProgress(100); // Ensure it completes
+        })
+        .finally(() => {
+          setLoading(false);
+          clearInterval(timer);
+        });
+    }
+  }, [currentPage, pageSize, fetchData, mode]);
+
   const handleSort = (accessor) => {
-    setCurrentPage(1);
     setSortConfig(prev => {
       if (prev.key === accessor) {
         if (prev.direction === 'asc') return { key: accessor, direction: 'desc' };
@@ -33,20 +65,25 @@ const DataTable = ({
       }
       return { key: accessor, direction: 'asc' };
     });
+    setCurrentPage(1);
   };
 
   const filteredData = useMemo(() => {
+    if (mode === 'server') return tableData;
+
     return data.filter(row =>
       Object.values(row).some(val =>
         String(val).toLowerCase().includes(search.toLowerCase())
       )
     );
-  }, [data, search]);
+  }, [data, tableData, search, mode]);
 
   const sortedData = useMemo(() => {
-    let sortableItems = [...filteredData];
-    if (sortConfig.key !== null) {
-      sortableItems.sort((a, b) => {
+    if (mode === 'server') return filteredData;
+
+    const sorted = [...filteredData];
+    if (sortConfig.key) {
+      sorted.sort((a, b) => {
         const aVal = String(a[sortConfig.key] ?? '').toLowerCase();
         const bVal = String(b[sortConfig.key] ?? '').toLowerCase();
         return sortConfig.direction === 'asc'
@@ -54,30 +91,34 @@ const DataTable = ({
           : bVal.localeCompare(aVal);
       });
     }
-    return sortableItems;
-  }, [filteredData, sortConfig]);
+    return sorted;
+  }, [filteredData, sortConfig, mode]);
 
   const currentData = useMemo(() => {
+    if (mode === 'server') return tableData;
+
     const start = (currentPage - 1) * pageSize;
     return sortedData.slice(start, start + pageSize);
-  }, [sortedData, currentPage, pageSize]);
+  }, [sortedData, tableData, currentPage, pageSize, mode]);
 
   const totalPages = useMemo(() => {
-    return Math.ceil(totalRows / pageSize);
-  }, [totalRows, pageSize]);
+    if (mode === 'server') return Math.ceil(totalRows / pageSize);
+    return Math.ceil(sortedData.length / pageSize);
+  }, [sortedData, totalRows, pageSize, mode]);
 
-  // Client-side CSV Export
   const exportCSV = () => {
     const csvHeader = columns
       .filter(col => visibleColumns.includes(col.accessor))
       .map(col => `"${col.label}"`)
       .join(',');
-    const csvRows = sortedData.map(row =>
+
+    const csvRows = currentData.map(row =>
       columns
         .filter(col => visibleColumns.includes(col.accessor))
         .map(col => `"${row[col.accessor] ?? ''}"`)
         .join(',')
     );
+
     const csvContent = [csvHeader, ...csvRows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -89,9 +130,8 @@ const DataTable = ({
     document.body.removeChild(link);
   };
 
-  // Client-side Excel Export
   const exportExcel = () => {
-    const exportData = sortedData.map(row => {
+    const exportData = currentData.map(row => {
       const rowData = {};
       columns
         .filter(col => visibleColumns.includes(col.accessor))
@@ -119,6 +159,7 @@ const DataTable = ({
             setCurrentPage(1);
           }}
           className="border rounded-md px-3 py-2 w-full md:w-1/3 text-gray-700"
+          disabled={mode === 'server'}
         />
 
         <DropdownWithCheckboxes
@@ -148,14 +189,14 @@ const DataTable = ({
           <button
             onClick={() => (onExportCSV ? onExportCSV() : exportCSV())}
             className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={!data.length}
+            disabled={!currentData.length}
           >
             Export CSV
           </button>
           <button
             onClick={() => (onExportExcel ? onExportExcel() : exportExcel())}
             className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
-            disabled={!data.length}
+            disabled={!currentData.length}
           >
             Export Excel
           </button>
@@ -189,23 +230,36 @@ const DataTable = ({
             </tr>
           </thead>
           <tbody>
-            {currentData.map((row, idx) => (
-              <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
-                {columns
-                  .filter(col => visibleColumns.includes(col.accessor))
-                  .map(col => (
-                    <td key={col.accessor} className="px-4 py-2 whitespace-nowrap">
-                      {row[col.accessor]}
-                    </td>
-                  ))}
+            {loading ? (
+              <tr>
+                <td colSpan={visibleColumns.length} className="text-center py-4">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 border-4 border-dashed rounded-full animate-spin border-blue-600 mb-4"></div>
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">Loading... {Math.round(progress)}%</p>
+                  </div>
+                </td>
               </tr>
-            ))}
-            {currentData.length === 0 && (
+            ) : currentData.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumns.length} className="text-center py-4 text-gray-500">
                   No data found.
                 </td>
               </tr>
+            ) : (
+              currentData.map((row, idx) => (
+                <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
+                  {columns
+                    .filter(col => visibleColumns.includes(col.accessor))
+                    .map(col => (
+                      <td key={col.accessor} className="px-4 py-2 whitespace-nowrap">
+                        {row[col.accessor]}
+                      </td>
+                    ))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -216,14 +270,14 @@ const DataTable = ({
         <button
           onClick={() => setCurrentPage(1)}
           disabled={currentPage === 1}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
         >
           First
         </button>
         <button
           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
           disabled={currentPage === 1}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
         >
           Previous
         </button>
@@ -231,14 +285,14 @@ const DataTable = ({
         <button
           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
         >
           Next
         </button>
         <button
           onClick={() => setCurrentPage(totalPages)}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300 disabled:cursor-not-allowed"
+          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
         >
           Last
         </button>
@@ -248,4 +302,3 @@ const DataTable = ({
 };
 
 export default DataTable;
-// kkdkdkkd
