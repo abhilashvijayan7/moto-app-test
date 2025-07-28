@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUser, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
 const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate', user, userName = '' }) => {
   const [statusMessage, setStatusMessage] = useState('');
