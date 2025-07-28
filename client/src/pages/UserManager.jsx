@@ -49,7 +49,6 @@ function UserManager() {
   const { user } = useContext(UserContext);
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
-  const [statusMessage, setStatusMessage] = useState("");
 
   const formatDisplayDate = (dateStr) => {
     if (!dateStr || dateStr === "N/A") return "N/A";
@@ -130,7 +129,6 @@ function UserManager() {
   const handleOpen = (user, action) => {
     setSelectedUser(user);
     setActionType(action);
-    setStatusMessage("");
     setShowConfirm(true);
   };
 
@@ -147,40 +145,15 @@ function UserManager() {
     setMessage("");
   };
 
-  const handleConfirm = async () => {
-    const newStatus = actionType === "Active" ? "Active" : "Inactive";
+  const handleConfirm = (userId, newStatus) => {
     // Optimistically update the UI
-    const originalData = [...apiData];
     setApiData((prevData) =>
       prevData.map((u) =>
-        u.user_id === selectedUser.user_id ? { ...u, status: newStatus } : u
+        u.user_id === userId ? { ...u, status: newStatus } : u
       )
     );
-
-    try {
-      await axios.put(
-        `https://water-pump.onrender.com/api/users/reset-status`,
-        {
-          user_id: selectedUser.user_id,
-          status: newStatus,
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
-      setStatusMessage(`User status updated to ${newStatus} successfully.`);
-      console.log(`${actionType} confirmed for`, selectedUser);
-      setShowConfirm(false);
-      await fetchUsers(); // Refresh to confirm the change
-    } catch (err) {
-      // Revert optimistic update on error
-      setApiData(originalData);
-      const errorMessage =
-        err.response?.data?.message || "Failed to update user status. Please try again.";
-      console.error("Error resetting status:", err.response?.data || err.message);
-      setStatusMessage(errorMessage);
-    }
+    // Delay fetch to handle eventual consistency
+    setTimeout(() => fetchUsers(), 500);
   };
 
   const handleOpenEditModal = (user) => {
@@ -357,7 +330,7 @@ function UserManager() {
             {paginatedData.map((card, cardIndex) => (
               <div
                 className="card-div font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4 break-inside-avoid"
-                key={cardIndex}
+                key={`${card.user_id}-${card.status}`} // Force re-render on status change
               >
                 <div className="flex flex-col w-full border-b border-[#208CD4] pb-[16px]">
                   <div className="flex flex-col">
@@ -513,7 +486,6 @@ function UserManager() {
         actionType={actionType}
         user={selectedUser}
         userName={selectedUser?.full_name}
-        statusMessage={statusMessage}
       />
       {isResetPasswordOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

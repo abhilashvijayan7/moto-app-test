@@ -4,30 +4,38 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
 const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate', user, userName = '' }) => {
-  const [successMessage, setSuccessMessage] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
     try {
       console.log('Submit button clicked', user);
+      const newStatus = actionType === 'Active' ? 'Active' : 'Inactive';
       const payload = {
-        target_user_id: user.user_id,
-        status: actionType,
+        user_id: user.user_id,
+        status: newStatus,
       };
 
       const response = await axios.put(
         'https://water-pump.onrender.com/api/users/reset-status',
         payload,
-        { withCredentials: true }
+        { 
+          withCredentials: true,
+          validateStatus: (status) => status >= 200 && status < 300, // Accept 204
+        }
       );
 
-      console.log('Success:', response.data);
-      setSuccessMessage(`User ${actionType}d successfully`);
-      onConfirm(); // Call external handler after success (optional)
-      onClose();   // Close modal after submit
+      console.log('Status update response:', response.status, response.data);
+      setStatusMessage(`User ${newStatus.toLowerCase()}d successfully`);
+      onConfirm(user.user_id, newStatus); // Notify parent to update UI
+      setTimeout(() => {
+        onClose(); // Close modal after success
+      }, 1500);
     } catch (err) {
-      console.error('Error resetting status:', err);
+      const errorMessage = err.response?.data?.message || 'Failed to update user status. Please try again.';
+      console.error('Error resetting status:', err.response?.status, err.response?.data, err.message);
+      setStatusMessage(errorMessage);
     }
   };
 
@@ -43,11 +51,20 @@ const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate',
         <p className="text-gray-600 text-center">
           Are you sure you want to <strong>{actionText.toLowerCase()}</strong> user <strong>{userName}</strong>?
         </p>
-
+        {statusMessage && (
+          <p
+            className={`mt-4 text-sm text-center ${
+              statusMessage.includes('success') ? 'text-green-500' : 'text-red-500'
+            }`}
+          >
+            {statusMessage}
+          </p>
+        )}
         <div className="mt-6 flex justify-center gap-4">
           <button
             className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
             onClick={onClose}
+            disabled={statusMessage.includes('success')}
           >
             Cancel
           </button>
@@ -56,6 +73,7 @@ const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate',
               isActivate ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
             }`}
             onClick={handleSubmit}
+            disabled={statusMessage.includes('success')}
           >
             {actionText}
           </button>
@@ -66,5 +84,3 @@ const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate',
 };
 
 export default UserConfirmation;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
