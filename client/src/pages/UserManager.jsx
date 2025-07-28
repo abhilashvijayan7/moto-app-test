@@ -145,28 +145,15 @@ function UserManager() {
     setMessage("");
   };
 
-  const handleConfirm = async (userId, newStatus) => {
+  const handleConfirm = (userId, newStatus) => {
     // Optimistically update the UI
-    setApiData((prevData) => {
-      const newData = prevData.map((u) =>
+    setApiData((prevData) =>
+      prevData.map((u) =>
         u.user_id === userId ? { ...u, status: newStatus } : u
-      );
-      console.log("Optimistic update applied:", newData.find((u) => u.user_id === userId));
-      return newData;
-    });
-
-    // Retry fetch to ensure updated status
-    let attempts = 3;
-    while (attempts > 0) {
-      await fetchUsers();
-      const updatedUser = apiData.find((u) => u.user_id === userId);
-      console.log("Fetched user status:", updatedUser?.status);
-      if (updatedUser?.status === newStatus) {
-        break;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      attempts--;
-    }
+      )
+    );
+    // Delay fetch to handle eventual consistency
+    setTimeout(() => fetchUsers(), 500);
   };
 
   const handleOpenEditModal = (user) => {
