@@ -338,28 +338,28 @@ function UserManager() {
                       {card.role}
                     </p>
                   </div>
-                  <div className="flex items-center w-full doom gap-4 mt-2">
-                    <div className="flex-1 flex justify-center">
+                  <div className="flex items-center w-full doom gap-4 mt-2 ">
+                    <div className="flex-1 flex justify-center border border-blue-300 rounded ">
                       <img
                         src={link}
                         alt="Upload"
-                        className="w-[36px] h-[32px] p-1 border border-blue-300 rounded"
+                        className="w-[36px] h-[32px] p-1  "
                         onClick={handleOpenUpload}
                       />
                     </div>
-                    <div className="flex-1 flex justify-center">
+                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
                       <img
                         src={edit}
                         alt="Edit"
-                        className="w-[36px] h-[32px] p-1 border border-blue-300 rounded"
+                        className="w-[36px] h-[32px] p-1 "
                         onClick={() => handleOpenEditModal(card)}
                       />
                     </div>
-                    <div className="flex-1 flex justify-center">
+                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
                       <img
                         src={card?.status === "Active" ? active : inactive}
                         alt={card?.status === "Active" ? "Active" : "Inactive"}
-                        className="w-[36px] h-[32px] p-1 border border-blue-300 rounded"
+                        className="w-[36px] h-[32px] p-1 "
                         style={{ color: card?.status === "Active" ? "#22C55E" : "#EF4444" }}
                         onClick={() =>
                           handleOpen(
@@ -369,12 +369,12 @@ function UserManager() {
                         }
                       />
                     </div>
-                    <div className="flex-1 flex justify-center">
+                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
                       {shouldShowResetIcon(card.role) && (
                         <img
                           src={password}
                           alt="Reset Password"
-                          className="w-[36px] h-[32px] p-1 border border-blue-300 rounded"
+                          className="w-[36px] h-[32px] p-1 "
                           style={{ color: "#F59E0B" }}
                           onClick={() => handleOpenResetPassword(card)}
                         />
