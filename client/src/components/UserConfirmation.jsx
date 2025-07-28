@@ -3,26 +3,43 @@ import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
-const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate', user, userName = '' }) => {
+const UserConfirmation = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  actionType = 'Active', // Expecting 'Active' or 'Inactive'
+  user,
+  userName = '',
+}) => {
   const [statusMessage, setStatusMessage] = useState('');
 
   if (!isOpen) return null;
 
   const handleSubmit = async () => {
+    const newStatus = actionType; // 'Active' or 'Inactive'
+
+    if (!user?.user_id || !newStatus) {
+      setStatusMessage('Target user ID and status required.');
+      return;
+    }
+
     try {
-      console.log('Submit button clicked', user);
-      const newStatus = actionType === 'Active' ? 'Active' : 'Inactive';
       const payload = {
         user_id: user.user_id,
         status: newStatus,
       };
 
+      console.log("Sending status update payload:", payload);
+
       const response = await axios.put(
         'https://water-pump.onrender.com/api/users/reset-status',
         payload,
-        { 
+        {
           withCredentials: true,
-          validateStatus: (status) => status >= 200 && status < 300, // Accept 204
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          validateStatus: (status) => status >= 200 && status < 300,
         }
       );
 
@@ -33,7 +50,8 @@ const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate',
         onClose(); // Close modal after success
       }, 1500);
     } catch (err) {
-      const errorMessage = err.response?.data?.message || 'Failed to update user status. Please try again.';
+      const errorMessage =
+        err.response?.data?.message || 'Failed to update user status. Please try again.';
       console.error('Error resetting status:', err.response?.status, err.response?.data, err.message);
       setStatusMessage(errorMessage);
     }
@@ -41,7 +59,11 @@ const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate',
 
   const isActivate = actionType === 'Active';
   const actionText = isActivate ? 'Activate' : 'Deactivate';
-  const icon = isActivate ? <FontAwesomeIcon icon={faCircleCheck} className="text-green-500 text-4xl" /> : <FontAwesomeIcon icon={faCircleCheck} className="text-red-500 text-4xl" />;
+  const icon = isActivate ? (
+    <FontAwesomeIcon icon={faCircleCheck} className="text-green-500 text-4xl" />
+  ) : (
+    <FontAwesomeIcon icon={faCircleCheck} className="text-red-500 text-4xl" />
+  );
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
