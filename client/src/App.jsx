@@ -1,31 +1,31 @@
-import React, { useContext } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import usePushNotifications from './hooks/usePushNotifications';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import Home from './pages/Home';
-import Motor from './pages/Motor';
-import UserManager from './pages/UserManager';
-import DeviceManager from './pages/DeviceManager';
-import MyDevice from './pages/MyDevice';
-import NewPlant from './pages/NewPlant';
-import AddMotor from './pages/AddMotor';
-import AddSensor from './pages/AddSensor';
-import Topic from './pages/Topic';
-import Log from './pages/LiveLog';
-import LoginPage from './pages/Login';
-import SavedLog from './pages/SavedLog';
-import { UserContext, UserProvider } from './context/UserContext';
+import React, { useContext } from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import usePushNotifications from "./hooks/usePushNotifications";
+import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
+import Home from "./pages/Home";
+import Motor from "./pages/Motor";
+import UserManager from "./pages/UserManager";
+import DeviceManager from "./pages/DeviceManager";
+import MyDevice from "./pages/MyDevice";
+import NewPlant from "./pages/NewPlant";
+import AddMotor from "./pages/AddMotor";
+import AddSensor from "./pages/AddSensor";
+import Topic from "./pages/Topic";
+import Log from "./pages/LiveLog";
+import LoginPage from "./pages/Login";
+import SavedLog from "./pages/SavedLog";
+import AddLocation from "./pages/AddLocation";
 
-import ChangePassword from './pages/ChangePassword';
+import { UserContext, UserProvider } from "./context/UserContext";
+
+import ChangePassword from "./pages/ChangePassword";
 
 function Support() {
   return <div className="p-6 text-gray-700 text-2xl">Support Page</div>;
 }
-
-
 
 function Logout() {
   const { logout } = useContext(UserContext);
@@ -40,30 +40,35 @@ const ProtectedRoute = ({ children, allowedForRestrictedUser }) => {
   const location = useLocation();
 
   if (isCheckingSession) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} />;
   }
 
-  const userType = user?.role?.toLowerCase() || 'normal';
+  const userType = user?.role?.toLowerCase() || "normal";
 
-  console.log("mythiliiiiii", user)
+  console.log("mythiliiiiii", user);
 
-  if ((userType === 'normal' || userType === 'regular') && !allowedForRestrictedUser) {
+  if (
+    (userType === "normal" || userType === "regular") &&
+    !allowedForRestrictedUser
+  ) {
     return <Navigate to="/home" />;
   }
 
   return <div>{React.cloneElement(children, { user })}</div>;
 };
 
-
-
 function App() {
   usePushNotifications();
   const location = useLocation();
-  const isLoginPage = location.pathname === '/login';
+  const isLoginPage = location.pathname === "/login";
 
   return (
     <UserProvider>
@@ -178,6 +183,16 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+
+              <Route
+                path="/add-location"
+                element={
+                  <ProtectedRoute allowedForRestrictedUser={false}>
+                    <AddLocation />
+                  </ProtectedRoute>
+                }
+              />
+
               <Route
                 path="/support"
                 element={

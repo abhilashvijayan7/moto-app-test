@@ -4,14 +4,14 @@ import axios from 'axios';
 
 export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-pump.onrender.com/api/locations' }) {
   const [formData, setFormData] = useState({
-    locationName: '',
+    location_name: '',
     city: '',
     address: '',
-    zipCode: '',
+    zipcode: '',
     country: '',
     state: '',
-    contactPerson: '',
-    phoneNumber: ''
+    contact: '',
+    phone_number: ''
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,7 +24,6 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
       ...prev,
       [name]: value
     }));
-    // Clear any previous error/success messages when user starts typing
     if (submitError) setSubmitError('');
     if (submitSuccess) setSubmitSuccess(false);
   };
@@ -42,22 +41,19 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
       });
 
       console.log('Device added successfully:', response.data);
-      
       setSubmitSuccess(true);
       
-      // Clear form data after successful submission
       setFormData({
-        locationName: '',
+        location_name: '',
         city: '',
         address: '',
-        zipCode: '',
+        zipcode: '',
         country: '',
         state: '',
-        contactPerson: '',
-        phoneNumber: ''
+        contact: '',
+        phone_number: ''
       });
 
-      // Close modal after a short delay to show success message
       setTimeout(() => {
         if (onClose) {
           onClose();
@@ -66,20 +62,15 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
 
     } catch (error) {
       console.error('Error adding device:', error);
-      
-      // Handle different types of errors
       if (error.response) {
-        // Server responded with error status
         setSubmitError(`Server Error: ${error.response.data?.message || error.response.statusText} (${error.response.status})`);
       } else if (error.request) {
-        // Request was made but no response received
         if (error.code === 'ERR_NETWORK' || error.message.includes('ERR_NAME_NOT_RESOLVED')) {
           setSubmitError('Cannot connect to server. Please check if the API URL is correct and the server is running.');
         } else {
           setSubmitError('No response from server. Please check your internet connection.');
         }
       } else {
-        // Something else happened
         setSubmitError(`Request Error: ${error.message}`);
       }
     } finally {
@@ -100,8 +91,7 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 ">
+        <div className="flex items-center justify-between p-6">
           <h1 className="text-2xl font-semibold text-gray-800">Add New Device</h1>
           <button 
             onClick={handleClose}
@@ -111,9 +101,7 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
           </button>
         </div>
 
-        {/* Form */}
         <div className="p-6 space-y-6">
-          {/* Success Message */}
           {submitSuccess && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
               <div className="flex">
@@ -124,7 +112,6 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
             </div>
           )}
 
-          {/* Error Message */}
           {submitError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <div className="flex">
@@ -135,17 +122,16 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
             </div>
           )}
 
-          {/* Location Name and City Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="locationName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="location_name" className="block text-sm font-medium text-gray-700 mb-2">
                 Location Name
               </label>
               <input
                 type="text"
-                id="locationName"
-                name="locationName"
-                value={formData.locationName}
+                id="location_name"
+                name="location_name"
+                value={formData.location_name}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Enter location name"
@@ -167,7 +153,6 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
             </div>
           </div>
 
-          {/* Address */}
           <div>
             <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
               Address
@@ -183,17 +168,16 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
             />
           </div>
 
-          {/* ZIP Code and Country Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="zipCode" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="zipcode" className="block text-sm font-medium text-gray-700 mb-2">
                 ZIP Code
               </label>
               <input
                 type="text"
-                id="zipCode"
-                name="zipCode"
-                value={formData.zipCode}
+                id="zipcode"
+                name="zipcode"
+                value={formData.zipcode}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Enter ZIP code"
@@ -211,7 +195,7 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
                   onChange={handleInputChange}
                   className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white"
                 >
-                  <option value="">Add Drop Down</option>
+                  <option value="">Select Country</option>
                   <option value="us">United States</option>
                   <option value="ca">Canada</option>
                   <option value="uk">United Kingdom</option>
@@ -226,7 +210,6 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
             </div>
           </div>
 
-          {/* State and Contact Person Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
@@ -240,7 +223,7 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
                   onChange={handleInputChange}
                   className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all appearance-none bg-white"
                 >
-                  <option value="">Add State Drop Down</option>
+                  <option value="">Select State</option>
                   <option value="al">Alabama</option>
                   <option value="ak">Alaska</option>
                   <option value="az">Arizona</option>
@@ -256,14 +239,14 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
               </div>
             </div>
             <div>
-              <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-2">
                 Contact Person
               </label>
               <input
                 type="text"
-                id="contactPerson"
-                name="contactPerson"
-                value={formData.contactPerson}
+                id="contact"
+                name="contact"
+                value={formData.contact}
                 onChange={handleInputChange}
                 className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="Enter contact person name"
@@ -271,23 +254,21 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
             </div>
           </div>
 
-          {/* Phone Number */}
           <div>
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-2">
               Phone Number
             </label>
             <input
               type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
+              id="phone_number"
+              name="phone_number"
+              value={formData.phone_number}
               onChange={handleInputChange}
               className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               placeholder="Enter phone number"
             />
           </div>
 
-          {/* Submit Button */}
           <div className="flex justify-end pt-4">
             <button
               type="button"
@@ -307,5 +288,3 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
     </div>
   );
 }
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

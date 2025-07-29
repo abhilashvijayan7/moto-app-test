@@ -15,6 +15,8 @@ import sensor from "../images/sensor_16704590.png";
 import topic from "../images/topic2.png";
 import livelogs from "../images/livelogs.png";
 import savedlogs from "../images/saved-png.png";
+import location from "../images/location.png"
+
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,6 +26,8 @@ const Header = () => {
     { icon: dashboard, label: "Home", path: "/home" },
     // { icon: devices, label: "My Device", path: "/my-device" },
     // { icon: tv, label: "Device Manager", path: "/device-manager" },
+        { icon: location, label: 'Add Location', path: '/add-location' },
+    
     { icon: icons8_plus_32, label: "New Plant", path: "/new-plant" },
     { icon: deployed, label: "User Manager", path: "/user-manager" },
     // { icon: headset, label: "Support", path: "/support" },

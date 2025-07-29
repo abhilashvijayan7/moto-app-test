@@ -15,6 +15,7 @@ import topic from '../images/topic2.png';
 import livelogs from '../images/livelogs.png';
 import savedlogs from '../images/saved-png.png';
 import { UserContext } from '../context/UserContext';
+import location from "../images/location.png"
 
 function Sidebar() {
   const { user } = useContext(UserContext);
@@ -24,7 +25,7 @@ function Sidebar() {
   const allMenuItems = [
     { icon: dashboard, label: 'Home', path: '/home' },
     // { icon: devices, label: 'My Device', path: '/my-device' },
-    { icon: tv, label: 'Device Manager', path: '/device-manager' },
+    { icon: location, label: 'Add Location', path: '/add-location' },
     { icon: icons8_plus_32, label: 'New Plant', path: '/new-plant' },
     { icon: technology, label: 'Add Motor', path: '/add-motor' },
     { icon: sensor, label: 'Add Sensor', path: '/add-sensor' },

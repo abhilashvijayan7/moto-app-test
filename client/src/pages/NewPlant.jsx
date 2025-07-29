@@ -117,7 +117,7 @@ function NewPlant() {
   const handleEditPlant = (plant) => {
     setFormData({
       plantName: plant.plant_name || "",
-      location: plant.address || "",
+      location: plant.location_name || "",
       contactPerson: plant.contact_person || "",
       phone: plant.contact_phone || "",
       email: plant.contact_email || "",
@@ -159,12 +159,14 @@ function NewPlant() {
       if (!formData.email.trim()) throw new Error("Email is required");
       if (!formData.deviceId.trim()) throw new Error("Device ID is required");
 
-      const selectedLocation = locations.find((loc) => loc.address === formData.location);
+      const selectedLocation = locations.find((loc) => loc.location_name === formData.location);
+      console.log(selectedLocation);
+      
       if (!selectedLocation) throw new Error("Please select a valid location");
 
       const plantData = {
         plant_name: formData.plantName.trim(),
-        plant_location_id: selectedLocation.id,
+        plant_location_id: selectedLocation.location_id,
         contact_person: formData.contactPerson.trim(),
         contact_email: formData.email.trim(),
         contact_phone: formData.phone.trim(),
@@ -504,8 +506,8 @@ function NewPlant() {
                       {isLoadingLocations ? "Loading locations..." : "Select Location"}
                     </option>
                     {locations.map((location) => (
-                      <option key={location.id || `location-${location.address}`} value={location.address}>
-                        {location.address}
+                      <option key={location.location_id || `location-${location.location_name}`} value={location.location_name}>
+                        {location.location_name}
                       </option>
                     ))}
                   </select>
@@ -672,7 +674,7 @@ function NewPlant() {
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{startIndex + index + 1}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.plant_name}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                              {plant.address}
+                              {plant.location_name}
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.contact_person}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.contact_phone}</td>
