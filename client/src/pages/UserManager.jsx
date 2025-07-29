@@ -405,9 +405,9 @@ function UserManager() {
                   </div>
                   <div>
                     {[
-                      { icon: faCalendarDays, value: `DOB: ${card.dob}` },
+                      // { icon: faCalendarDays, value: `DOB: ${card.dob}` },
                       { icon: faCalendarDays, value: `DOJ: ${card.displayDoj}` },
-                      { icon: faVenusMars, value: card.gender },
+                      // { icon: faVenusMars, value: card.gender },
                       { icon: faBuilding, value: card.company },
                       { icon: faIndustry, value: `Assigned Plant: ${card.assignedPlant}` },
                     ].map((item, detailIndex) => (
@@ -542,3 +542,6 @@ function UserManager() {
 }
 
 export default UserManager;
+
+
+// before edit

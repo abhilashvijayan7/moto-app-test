@@ -24,7 +24,7 @@ function Sidebar() {
   const allMenuItems = [
     { icon: dashboard, label: 'Home', path: '/home' },
     // { icon: devices, label: 'My Device', path: '/my-device' },
-    // { icon: tv, label: 'Device Manager', path: '/device-manager' },
+    { icon: tv, label: 'Device Manager', path: '/device-manager' },
     { icon: icons8_plus_32, label: 'New Plant', path: '/new-plant' },
     { icon: technology, label: 'Add Motor', path: '/add-motor' },
     { icon: sensor, label: 'Add Sensor', path: '/add-sensor' },

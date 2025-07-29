@@ -115,10 +115,9 @@ function NewPlant() {
   };
 
   const handleEditPlant = (plant) => {
-    const location = locations.find((loc) => loc.id === plant.plant_location_id);
     setFormData({
       plantName: plant.plant_name || "",
-      location: location ? location.address : "",
+      location: plant.address || "",
       contactPerson: plant.contact_person || "",
       phone: plant.contact_phone || "",
       email: plant.contact_email || "",
@@ -673,7 +672,7 @@ function NewPlant() {
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{startIndex + index + 1}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.plant_name}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                              {locations.find((loc) => loc.id === plant.plant_location_id)?.address || "N/A"}
+                              {plant.address}
                             </td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.contact_person}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.contact_phone}</td>
@@ -719,8 +718,7 @@ function NewPlant() {
                           <span className="font-medium">Name:</span> {plant.plant_name}
                         </p>
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">Location:</span>{" "}
-                          {locations.find((loc) => loc.id === plant.plant_location_id)?.address || "N/A"}
+                          <span className="font-medium">Location:</span>  {plant.address}
                         </p>
                         <p className="text-sm text-gray-700">
                           <span className="font-medium">Contact:</span> {plant.contact_person}
