@@ -265,9 +265,9 @@ function UserManager() {
   if (isCheckingSession || loading) {
     return (
       <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
-        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
-          <div>
-            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+        <div className="text-[14px] font-[500] lg:flex lg:justify-between lg:items-center">
+          <div className="px-6 md:px-4">
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-4 md:text-[28px] md:mb-[20px]">
               User Manager
             </p>
           </div>
@@ -282,9 +282,9 @@ function UserManager() {
   if (error) {
     return (
       <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
-        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
-          <div>
-            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+        <div className="text-[14px] font-[500] lg:flex lg:justify-between lg:items-center">
+          <div className="px-6 md:px-4">
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-4 md:text-[28px] md:mb-[20px]">
               User Manager
             </p>
           </div>
@@ -297,175 +297,179 @@ function UserManager() {
   }
 
   return (
-    <div>
-      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
-        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
-          <div>
-            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
-              User Manager
-            </p>
-          </div>
-          <div className="flex gap-2 mb-[24px] lg:h-12">
-            <input
-              type="text"
-              placeholder="Search users..."
-              className="border border-[#DADADA] rounded px-2 py-1 w-[287.4px] lg:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button
-              onClick={handleOpenAddModal}
-              className="bg-[#208CD4] flex items-center gap-2 px-3 py-1 rounded-sm hover:bg-[#1b7bb9] transition-colors"
-            >
-              <img src={add} alt="Add User" className="w-[10px] h-[10px]" />
-              <p className="font-[400] text-[12px] text-[#FFFFFF]">Add User</p>
-            </button>
-          </div>
+    <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
+      <div className="text-[14px] font-[500] lg:flex lg:justify-between lg:items-center">
+        <div className="px-6 md:px-4">
+          <p className="text-[#4E4D4D] font-[700] text-[28px] mb-4 md:text-[28px] md:mb-[20px]">
+            User Manager
+          </p>
         </div>
-        <div className="bg-[#FFFFFF] rounded-xl">
-          <div className="columns-1 lg:columns-4 gap-4 p-4 rounded-xl">
-            {paginatedData.map((card, cardIndex) => (
-              <div
-                className="card-div font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4 break-inside-avoid"
-                key={`${card.user_id}-${card.status}`}
-              >
-                <div className="flex flex-col w-full border-b border-[#208CD4] pb-[16px]">
-                  <div className="flex flex-col">
-                    <p className="text-[#4E4D4D] font-[600] text-[16px] break-words max-w-[200px]">
-                      {card.full_name}
-                    </p>
-                    <p className="text-[#aba6a6] font-[500] text-[12px]">
-                      {card.role}
-                    </p>
-                  </div>
-                  <div className="flex items-center w-full doom gap-4 mt-2">
-                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
-                      <img
-                        src={link}
-                        alt="Upload"
-                        className="w-[36px] h-[32px] p-1"
-                        onClick={handleOpenUpload}
-                      />
-                    </div>
-                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
-                      <img
-                        src={edit}
-                        alt="Edit"
-                        className="w-[36px] h-[32px] p-1"
-                        onClick={() => handleOpenEditModal(card)}
-                      />
-                    </div>
-                    {card.user_id !== user?.user_id && (
-                      <div className="flex-1 flex justify-center border border-blue-300 rounded">
-                        <img
-                          src={card?.status === "Active" ? active : inactive}
-                          alt={card?.status === "Active" ? "Active" : "Inactive"}
-                          className="w-[36px] h-[32px] p-1"
-                          style={{ color: card?.status === "Active" ? "#22C55E" : "#EF4444" }}
-                          onClick={() =>
-                            handleOpen(
-                              card,
-                              card.status === "Active" ? "Inactive" : "Active"
-                            )
-                          }
-                        />
-                      </div>
-                    )}
-                    {shouldShowResetIcon(card.role) && (
-                      <div className="flex-1 flex justify-center border border-blue-300 rounded">
-                        <img
-                          src={password}
-                          alt="Reset Password"
-                          className="w-[36px] h-[32px] p-1"
-                          style={{ color: "#F59E0B" }}
-                          onClick={() => handleOpenResetPassword(card)}
-                        />
-                      </div>
-                    )}
-                  </div>
+        <div className="flex flex-col gap-2 mb-4 px-4 md:flex-row md:gap-2 md:mb-[24px] md:h-12">
+          <input
+            type="text"
+            placeholder="Search users..."
+            className="border border-[#DADADA] rounded px-2 py-1 w-full lg:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] md:w-[287.4px]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <button
+            onClick={handleOpenAddModal}
+            className="bg-gradient-to-r from-[#208CD4] to-[#1b7bb9] flex items-center justify-center gap-2 px-4 py-2 rounded-lg shadow-md text-sm text-white hover:from-[#1b7bb9] hover:to-[#166fa1] transition-all duration-200 md:px-3 md:py-1"
+          >
+            <img src={add} alt="Add User" className="w-[12px] h-[12px] md:w-[10px] md:h-[10px]" />
+            <p className="font-[400] text-white">Add User</p>
+          </button>
+        </div>
+      </div>
+      <div className="bg-[#FFFFFF] rounded-xl">
+        <div className="columns-1 lg:columns-4 gap-4 p-4 rounded-xl">
+          {paginatedData.map((card, cardIndex) => (
+            <div
+              className="card-div font-[400] text-[14px] border border-[#DADADA] rounded-lg px-4 py-6 mb-4 break-inside-avoid md:px-[16px] md:py-[24px]"
+              key={`${card.user_id}-${card.status}`}
+            >
+              <div className="flex flex-col w-full border-b border-[#208CD4] pb-4">
+                <div className="flex flex-col">
+                  <p className="text-[#4E4D4D] font-[600] text-[16px] break-words max-w-[200px] md:text-[16px]">
+                    {card.full_name}
+                  </p>
+                  <p className="text-[#aba6a6] font-[500] text-[12px] md:text-[12px]">
+                    {card.role}
+                  </p>
                 </div>
-                <div className="grid grid-cols-2 gap-4 pt-[16px]">
-                  <div>
-                    {[
-                      { icon: faUser, value: card.designation },
-                      { icon: faPhone, value: card.call },
-                      { icon: faEnvelope, value: card.mail },
-                      { icon: faHouse, value: card.home },
-                      { icon: faLocation, value: card.location },
-                    ].map((item, detailIndex) => (
-                      <div
-                        key={detailIndex}
-                        className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
-                      >
-                        <FontAwesomeIcon
-                          icon={item.icon}
-                          className="text-blue-400 text-xl"
-                        />
-                        <p className="break-words max-w-[90%]">{item.value}</p>
-                      </div>
-                    ))}
+                <div className="flex items-center w-full gap-4 mt-2 md:gap-4">
+                  <div className="flex-1 flex justify-center border border-blue-300 rounded">
+                    <img
+                      src={link}
+                      alt="Upload"
+                      className="w-[36px] h-[32px] p-1"
+                      onClick={handleOpenUpload}
+                    />
                   </div>
-                  <div>
-                    {[
-                      { icon: faCalendarDays, value: `DOJ: ${card.displayDoj}` },
-                      { icon: faBuilding, value: card.company },
-                      { icon: faIndustry, value: `Assigned Plant: ${card.assignedPlant}` },
-                    ].map((item, detailIndex) => (
-                      <div
-                        key={detailIndex}
-                        className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
-                      >
-                        <FontAwesomeIcon
-                          icon={item.icon}
-                          className="text-blue-400 text-xl"
-                        />
-                        <p className="break-words max-w-[90%]">{item.value}</p>
-                      </div>
-                    ))}
+                  <div className="flex-1 flex justify-center border border-blue-300 rounded">
+                    <img
+                      src={edit}
+                      alt="Edit"
+                      className="w-[36px] h-[32px] p-1"
+                      onClick={() => handleOpenEditModal(card)}
+                    />
                   </div>
+                  {card.user_id !== user?.user_id && (
+                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
+                      <img
+                        src={card?.status === "Active" ? active : inactive}
+                        alt={card?.status === "Active" ? "Active" : "Inactive"}
+                        className="w-[36px] h-[32px] p-1"
+                        style={{ color: card?.status === "Active" ? "#22C55E" : "#EF4444" }}
+                        onClick={() =>
+                          handleOpen(
+                            card,
+                            card.status === "Active" ? "Inactive" : "Active"
+                          )
+                        }
+                      />
+                    </div>
+                  )}
+                  {shouldShowResetIcon(card.role) && (
+                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
+                      <img
+                        src={password}
+                        alt="Reset Password"
+                        className="w-[36px] h-[32px] p-1"
+                        style={{ color: "#F59E0B" }}
+                        onClick={() => handleOpenResetPassword(card)}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-          <div className="col-span-1 lg:col-span-4 flex justify-center items-center gap-2 mt-4 pb-4">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                <div>
+                  {[
+                    { icon: faUser, value: card.designation },
+                    { icon: faPhone, value: card.call },
+                    { icon: faEnvelope, value: card.mail },
+                    { icon: faHouse, value: card.home },
+                    { icon: faLocation, value: card.location },
+                  ].map((item, detailIndex) => (
+                    <div
+                      key={detailIndex}
+                      className="flex items-center gap-0.5 py-2 min-h-[40px] border-b border-[#DADADA] md:py-[8px] md:min-h-[40px]"
+                    >
+                      <FontAwesomeIcon
+                        icon={item.icon}
+                        className="text-blue-400 text-xl"
+                      />
+                      <p className="break-words max-w-[90%]">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  {[
+                    { icon: faCalendarDays, value: `DOJ: ${card.displayDoj}` },
+                    { icon: faBuilding, value: card.company },
+                    { icon: faIndustry, value: `Assigned Plant: ${card.assignedPlant}` },
+                  ].map((item, detailIndex) => (
+                    <div
+                      key={detailIndex}
+                      className="flex items-center gap-0.5 py-2 min-h-[40px] border-b border-[#DADADA] md:py-[8px] md:min-h-[40px]"
+                    >
+                      <FontAwesomeIcon
+                        icon={item.icon}
+                        className="text-blue-400 text-xl"
+                      />
+                      <p className="break-words max-w-[90%]">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="px-8 md:px-4">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-2 mt-4 pb-4">
+            <div className="flex justify-center items-center gap-2">
               <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === page
-                    ? "bg-[#208CD4] text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } transition-colors`}
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
               >
-                {page}
+                Previous
               </button>
-            ))}
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
-            >
-              Next
-            </button>
-            <select
-              value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              className="px-3 py-1 border border-[#DADADA] rounded bg-gray-100 text-[#6B6B6B] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#208CD4] hover:bg-gray-200 transition-colors"
-            >
-              {itemsPerPageOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option} per page
-                </option>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`px-3 py-1 rounded ${
+                    currentPage === page
+                      ? "bg-[#208CD4] text-white"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  } transition-colors`}
+                >
+                  {page}
+                </button>
               ))}
-            </select>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
+              >
+                Next
+              </button>
+            </div>
+            <div className="flex justify-center items-center gap-2 mt-2 md:mt-0">
+              <select
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                className="px-3 py-1 border border-[#DADADA] rounded bg-gray-100 text-[#6B6B6B] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#208CD4] hover:bg-gray-200 transition-colors"
+              >
+                {itemsPerPageOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option} per page
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>

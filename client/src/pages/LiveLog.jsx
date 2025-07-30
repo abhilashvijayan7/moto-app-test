@@ -121,17 +121,17 @@ const DataLog = () => {
     : [];
 
   return (
-    <div className="min-h-screen p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-none lg:mx-0 lg:px-11">
+    <div className="min-h-screen p-4 sm:p-6 max-w-full sm:max-w-[480px] lg:max-w-none mx-auto text-[#6B6B6B] my-4">
       <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 lg:p-6 border-b border-gray-200">
-          <h2 className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+        <div className="p-4 sm:p-6 border-b border-gray-200">
+          <h2 className="text-[#4E4D4D] font-bold text-xl sm:text-2xl mb-4">
             Data Log
           </h2>
           {/* Desktop/Table View */}
           <div className="hidden sm:block overflow-x-auto">
             <div className="min-w-full">
               <div className="bg-gray-50 border-b border-gray-200">
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 px-4 py-3 text-xs font-medium text-gray-700 uppercase tracking-wider">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-2 px-4 py-3 text-xs font-medium text-gray-700 uppercase tracking-wider">
                   {['Time', 'Plant ID', 'Plant Name', ...headers.map(header => header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()))].map((header, index) => (
                     <div key={index} className="flex items-center gap-2">
                       {header}
@@ -141,7 +141,7 @@ const DataLog = () => {
               </div>
               {logData.length > 0 ? (
                 logData.map((log, index) => (
-                  <div key={index} className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 px-4 py-3 border-b border-gray-200 text-sm">
+                  <div key={index} className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-2 px-4 py-3 border-b border-gray-200 text-sm">
                     <div>{log.time}</div>
                     <div>{log.plantId}</div>
                     <div>{log.plantName}</div>
@@ -162,30 +162,36 @@ const DataLog = () => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-16 text-gray-500 text-sm">
+                <div className="text-center py-12 text-gray-500 text-sm">
                   No log data available. Waiting for sensor updates...
                 </div>
               )}
             </div>
           </div>
           {/* Mobile/Card View */}
-          <div className="sm:hidden space-y-4 p-4">
+          <div className="sm:hidden space-y-3">
             {logData.length > 0 ? (
               logData.map((log, index) => (
                 <div key={index} className="border rounded-lg p-3 bg-gray-50">
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="font-semibold">Time:</div>
-                    <div>{log.time}</div>
-                    <div className="font-semibold">Plant ID:</div>
-                    <div>{log.plantId}</div>
-                    <div className="font-semibold">Plant Name:</div>
-                    <div>{log.plantName}</div>
+                  <div className="grid grid-cols-1 gap-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Time:</span>
+                      <span>{log.time}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Plant ID:</span>
+                      <span>{log.plantId}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Plant Name:</span>
+                      <span>{log.plantName}</span>
+                    </div>
                     {headers.map((header) => (
-                      <React.Fragment key={header}>
-                        <div className="font-semibold">
+                      <div key={header} className="flex justify-between">
+                        <span className="font-semibold">
                           {header.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}:
-                        </div>
-                        <div>
+                        </span>
+                        <span>
                           {(header.endsWith('_status') || header === 'chlorineGasValve' || header === 'hoclValve' || header === 'waterInletValve' || header === 'vacuum_switch_ok' || header === 'manual_mode_active') ? (
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium 
                               ${log[header] === 'ON' || log[header] === 'OK' || log[header] === 'Manual' ? 'bg-green-100 text-green-800' : 
@@ -196,14 +202,14 @@ const DataLog = () => {
                           ) : (
                             log[header]
                           )}
-                        </div>
-                      </React.Fragment>
+                        </span>
+                      </div>
                     ))}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-center py-16 text-gray-500 text-sm">
+              <div className="text-center py-12 text-gray-500 text-sm">
                 No log data available. Waiting for sensor updates...
               </div>
             )}
@@ -215,5 +221,3 @@ const DataLog = () => {
 };
 
 export default DataLog;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

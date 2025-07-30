@@ -324,28 +324,30 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
 
   return (
     isOpen && (
-      <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-md shadow-sm border border-[#DADADA] p-4 lg:p-6 w-full max-w-[480px] lg:max-w-6xl">
+      <div className="fixed inset-0 bg-gray-100 bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
+        <div className="bg-white rounded-md shadow-sm border border-[#DADADA] p-4 sm:p-4 md:p-6 w-full max-w-[480px] md:max-w-[640px] lg:max-w-6xl max-h-[90vh] sm:max-h-[90vh] md:max-h-[85vh] lg:max-h-none overflow-y-auto">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-[28px] font-[500] text-[#4D4D4D]">{name}</h2>
-              <h6 className="text-sm text-gray-500">{formData.userName}</h6>
+              <h2 className="text-[20px] sm:text-[24px] md:text-[26px] lg:text-[28px] font-[500] text-[#4D4D4D]">
+                {name}
+              </h2>
+              <h6 className="text-xs sm:text-sm text-gray-500">{formData.userName}</h6>
             </div>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 focus:outline-none"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
           <div className="space-y-4">
             {error && (
-              <div className="text-red-500 text-sm mb-4">{error}</div>
+              <div className="text-red-500 text-xs sm:text-sm mb-4">{error}</div>
             )}
-            <div className="lg:grid lg:grid-cols-3 lg:gap-4">
+            <div className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Date Of Joining
                   </label>
                   <input
@@ -353,11 +355,11 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Date Of Joining"
                     value={formData.dateOfJoining}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Email
                   </label>
                   <input
@@ -365,11 +367,11 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Gender
                   </label>
                   <div className="relative">
@@ -377,7 +379,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                       name="Gender"
                       value={formData.gender}
                       onChange={handleChange}
-                      className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                      className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-xs sm:text-sm"
                     >
                       <option>Male</option>
                       <option>Female</option>
@@ -387,7 +389,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Full Name
                   </label>
                   <input
@@ -395,11 +397,11 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Full Name"
                     value={formData.fullName}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Company
                   </label>
                   <input
@@ -407,11 +409,11 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Company"
                     value={formData.company}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Date Of Birth
                   </label>
                   <input
@@ -419,13 +421,13 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Date Of Birth"
                     value={formData.dateOfBirth}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Contact No
                   </label>
                   <input
@@ -433,11 +435,11 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Contact No"
                     value={formData.contactNo}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Designation
                   </label>
                   <input
@@ -445,11 +447,11 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Designation"
                     value={formData.designation}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Address
                   </label>
                   <input
@@ -457,15 +459,15 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Address"
                     value={formData.address}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
               </div>
             </div>
-            <div className="lg:grid lg:grid-cols-3 lg:gap-4 space-y-6">
+            <div className="space-y-6 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Location
                   </label>
                   <input
@@ -473,20 +475,20 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                     name="Location"
                     value={formData.location}
                     onChange={handleChange}
-                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                   />
                 </div>
               </div>
               <div className="space-y-4 lg:col-span-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600">
                     Plants
                   </label>
                   <div className="relative" ref={dropdownRef}>
                     <button
                       type="button"
                       onClick={toggleDropdown}
-                      className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-left bg-white text-sm overflow-hidden whitespace-nowrap text-ellipsis"
+                      className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-left bg-white text-xs sm:text-sm overflow-hidden whitespace-nowrap text-ellipsis"
                     >
                       {getSelectedPlantNames()}
                     </button>
@@ -498,20 +500,26 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                             placeholder="Search plants..."
                             value={searchTerm}
                             onChange={handleSearchChange}
-                            className="w-full py-1 px-2 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            className="w-full py-1 px-2 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
                           />
                         </div>
                         {loadingPlants ? (
-                          <div className="p-2 text-gray-500 text-sm">Loading plants...</div>
+                          <div className="p-2 text-gray-500 text-xs sm:text-sm">
+                            Loading plants...
+                          </div>
                         ) : error ? (
-                          <div className="p-2 text-red-500 text-sm">{error}</div>
+                          <div className="p-2 text-red-500 text-xs sm:text-sm">
+                            {error}
+                          </div>
                         ) : filteredAndSortedPlants.length === 0 ? (
-                          <div className="p-2 text-gray-500 text-sm">No plants found</div>
+                          <div className="p-2 text-gray-500 text-xs sm:text-sm">
+                            No plants found
+                          </div>
                         ) : (
                           filteredAndSortedPlants.map((plant) => (
                             <label
                               key={plant.plant_id}
-                              className="flex items-center p-2 hover:bg-gray-50 cursor-pointer text-sm"
+                              className="flex items-center p-2 hover:bg-gray-50 cursor-pointer text-xs sm:text-sm"
                             >
                               <input
                                 type="checkbox"
@@ -531,11 +539,13 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
             </div>
             {name !== "Edit User" && (
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-[#4D4D4D]">Login Info</h3>
-                <div className="lg:grid lg:grid-cols-3 lg:gap-4">
+                <h3 className="text-base sm:text-lg font-semibold text-[#4D4D4D]">
+                  Login Info
+                </h3>
+                <div className="space-y-4 lg:grid lg:grid-cols-3 lg:gap-4 lg:space-y-0">
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-600">
                         User Type
                       </label>
                       <div className="relative">
@@ -543,7 +553,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                           name="User Type"
                           value={formData.userType}
                           onChange={handleChange}
-                          className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-sm"
+                          className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white text-xs sm:text-sm"
                         >
                           {loadingRoles ? (
                             <option value="">Loading roles...</option>
@@ -562,7 +572,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-600">
                         User Name
                       </label>
                       <input
@@ -570,13 +580,13 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                         name="User Name"
                         value={formData.userName}
                         onChange={handleChange}
-                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                       />
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-600">
                         Password
                       </label>
                       <input
@@ -584,7 +594,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                         name="Password"
                         value={formData.password}
                         onChange={handleChange}
-                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
                       />
                     </div>
                   </div>
@@ -596,9 +606,15 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
                 type="submit"
                 onClick={handleSubmit}
                 disabled={loadingPlants}
-                className={`flex items-center gap-2 px-4 py-2 bg-[#208CD4] text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm font-medium ${loadingPlants ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`flex items-center gap-2 px-4 py-2 bg-[#208CD4] text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-xs sm:text-sm font-medium ${
+                  loadingPlants ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                {loadingPlants ? "Processing..." : name === "Edit User" ? "Update" : "Submit"}
+                {loadingPlants
+                  ? "Processing..."
+                  : name === "Edit User"
+                  ? "Update"
+                  : "Submit"}
               </button>
             </div>
           </div>
