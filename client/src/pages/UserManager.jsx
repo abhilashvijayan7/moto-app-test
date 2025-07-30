@@ -45,7 +45,7 @@ function UserManager() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [actionType, setActionType] = useState("activate");
   const location = useLocation();
-  const { user } = useContext(UserContext);
+  const { user, isCheckingSession } = useContext(UserContext);
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState("");
 
@@ -222,6 +222,28 @@ function UserManager() {
     return false;
   };
 
+  const shouldShowActiveInactiveButton = (card) => {
+    if (!user || !user.role || !user.user_id) {
+      console.log("No user, role, or user_id, hiding active/inactive button");
+      return false;
+    }
+    if (card.user_id === user.user_id) {
+      console.log("Card belongs to logged-in user, hiding active/inactive button");
+      return false;
+    }
+    const currentRole = user.role.toLowerCase();
+    const cardRole = card.role.toLowerCase();
+    if (currentRole === "super admin") {
+      console.log(`Super Admin user, card role: ${cardRole}, show button: ${cardRole !== "super admin"}`);
+      return cardRole !== "super admin";
+    } else if (currentRole === "admin") {
+      console.log(`Admin user, card role: ${cardRole}, show button: ${["normal", "regular"].includes(cardRole)}`);
+      return ["normal", "regular"].includes(cardRole);
+    }
+    console.log("User role not Super Admin or Admin, hiding active/inactive button");
+    return false;
+  };
+
   const handleResetPasswordConfirm = async () => {
     if (!newPassword) {
       setMessage("Please enter a new password.");
@@ -262,7 +284,7 @@ function UserManager() {
     }
   };
 
-  if (loading) {
+  if (isCheckingSession || loading) {
     return (
       <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
         <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
@@ -355,20 +377,22 @@ function UserManager() {
                         onClick={() => handleOpenEditModal(card)}
                       />
                     </div>
-                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
-                      <img
-                        src={card?.status === "Active" ? active : inactive}
-                        alt={card?.status === "Active" ? "Active" : "Inactive"}
-                        className="w-[36px] h-[32px] p-1"
-                        style={{ color: card?.status === "Active" ? "#22C55E" : "#EF4444" }}
-                        onClick={() =>
-                          handleOpen(
-                            card,
-                            card.status === "Active" ? "Inactive" : "Active"
-                          )
-                        }
-                      />
-                    </div>
+                    {shouldShowActiveInactiveButton(card) && (
+                      <div className="flex-1 flex justify-center border border-blue-300 rounded">
+                        <img
+                          src={card?.status === "Active" ? active : inactive}
+                          alt={card?.status === "Active" ? "Active" : "Inactive"}
+                          className="w-[36px] h-[32px] p-1"
+                          style={{ color: card?.status === "Active" ? "#22C55E" : "#EF4444" }}
+                          onClick={() =>
+                            handleOpen(
+                              card,
+                              card.status === "Active" ? "Inactive" : "Active"
+                            )
+                          }
+                        />
+                      </div>
+                    )}
                     {shouldShowResetIcon(card.role) && (
                       <div className="flex-1 flex justify-center border border-blue-300 rounded">
                         <img
