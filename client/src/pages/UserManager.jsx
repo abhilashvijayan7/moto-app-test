@@ -338,12 +338,12 @@ function UserManager() {
                       {card.role}
                     </p>
                   </div>
-                  <div className="flex items-center w-full doom gap-4 mt-2 ">
-                    <div className="flex-1 flex justify-center border border-blue-300 rounded ">
+                  <div className="flex items-center w-full doom gap-4 mt-2">
+                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
                       <img
                         src={link}
                         alt="Upload"
-                        className="w-[36px] h-[32px] p-1  "
+                        className="w-[36px] h-[32px] p-1"
                         onClick={handleOpenUpload}
                       />
                     </div>
@@ -351,7 +351,7 @@ function UserManager() {
                       <img
                         src={edit}
                         alt="Edit"
-                        className="w-[36px] h-[32px] p-1 "
+                        className="w-[36px] h-[32px] p-1"
                         onClick={() => handleOpenEditModal(card)}
                       />
                     </div>
@@ -359,7 +359,7 @@ function UserManager() {
                       <img
                         src={card?.status === "Active" ? active : inactive}
                         alt={card?.status === "Active" ? "Active" : "Inactive"}
-                        className="w-[36px] h-[32px] p-1 "
+                        className="w-[36px] h-[32px] p-1"
                         style={{ color: card?.status === "Active" ? "#22C55E" : "#EF4444" }}
                         onClick={() =>
                           handleOpen(
@@ -369,17 +369,17 @@ function UserManager() {
                         }
                       />
                     </div>
-                    <div className="flex-1 flex justify-center border border-blue-300 rounded">
-                      {shouldShowResetIcon(card.role) && (
+                    {shouldShowResetIcon(card.role) && (
+                      <div className="flex-1 flex justify-center border border-blue-300 rounded">
                         <img
                           src={password}
                           alt="Reset Password"
-                          className="w-[36px] h-[32px] p-1 "
+                          className="w-[36px] h-[32px] p-1"
                           style={{ color: "#F59E0B" }}
                           onClick={() => handleOpenResetPassword(card)}
                         />
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 pt-[16px]">
@@ -405,9 +405,7 @@ function UserManager() {
                   </div>
                   <div>
                     {[
-                      // { icon: faCalendarDays, value: `DOB: ${card.dob}` },
                       { icon: faCalendarDays, value: `DOJ: ${card.displayDoj}` },
-                      // { icon: faVenusMars, value: card.gender },
                       { icon: faBuilding, value: card.company },
                       { icon: faIndustry, value: `Assigned Plant: ${card.assignedPlant}` },
                     ].map((item, detailIndex) => (
@@ -542,6 +540,3 @@ function UserManager() {
 }
 
 export default UserManager;
-
-
-// before edit
