@@ -222,28 +222,6 @@ function UserManager() {
     return false;
   };
 
-  const shouldShowActiveInactiveButton = (card) => {
-    if (!user || !user.role || !user.user_id) {
-      console.log("No user, role, or user_id, hiding active/inactive button");
-      return false;
-    }
-    if (card.user_id === user.user_id) {
-      console.log("Card belongs to logged-in user, hiding active/inactive button");
-      return false;
-    }
-    const currentRole = user.role.toLowerCase();
-    const cardRole = card.role.toLowerCase();
-    if (currentRole === "super admin") {
-      console.log(`Super Admin user, card role: ${cardRole}, show button: ${cardRole !== "super admin"}`);
-      return cardRole !== "super admin";
-    } else if (currentRole === "admin") {
-      console.log(`Admin user, card role: ${cardRole}, show button: ${["normal", "regular"].includes(cardRole)}`);
-      return ["normal", "regular"].includes(cardRole);
-    }
-    console.log("User role not Super Admin or Admin, hiding active/inactive button");
-    return false;
-  };
-
   const handleResetPasswordConfirm = async () => {
     if (!newPassword) {
       setMessage("Please enter a new password.");
@@ -377,7 +355,7 @@ function UserManager() {
                         onClick={() => handleOpenEditModal(card)}
                       />
                     </div>
-                    {shouldShowActiveInactiveButton(card) && (
+                    {card.user_id !== user?.user_id && (
                       <div className="flex-1 flex justify-center border border-blue-300 rounded">
                         <img
                           src={card?.status === "Active" ? active : inactive}

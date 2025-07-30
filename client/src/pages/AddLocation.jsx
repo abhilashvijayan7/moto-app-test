@@ -89,7 +89,7 @@ function AddLocation() {
   };
 
   const handleEditLocation = (location) => {
-    console.log(location)
+    console.log(location);
     setFormData({
       locationName: location.location_name || "",
       city: location.city || "",
@@ -345,7 +345,7 @@ function AddLocation() {
             )}
 
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="locationName" className="block text-sm font-medium text-gray-700 mb-2">
                     Location Name *
@@ -363,52 +363,37 @@ function AddLocation() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-                    City *
+                  <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-2">
+                    Contact Person *
                   </label>
                   <input
                     type="text"
-                    id="city"
-                    name="city"
-                    value={formData.city}
+                    id="contact"
+                    name="contact"
+                    value={formData.contact}
                     onChange={handleInputChange}
-                    placeholder="Enter city"
+                    placeholder="Enter contact person name"
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                   />
                 </div>
-              </div>
-              <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
-                  Address *
-                </label>
-                <textarea
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  rows="3"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none placeholder-gray-400"
-                  placeholder="Enter full address"
-                />
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="zipcode" className="block text-sm font-medium text-gray-700 mb-2">
-                    ZIP Code *
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number *
                   </label>
                   <input
-                    type="text"
-                    id="zipcode"
-                    name="zipcode"
-                    value={formData.zipcode}
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleInputChange}
-                    placeholder="Enter ZIP code"
+                    placeholder="Enter phone number"
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
                     Country *
@@ -432,8 +417,6 @@ function AddLocation() {
                     <option value="jp">Japan</option>
                   </select>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
                     State *
@@ -460,35 +443,52 @@ function AddLocation() {
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="contact" className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Person *
+                  <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
+                    City *
                   </label>
                   <input
                     type="text"
-                    id="contact"
-                    name="contact"
-                    value={formData.contact}
+                    id="city"
+                    name="city"
+                    value={formData.city}
                     onChange={handleInputChange}
-                    placeholder="Enter contact person name"
+                    placeholder="Enter city"
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                   />
                 </div>
               </div>
-              <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2">
-                  Phone Number *
-                </label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleInputChange}
-                  placeholder="Enter phone number"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
-                />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="zipcode" className="block text-sm font-medium text-gray-700 mb-2">
+                    ZIP Code *
+                  </label>
+                  <input
+                    type="text"
+                    id="zipcode"
+                    name="zipcode"
+                    value={formData.zipcode}
+                    onChange={handleInputChange}
+                    placeholder="Enter ZIP code"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                    Address *
+                  </label>
+                  <textarea
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    rows="3"
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none placeholder-gray-400"
+                    placeholder="Enter full address"
+                  />
+                </div>
               </div>
               <div className="flex justify-end pt-6 gap-4">
                 {isEditing && (

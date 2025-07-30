@@ -472,7 +472,7 @@ function NewPlant() {
             )}
 
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="plantName" className="block text-sm font-medium text-gray-700 mb-2">
                     Plant Name *
@@ -487,6 +487,21 @@ function NewPlant() {
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                     ref={plantNameInputRef}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="deviceId" className="block text-sm font-medium text-gray-700 mb-2">
+                    Device ID *
+                  </label>
+                  <input
+                    type="text"
+                    id="deviceId"
+                    name="deviceId"
+                    value={formData.deviceId}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="Enter Device ID (e.g., esp32-wtp-test-1185abt25)"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                   />
                 </div>
                 <div>
@@ -513,7 +528,7 @@ function NewPlant() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div>
                   <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700 mb-2">
                     Contact Person *
@@ -542,8 +557,6 @@ function NewPlant() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email *
@@ -556,21 +569,6 @@ function NewPlant() {
                     onChange={handleInputChange}
                     required
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="deviceId" className="block text-sm font-medium text-gray-700 mb-2">
-                    Device ID *
-                  </label>
-                  <input
-                    type="text"
-                    id="deviceId"
-                    name="deviceId"
-                    value={formData.deviceId}
-                    onChange={handleInputChange}
-                    required
-                    placeholder="Enter Device ID (e.g., esp32-wtp-test-1185abt25)"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
                   />
                 </div>
               </div>
@@ -663,8 +661,7 @@ function NewPlant() {
                     <tbody className="bg-white">
                       {paginatedPlants.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="border border-gray-300 px-4 py-8ẹn
-                          text-center text-gray-500">
+                          <td colSpan="6" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
                             {searchQuery ? "No plants found matching your search." : "No plants added yet."}
                           </td>
                         </tr>
@@ -720,7 +717,7 @@ function NewPlant() {
                           <span className="font-medium">Name:</span> {plant.plant_name}
                         </p>
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">Location:</span>  {plant.address}
+                          <span className="font-medium">Location:</span> {plant.address}
                         </p>
                         <p className="text-sm text-gray-700">
                           <span className="font-medium">Contact:</span> {plant.contact_person}
@@ -798,5 +795,3 @@ function NewPlant() {
 }
 
 export default NewPlant;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
