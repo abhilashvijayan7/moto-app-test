@@ -89,7 +89,7 @@ app.get("/send", async (req, res) => {
 // Fetch plant topics from API
 const loadPlantTopics = async () => {
   try {
-    const response = await axios.get("https://water-pump.onrender.com/api/planttopics");
+    const response = await axios.get(process.env.PLANT_TOPICS_API_URL);
     const topics = response.data;
     console.log("Loaded plant topics from API:", topics);
     return topics.map(topic => ({
@@ -107,7 +107,7 @@ const loadPlantTopics = async () => {
 // Fetch motor data for a specific plant
 const fetchMotorData = async (plantId) => {
   try {
-    const response = await axios.get(`https://water-pump.onrender.com/api/plantmotors/plant/${plantId}`);
+    const response = await axios.get(`${process.env.PLANT_MOTORS_API_URL}/${plantId}`);
     return Array.isArray(response.data) ? response.data : [];
   } catch (error) {
     console.error(`Error fetching motor data for plant ${plantId}:`, error.message);
@@ -182,7 +182,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
 };
 
 // MQTT Setup
-const mqttClient = mqtt.connect("mqtt://mosquitto-fsogoowk8okc0c0ccwk0k8ow.195.200.14.84.sslip.io:1883");
+const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL);
 let latestSensorData = {};
 
 // Cache for plant topics
@@ -232,7 +232,7 @@ const logRuntimeAndSensorData = async () => {
       console.log(`[${timestamp}] Posting payload for plant ${plantId}:`, payload);
 
       const response = await axios.post(
-        "https://water-pump.onrender.com/api/plantops",
+        process.env.PLANT_OPS_API_URL,
         payload,
         process.env.API_TOKEN ? { headers: { Authorization: `Bearer ${process.env.API_TOKEN}` } } : {}
       );
