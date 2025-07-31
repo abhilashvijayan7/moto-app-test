@@ -162,7 +162,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
 };
 
 // MQTT Setup
-const mqttClient = mqtt.connect("mosquitto-fsogoowk8okc0c0ccwk0k8ow.195.200.14.84.sslip.io");
+const mqttClient = mqtt.connect("mqtts://mosquitto-fsogoowk8okc0c0ccwk0k8ow.195.200.14.84.sslip.io");
 let latestSensorData = {};
 
 // Cache for plant topics
