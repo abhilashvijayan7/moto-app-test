@@ -17,8 +17,8 @@ function AddSensorAndMotor() {
     sensorName: "",
     sensorType: "",
     deviceType: "sensor",
-    onTime: "", // New field for valve on time
-    offTime: "", // New field for valve off time
+    onTime: "",
+    offTime: "",
   });
   const [sensors, setSensors] = useState([]);
   const [isSubmittingSensor, setIsSubmittingSensor] = useState(false);
@@ -378,44 +378,45 @@ function AddSensorAndMotor() {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 min-h-screen">
-      {/* Sensor Type Section */}
-      {/* <div className="max-w-[450px] mx-auto text-[#6B6B6B] py-6 lg:max-w-[1280px] lg:px-11 lg:w-full">
-        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
+    <div className="flex-1 bg-gray-50 min-h-screen py-4 sm:py-6">
+      {/* Header and Breadcrumb: Stacked vertically on mobile */}
+      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-11">
+        <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
           <div>
-            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
               {editingSensorId ? "Edit Sensor/Valve" : "Add Sensor/Valve"}
             </p>
-            <div className="flex bg-gray-100 w-[148px] py-1 px-2 rounded-sm mb-[18px] items-center">
-              <p>Home</p>
-              <ChevronRight className="w-[20px] h-[20px] text-gray-500" />
-              <p className="text-[#208CD4]">
+            {/* <div className="flex bg-gray-100 w-[148px] py-1.5 sm:py-2 px-2 sm:px-3 rounded-sm mb-3 sm:mb-4 items-center gap-1.5 sm:gap-2">
+              <p className="text-xs sm:text-sm">Home</p>
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+              <p className="text-[#208CD4] text-xs sm:text-sm">
                 {editingSensorId ? "Edit Sensor/Valve" : "Add Sensor/Valve"}
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
-      </div> */}
+      </div>
 
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B]  lg:max-w-[1280px]">
+      {/* Sensor Type Section */}
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 mb-8">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 lg:mb-8">
                 Add Sensor Type
               </h1>
 
               {submitTypeSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 relative">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
                   <div className="flex justify-between items-start">
                     <div className="text-green-800">
-                      <p className="text-sm font-medium">
+                      <p className="text-xs sm:text-sm font-medium">
                         Sensor type added successfully!
                       </p>
                     </div>
                     <button
                       onClick={() => setSubmitTypeSuccess(false)}
-                      className="text-green-600 hover:text-green-800 text-lg font-bold leading-none"
+                      className="text-green-600 hover:text-green-800 text-base sm:text-lg font-bold leading-none"
                     >
                       ×
                     </button>
@@ -424,14 +425,14 @@ function AddSensorAndMotor() {
               )}
 
               {submitTypeError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 relative">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
                   <div className="flex justify-between items-start">
                     <div className="text-red-800">
-                      <p className="text-sm font-medium">{submitTypeError}</p>
+                      <p className="text-xs sm:text-sm font-medium">{submitTypeError}</p>
                     </div>
                     <button
                       onClick={() => setSubmitTypeError("")}
-                      className="text-red-600 hover:text-red-800 text-lg font-bold leading-none"
+                      className="text-red-600 hover:text-red-800 text-base sm:text-lg font-bold leading-none"
                     >
                       ×
                     </button>
@@ -439,12 +440,12 @@ function AddSensorAndMotor() {
                 </div>
               )}
 
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label
                       htmlFor="sensorTypeName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                     >
                       Sensor Type Name
                     </label>
@@ -455,7 +456,7 @@ function AddSensorAndMotor() {
                       value={sensorTypeForm.sensorTypeName}
                       onChange={handleSensorTypeChange}
                       placeholder="Enter Sensor Type Name"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                     />
                   </div>
                 </div>
@@ -465,7 +466,7 @@ function AddSensorAndMotor() {
                     type="button"
                     onClick={handleSensorTypeSubmit}
                     disabled={isSubmittingType}
-                    className={`font-medium py-3 px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm sm:text-base ${
                       isSubmittingType
                         ? "bg-gray-400 text-white cursor-not-allowed"
                         : "bg-[#208CD4] hover:bg-blue-700 text-white"
@@ -481,19 +482,19 @@ function AddSensorAndMotor() {
       </div>
 
       {/* Sensor Section */}
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 mb-8">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 lg:mb-8">
                 Sensor/Valve
               </h1>
 
               {submitSensorSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 relative">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
                   <div className="flex justify-between items-start">
                     <div className="text-green-800">
-                      <p className="text-sm font-medium">
+                      <p className="text-xs sm:text-sm font-medium">
                         {editingSensorId
                           ? "Sensor/Valve updated successfully!"
                           : "Sensor/Valve added successfully!"}
@@ -501,7 +502,7 @@ function AddSensorAndMotor() {
                     </div>
                     <button
                       onClick={() => setSubmitSensorSuccess(false)}
-                      className="text-green-600 hover:text-green-800 text-lg font-bold leading-none"
+                      className="text-green-600 hover:text-green-800 text-base sm:text-lg font-bold leading-none"
                     >
                       ×
                     </button>
@@ -510,14 +511,14 @@ function AddSensorAndMotor() {
               )}
 
               {submitSensorError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 relative">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
                   <div className="flex justify-between items-start">
                     <div className="text-red-800">
-                      <p className="text-sm font-medium">{submitSensorError}</p>
+                      <p className="text-xs sm:text-sm font-medium">{submitSensorError}</p>
                     </div>
                     <button
                       onClick={() => setSubmitSensorError("")}
-                      className="text-red-600 hover:text-red-800 text-lg font-bold leading-none"
+                      className="text-red-600 hover:text-red-800 text-base sm:text-lg font-bold leading-none"
                     >
                       ×
                     </button>
@@ -525,12 +526,12 @@ function AddSensorAndMotor() {
                 </div>
               )}
 
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <div>
                     <label
                       htmlFor="sensorName"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                     >
                       Sensor/Valve Name
                     </label>
@@ -541,7 +542,7 @@ function AddSensorAndMotor() {
                       value={sensorForm.sensorName}
                       onChange={handleSensorChange}
                       placeholder="Name of Sensor/Valve"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                       ref={sensorNameInputRef}
                     />
                   </div>
@@ -549,7 +550,7 @@ function AddSensorAndMotor() {
                   <div>
                     <label
                       htmlFor="sensorType"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                     >
                       Sensor Type
                     </label>
@@ -558,7 +559,7 @@ function AddSensorAndMotor() {
                       name="sensorType"
                       value={sensorForm.sensorType}
                       onChange={handleSensorChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                       disabled={!hasSensorType}
                     >
                       <option value="">Select Sensor Type</option>
@@ -576,7 +577,7 @@ function AddSensorAndMotor() {
                   <div>
                     <label
                       htmlFor="deviceType"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                     >
                       Device Type
                     </label>
@@ -585,7 +586,7 @@ function AddSensorAndMotor() {
                       name="deviceType"
                       value={sensorForm.deviceType}
                       onChange={handleSensorChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                     >
                       <option value="sensor">Sensor</option>
                       <option value="valve">Valve</option>
@@ -597,7 +598,7 @@ function AddSensorAndMotor() {
                       <div>
                         <label
                           htmlFor="onTime"
-                          className="block text-sm font-medium text-gray-700 mb-2"
+                          className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                         >
                           On Time (seconds)
                         </label>
@@ -609,13 +610,13 @@ function AddSensorAndMotor() {
                           onChange={handleSensorChange}
                           placeholder="Enter On Time"
                           min="0"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                          className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                         />
                       </div>
                       <div>
                         <label
                           htmlFor="offTime"
-                          className="block text-sm font-medium text-gray-700 mb-2"
+                          className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                         >
                           Off Time (seconds)
                         </label>
@@ -627,19 +628,19 @@ function AddSensorAndMotor() {
                           onChange={handleSensorChange}
                           placeholder="Enter Off Time"
                           min="0"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                          className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                         />
                       </div>
                     </>
                   )}
                 </div>
 
-                <div className="flex justify-end gap-4">
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
                   {editingSensorId && (
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="font-medium py-3 px-8 rounded-md bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                      className="font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-md bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm sm:text-base"
                     >
                       Cancel
                     </button>
@@ -648,7 +649,7 @@ function AddSensorAndMotor() {
                     type="button"
                     onClick={handleSensorSubmit}
                     disabled={isSubmittingSensor || !hasSensorType}
-                    className={`font-medium py-3 px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm sm:text-base ${
                       isSubmittingSensor || !hasSensorType
                         ? "bg-gray-400 text-white cursor-not-allowed"
                         : "bg-[#208CD4] hover:bg-blue-700 text-white"
@@ -668,45 +669,45 @@ function AddSensorAndMotor() {
       </div>
 
       {/* Sensors Table Section */}
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-              <h2 className="text-2xl font-semibold text-gray-900">
+          <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">
                 Sensors/Valves List
               </h2>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search sensors/valves..."
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full sm:w-64 px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                   />
                 </div>
                 <select
                   value={sensorsPerPage}
                   onChange={handleShowChange}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base"
                 >
-                  <option value={1}>Show 1</option>
-                  <option value={10}>Show 10</option>
-                  <option value={25}>Show 25</option>
-                  <option value={50}>Show 50</option>
+                  <option value="1">Show 1</option>
+                  <option value="10">Show 10</option>
+                  <option value="25">Show 25</option>
+                  <option value="50">Show 50</option>
                 </select>
               </div>
             </div>
 
             {sensorsError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                 <div className="flex justify-between items-start">
                   <div className="text-red-800">
-                    <p className="text-sm font-medium">{sensorsError}</p>
+                    <p className="text-xs sm:text-sm font-medium">{sensorsError}</p>
                   </div>
                   <button
                     onClick={fetchSensors}
-                    className="text-sm underline hover:no-underline"
+                    className="text-xs sm:text-sm underline hover:no-underline"
                   >
                     Retry
                   </button>
@@ -715,8 +716,8 @@ function AddSensorAndMotor() {
             )}
 
             {isLoadingSensors ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading sensors/valves...</p>
+              <div className="text-center py-6 sm:py-8">
+                <p className="text-gray-500 text-sm sm:text-base">Loading sensors/valves...</p>
               </div>
             ) : (
               <>
@@ -725,25 +726,25 @@ function AddSensorAndMotor() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           S/No
                         </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           Name
                         </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           Sensor Type
                         </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           Device Type
                         </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           On Time
                         </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           Off Time
                         </th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           Actions
                         </th>
                       </tr>
@@ -753,7 +754,7 @@ function AddSensorAndMotor() {
                         <tr>
                           <td
                             colSpan="7"
-                            className="border border-gray-300 px-4 py-8 text-center text-gray-500"
+                            className="border border-gray-300 px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm sm:text-base"
                           >
                             {searchQuery
                               ? "No sensors/valves found matching your search."
@@ -766,28 +767,28 @@ function AddSensorAndMotor() {
                             key={sensor.id || sensor.sensor_id || `sensor-${index}`}
                             className="hover:bg-gray-50"
                           >
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {startIndex + index + 1}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {sensor.sensor_name}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {sensor.sensor_type_name}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {sensor.device_type}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {sensor.on_time ? `${sensor.on_time} sec` : '-'}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {sensor.off_time ? `${sensor.off_time} sec` : '-'}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               <button
                                 onClick={() => editSensor(sensor)}
-                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
                               >
                                 Edit
                               </button>
@@ -800,9 +801,9 @@ function AddSensorAndMotor() {
                 </div>
 
                 {/* Mobile Card View */}
-                <div className="md:hidden space-y-4">
+                <div className="md:hidden space-y-3">
                   {paginatedSensors.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-6 text-gray-500 text-sm">
                       {searchQuery
                         ? "No sensors/valves found matching your search."
                         : "No sensors/valves added yet."}
@@ -811,27 +812,27 @@ function AddSensorAndMotor() {
                     paginatedSensors.map((sensor, index) => (
                       <div
                         key={sensor.id || sensor.sensor_id || `sensor-${index}`}
-                        className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                        className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
                       >
-                        <div className="flex justify-between items-start mb-3">
+                        <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
                             <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
                               #{startIndex + index + 1}
                             </span>
-                            <h3 className="font-semibold text-gray-900 text-lg">
+                            <h3 className="font-semibold text-gray-900 text-base">
                               {sensor.sensor_name}
                             </h3>
                           </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => editSensor(sensor)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                              className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                             >
                               Edit
                             </button>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-2 gap-3 text-xs">
                           <div className="flex flex-col">
                             <span className="text-gray-500 font-medium">
                               Sensor Type:
@@ -872,11 +873,11 @@ function AddSensorAndMotor() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 text-sm font-medium rounded ${
+                      className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                         currentPage === 1
                           ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                           : "bg-gray-300 text-gray-700 hover:bg-gray-400"
@@ -901,7 +902,7 @@ function AddSensorAndMotor() {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-2 text-sm font-medium rounded ${
+                          className={`px-2.5 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                             currentPage === pageNum
                               ? "bg-blue-500 text-white"
                               : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -915,7 +916,7 @@ function AddSensorAndMotor() {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`px-4 py-2 text-sm font-medium rounded ${
+                      className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                         currentPage === totalPages
                           ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                           : "bg-gray-300 text-gray-700 hover:bg-gray-400"
@@ -935,5 +936,3 @@ function AddSensorAndMotor() {
 }
 
 export default AddSensorAndMotor;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

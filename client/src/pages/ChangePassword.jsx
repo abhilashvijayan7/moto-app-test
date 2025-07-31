@@ -28,112 +28,65 @@ function ChangePassword() {
     return `${day}/${month}/${year}`;
   };
 
-  useEffect(() => {
-    if (!isCheckingSession && !user) {
-      console.log('No user after session check, redirecting to /login');
-      navigate('/login', { state: { from: '/change-password' } });
-    }
-  }, [isCheckingSession, user, navigate]);
-
   const fetchUserDetails = async () => {
-    if (!user || !user.user_id) {
-      setError('Please log in to change your password.');
+    // --- THIS IS THE FIX ---
+    // 1. Check for either 'userId' (from login) or 'user_id' (from session refresh).
+    const id = user?.userId || user?.user_id;
+
+    // 2. If neither ID exists, then show the error.
+    if (!id) {
+      setError('User ID not found. Please log in again.');
       setLoading(false);
       return;
     }
 
     try {
       setLoading(true);
-      const response = await axios.get('https://water-pump.onrender.com/api/UserPlantAccess', {
+      // 3. Use the consistent 'id' variable in the API call.
+      const response = await axios.get(`https://water-pump.onrender.com/api/UserPlantAccess/${id}`, {
         headers: { 'Content-Type': 'application/json' },
         withCredentials: true,
       });
 
-      console.log('UserPlantAccess Response:', response.data);
+      console.log("UserPlantAccess Response:", response.data);
 
-      const mappedData = response.data
-        .filter((apiUser) => apiUser.user_id === user.user_id)
-        .map((apiUser) => ({
-          companyName: apiUser.company || 'N/A',
-          full_name: apiUser.full_name || user.username || 'N/A',
-          username: apiUser.username || user.username || 'N/A',
-          role: apiUser.role_name || user.role || 'N/A',
-          designation: apiUser.designation || 'N/A',
-          dob: apiUser.date_of_birth ? formatDisplayDate(apiUser.date_of_birth) : 'N/A',
-          call: apiUser.contact_number || 'N/A',
-          doj: apiUser.date_of_joining || 'N/A',
-          displayDoj: apiUser.date_of_joining ? formatDisplayDate(apiUser.date_of_joining) : 'N/A',
-          mail: apiUser.email || 'N/A',
-          gender: apiUser.gender || 'N/A',
-          home: apiUser.address || 'N/A',
-          company: apiUser.company || 'N/A',
-          location: apiUser.location || 'N/A',
-          assignedPlant: apiUser.plants && apiUser.plants.length > 0
-            ? apiUser.plants.map((plant) => plant.plant_name).join(', ')
-            : user.userPlants && user.userPlants.length > 0
-            ? user.userPlants.map((plant) => plant.plant_name).join(', ')
-            : 'No plants assigned',
-          user_id: apiUser.user_id,
-          status: apiUser.status || 'N/A',
-        }));
+      const currentUserDetails = Array.isArray(response.data) ? response.data[0] : response.data;
 
-      if (mappedData.length > 0) {
-        setUserData(mappedData[0]);
-        setError(null);
-      } else {
-        console.warn('No matching user in UserPlantAccess, falling back to UserContext');
+      if (currentUserDetails) {
         setUserData({
-          companyName: 'N/A',
-          full_name: user.username || 'N/A',
-          username: user.username || 'N/A',
-          role: user.role || 'N/A',
-          designation: 'N/A',
-          dob: 'N/A',
-          call: 'N/A',
-          doj: 'N/A',
-          displayDoj: 'N/A',
-          mail: 'N/A',
-          gender: 'N/A',
-          home: 'N/A',
-          company: 'N/A',
-          location: 'N/A',
-          assignedPlant: user.userPlants && user.userPlants.length > 0
-            ? user.userPlants.map((plant) => plant.plant_name).join(', ')
+          companyName: currentUserDetails.company || 'N/A',
+          full_name: currentUserDetails.full_name || user.username || 'N/A',
+          username: currentUserDetails.username || user.username || 'N/A',
+          role: currentUserDetails.role_name || user.role || 'N/A',
+          designation: currentUserDetails.designation || 'N/A',
+          dob: currentUserDetails.date_of_birth ? formatDisplayDate(currentUserDetails.date_of_birth) : 'N/A',
+          call: currentUserDetails.contact_number || 'N/A',
+          doj: currentUserDetails.date_of_joining || 'N/A',
+          displayDoj: currentUserDetails.date_of_joining ? formatDisplayDate(currentUserDetails.date_of_joining) : 'N/A',
+          mail: currentUserDetails.email || 'N/A',
+          gender: currentUserDetails.gender || 'N/A',
+          home: currentUserDetails.address || 'N/A',
+          company: currentUserDetails.company || 'N/A',
+          location: currentUserDetails.location || 'N/A',
+          assignedPlant: currentUserDetails.plants && currentUserDetails.plants.length > 0
+            ? currentUserDetails.plants.map((plant) => plant.plant_name).join(', ')
             : 'No plants assigned',
-          user_id: user.user_id,
-          status: 'N/A',
+          user_id: currentUserDetails.user_id,
+          status: currentUserDetails.status || 'N/A',
         });
         setError(null);
+      } else {
+        setError('Could not find detailed user information.');
       }
     } catch (err) {
       console.error('Error fetching user details:', err.response?.data || err.message);
-      setError('Failed to fetch user details. Using session data.');
-      setUserData({
-        companyName: 'N/A',
-        full_name: user.username || 'N/A',
-        username: user.username || 'N/A',
-        role: user.role || 'N/A',
-        designation: 'N/A',
-        dob: 'N/A',
-        call: 'N/A',
-        doj: 'N/A',
-        displayDoj: 'N/A',
-        mail: 'N/A',
-        gender: 'N/A',
-        home: 'N/A',
-        company: 'N/A',
-        location: 'N/A',
-        assignedPlant: user.userPlants && user.userPlants.length > 0
-          ? user.userPlants.map((plant) => plant.plant_name).join(', ')
-          : 'No plants assigned',
-        user_id: user.user_id,
-        status: 'N/A',
-      });
+      setError('Failed to fetch user details.');
     } finally {
       setLoading(false);
     }
   };
 
+  // This hook now correctly waits for the user object to be available
   useEffect(() => {
     if (!isCheckingSession && user) {
       fetchUserDetails();
@@ -174,13 +127,24 @@ function ChangePassword() {
         setMessage('');
       }, 1500);
     } catch (err) {
-      console.error('Password update failed:', err.response?.data || err.message);
-      setMessage('Failed to update password. Please try again.');
-      toast.error('Failed to update password. Please try again.');
+      const errorMessage = err.response?.data?.message || 'Failed to update password. Please try again.';
+      setMessage(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
-  if (isCheckingSession || loading) {
+  // This "guard clause" is the key. It shows a loading screen
+  // and prevents the rest of the component from rendering until the user is confirmed.
+  if (isCheckingSession || !user) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div>Loading User Data...</div>
+      </div>
+    );
+  }
+
+  // A secondary loading state for when we are fetching this page's specific data
+  if (loading) {
     return (
       <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
         <div className="bg-[#FFFFFF] rounded-xl p-8 text-center">
@@ -189,50 +153,60 @@ function ChangePassword() {
       </div>
     );
   }
-
+  
+  // An error state if fetching fails or the user data couldn't be found
   if (error || !userData) {
     return (
       <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
         <div className="bg-[#FFFFFF] rounded-xl p-8 text-center text-red-500">
-          <p>{error || 'Please log in to change your password.'}</p>
+          <p>{error || 'Could not load user data.'}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
-      <div className="font-[500] text-[14px]">
-        <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
-          Change Password
-        </p>
-      </div>
-      <div className="bg-[#FFFFFF] rounded-xl p-4">
-        <div className="bg-[#FFFFFF] rounded-xl p-6">
-          <h2 className="text-xl font-bold mb-4">Update Password</h2>
-          <div>
-            <input
-              type="password"
-              style={{ display: 'none' }}
-              name="dummy-password"
-              autoComplete="new-password"
-            />
-            <div className="mb-4">
+    <div className="max-w-[1680px] w-full mx-auto text-[#4E4D4D] my-6 px-4 sm:px-6 lg:px-11">
+      {/* Page Heading */}
+      <h1 className="text-[22px] sm:text-[26px] lg:text-[28px] font-bold mb-6 text-[#333] text-center lg:text-left">
+        Change Password
+      </h1>
+
+      {/* Responsive Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left: Password Update Form */}
+        <div className="bg-white border border-[#E5E7EB] rounded-2xl shadow-sm p-5 sm:p-6 md:p-8">
+          <h2 className="text-lg sm:text-xl font-semibold mb-4 text-[#208CD4] text-center lg:text-left">
+            Update Password
+          </h2>
+
+          {/* Hidden Field for Autocomplete */}
+          <input
+            type="password"
+            name="dummy-password"
+            autoComplete="new-password"
+            style={{ display: 'none' }}
+          />
+
+          <div className="space-y-4">
+            {/* Current Password */}
+            <div>
               <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Current Password
               </label>
               <input
                 type="password"
                 id="currentPassword"
-                name={`current-password-${Math.random().toString(36).substring(2)}`}
                 placeholder="Enter current password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 autoComplete="off"
-                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               />
             </div>
-            <div className="mb-4">
+
+            {/* New Password */}
+            <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 New Password
               </label>
@@ -243,10 +217,12 @@ function ChangePassword() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
-                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               />
             </div>
-            <div className="mb-4">
+
+            {/* Confirm Password */}
+            <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm New Password
               </label>
@@ -257,67 +233,70 @@ function ChangePassword() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autoComplete="new-password"
-                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               />
             </div>
+
+            {/* Message */}
             {message && (
-              <p className={`mb-4 text-sm ${message.includes('success') ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-sm ${message.includes('success') ? 'text-green-600' : 'text-red-600'}`}>
                 {message}
               </p>
             )}
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="px-4 py-2 bg-[#208CD4] text-white rounded hover:bg-[#1b7bb9] transition-colors"
-              >
-                Update Password
-              </button>
-            </div>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end mt-6">
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="px-5 py-2.5 w-full sm:w-auto bg-[#208CD4] text-white rounded-lg hover:bg-[#1b7bb9] transition-all"
+            >
+              Update Password
+            </button>
           </div>
         </div>
 
-        <div className="font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4">
-          <div className="border-b border-[#208CD4] pb-[16px]">
-            <p className="text-[#4E4D4D] font-[600] text-[16px] break-words">
+        {/* Right: Profile Details */}
+        <div className="bg-white border border-[#E5E7EB] shadow-sm hover:shadow-md transition-shadow duration-300 rounded-2xl p-5 sm:p-6 md:p-8">
+          {/* Header */}
+          <div className="border-b border-[#208CD4] pb-4 mb-6">
+            <p className="text-gray-800 text-lg sm:text-xl font-semibold break-words text-center lg:text-left">
               {userData.full_name}
             </p>
-            <p className="text-[#aba6a6] font-[500] text-[12px]">
+            <p className="text-gray-500 font-medium text-sm capitalize text-center lg:text-left">
               {userData.role}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4 pt-[16px]">
-            <div>
+
+          {/* Grid Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-4">
               {[
                 { label: 'Designation', value: userData.designation },
                 { label: 'Contact Number', value: userData.call },
                 { label: 'Email', value: userData.mail },
                 { label: 'Address', value: userData.home },
                 { label: 'Location', value: userData.location },
-              ].map((item, detailIndex) => (
-                <div
-                  key={detailIndex}
-                  className="py-[8px] min-h-[40px] border-b border-[#DADADA]"
-                >
-                  <p className="font-[500] text-[#4E4D4D]">{item.label}:</p>
-                  <p className="break-words max-w-[90%]">{item.value}</p>
+              ].map((item, index) => (
+                <div key={index}>
+                  <p className="text-gray-600 text-sm font-medium">{item.label}</p>
+                  <p className="text-gray-900 text-sm break-words">{item.value}</p>
                 </div>
               ))}
             </div>
-            <div>
+
+            <div className="space-y-4">
               {[
                 { label: 'Date of Birth', value: userData.dob },
                 { label: 'Date of Joining', value: userData.displayDoj },
                 { label: 'Gender', value: userData.gender },
                 { label: 'Company', value: userData.company },
                 { label: 'Assigned Plant', value: userData.assignedPlant },
-              ].map((item, detailIndex) => (
-                <div
-                  key={detailIndex}
-                  className="py-[8px] min-h-[40px] border-b border-[#DADADA]"
-                >
-                  <p className="font-[500] text-[#4E4D4D]">{item.label}:</p>
-                  <p className="break-words max-w-[90%]">{item.value}</p>
+              ].map((item, index) => (
+                <div key={index}>
+                  <p className="text-gray-600 text-sm font-medium">{item.label}</p>
+                  <p className="text-gray-900 text-sm break-words">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -325,6 +304,8 @@ function ChangePassword() {
         </div>
       </div>
     </div>
+
+
   );
 }
 

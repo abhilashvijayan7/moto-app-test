@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import axios from 'axios';
-import { Search, Calendar, ChevronDown } from 'lucide-react';
+import { Search, Calendar, ChevronDown, ChevronRight } from 'lucide-react';
 import DataTable from '../components/DataTable';
 
 const SavedLog = () => {
@@ -212,134 +212,152 @@ const SavedLog = () => {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 max-w-full sm:max-w-[450px] lg:max-w-[1480px] mx-auto text-[#6B6B6B] my-4">
-      <div className="w-full bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-4 sm:p-6 border-b border-gray-200">
-          <h2 className="text-[#4E4D4D] font-bold text-xl sm:text-2xl mb-4">
-            Log
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="relative">
-              <select
-                id="summaryType"
-                value={summaryType}
-                onChange={handleSummaryTypeChange}
-                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 appearance-none bg-white text-sm text-gray-700"
-              >
-                <option value="plant">Plant Log</option>
-                <option value="motor">Motor Summary</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none" />
-            </div>
-
-            <div className="relative" ref={dropdownRef}>
-              <div
-                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-600 bg-white cursor-pointer flex items-center"
-                onClick={() => setIsPlantDropdownOpen(!isPlantDropdownOpen)}
-              >
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none" />
-                <input
-                  type="text"
-                  value={plantSearch}
-                  onChange={(e) => {
-                    setPlantSearch(e.target.value || '');
-                    setIsPlantDropdownOpen(true);
-                  }}
-                  placeholder={tableFilters.plantName || 'Search plants...'}
-                  className="w-full bg-transparent text-sm focus:outline-none text-gray-700"
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none" />
-              </div>
-              {isPlantDropdownOpen && (
-                <div className="absolute z-10 w-full mt-1 max-sm:bg-white/95 bg-white border border-gray-300 rounded-md shadow-md max-h-60 overflow-y-auto">
-                  {filteredPlants.length > 0 ? (
-                    filteredPlants.map(([plantId, plantName]) => (
-                      <div
-                        key={plantId}
-                        className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handlePlantSelect(plantId, plantName)}
-                      >
-                        {plantName} (ID: {plantId})
-                      </div>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-sm text-gray-500">No plants found</div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none z-10" />
-              <input
-                type="date"
-                id="startDate"
-                value={startDate}
-                onChange={(e) => handleDateChange(e, 'startDate')}
-                ref={startDateRef}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
-              />
-            </div>
-
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none z-10" />
-              <input
-                type="date"
-                id="endDate"
-                value={endDate}
-                onChange={(e) => handleDateChange(e, 'endDate')}
-                ref={endDateRef}
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
-              />
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitDisabled || loading}
-              className={`px-3 sm:px-4 py-2 rounded-md text-white font-semibold text-sm ${
-                isSubmitDisabled || loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-              }`}
-            >
-              {loading ? 'Loading...' : `Fetch ${summaryType === 'motor' ? 'Motor Summary' : 'Plant Log'}`}
-            </button>
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6">
+      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-8">
+        <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
+          <div>
+            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
+              Log
+            </p>
           </div>
         </div>
+      </div>
 
-        {error && <p className="text-center text-red-500 py-4 text-sm">{error}</p>}
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
+        <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200">
+          <div className="p-2 sm:p-6 border-b border-gray-200">
+            <h2 className="text-[#4E4D4D] font-bold text-xl sm:text-2xl mb-4">
+              Log
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-6">
+              <div className="relative">
+                <select
+                  id="summaryType"
+                  value={summaryType}
+                  onChange={handleSummaryTypeChange}
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 appearance-none bg-white text-sm text-gray-700"
+                >
+                  <option value="plant">Plant Log</option>
+                  <option value="motor">Motor Summary</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none" />
+              </div>
 
-        {loading && <p className="text-center text-gray-500 py-4 text-sm">Loading...</p>}
+              <div className="relative" ref={dropdownRef}>
+                <div
+                  className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-600 bg-white cursor-pointer flex items-center"
+                  onClick={() => setIsPlantDropdownOpen(!isPlantDropdownOpen)}
+                >
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={plantSearch}
+                    onChange={(e) => {
+                      setPlantSearch(e.target.value || '');
+                      setIsPlantDropdownOpen(true);
+                    }}
+                    placeholder={tableFilters.plantName || 'Search plants...'}
+                    className="w-full bg-transparent text-sm focus:outline-none text-gray-700"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none" />
+                </div>
+                {isPlantDropdownOpen && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-md max-h-40 overflow-y-auto">
+                    {filteredPlants.length > 0 ? (
+                      filteredPlants.map(([plantId, plantName]) => (
+                        <div
+                          key={plantId}
+                          className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handlePlantSelect(plantId, plantName)}
+                        >
+                          {plantName} (ID: {plantId})
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-sm text-gray-500">No plants found</div>
+                    )}
+                  </div>
+                )}
+              </div>
 
-        <div className="p-4 sm:p-6">
-          <DataTable
-            mode={summaryType === 'plant' ? 'server' : 'client'}
-            fetchData={summaryType === 'plant' ? fetchData : undefined}
-            data={data}
-            totalRows={totalRows}
-            columns={columns}
-            pageSizeOptions={summaryType === 'motor' ? [5, 10, 20] : [5, 10, 15, 20, 50, 100]}
-            defaultPageSize={5}
-            onExportCSV={
-              summaryType === 'plant'
-                ? () =>
-                    window.open(
-                      `https://water-pump.onrender.com/api/export/plantcsv/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
-                      '_blank'
-                    )
-                : undefined
-            }
-            onExportExcel={
-              summaryType === 'plant'
-                ? () =>
-                    window.open(
-                      `https://water-pump.onrender.com/api/export/plantexcel/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
-                      '_blank'
-                    )
-                : undefined
-            }
-          />
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none z-10" />
+                <input
+                  type="date"
+                  id="startDate"
+                  value={startDate}
+                  onChange={(e) => handleDateChange(e, 'startDate')}
+                  ref={startDateRef}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
+                />
+              </div>
+
+              <div className="relative">
+                <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-700 pointer-events-none z-10" />
+                <input
+                  type="date"
+                  id="endDate"
+                  value={endDate}
+                  onChange={(e) => handleDateChange(e, 'endDate')}
+                  ref={endDateRef}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-600 text-sm text-gray-700"
+                />
+              </div>
+
+              <div className="mt-4 sm:mt-0">
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitDisabled || loading}
+                  className={`w-full px-4 py-2 rounded-md text-white font-semibold text-sm ${
+                    isSubmitDisabled || loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                >
+                  {loading ? 'Loading...' : `Fetch ${summaryType === 'motor' ? 'Motor Summary' : 'Plant Log'}`}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {error && <p className="text-center text-red-500 py-4 text-sm">{error}</p>}
+
+          {loading && <p className="text-center text-gray-500 py-4 text-sm">Loading...</p>}
+
+          <div className="p-4 sm:p-6">
+            <div className="overflow-x-auto">
+              <DataTable
+                mode={summaryType === 'plant' ? 'server' : 'client'}
+                fetchData={summaryType === 'plant' ? fetchData : undefined}
+                data={data}
+                totalRows={totalRows}
+                columns={columns}
+                pageSizeOptions={summaryType === 'motor' ? [5, 10, 20] : [5, 10, 15, 20, 50, 100]}
+                defaultPageSize={5}
+                onExportCSV={
+                  summaryType === 'plant'
+                    ? () => {
+                        window.open(
+                          `https://water-pump.onrender.com/api/export/plantcsv/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+                          '_blank'
+                        );
+                      }
+                    : undefined
+                }
+                onExportExcel={
+                  summaryType === 'plant'
+                    ? () => {
+                        window.open(
+                          `https://water-pump.onrender.com/api/export/plantexcel/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+                          '_blank'
+                        );
+                      }
+                    : undefined
+                }
+                paginationClassName="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-4"
+                paginationButtonClassName="px-4 py-2 text-sm font-medium text-white bg-[#208CD4] border border-[#208CD4] rounded-md hover:bg-[#1A73B0] focus:outline-none focus:ring-2 focus:ring-[#208CD4] disabled:opacity-50 disabled:cursor-not-allowed min-w-[40px] touch-manipulation"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

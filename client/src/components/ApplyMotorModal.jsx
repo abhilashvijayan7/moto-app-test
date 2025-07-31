@@ -352,32 +352,33 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      {/* Modal Container: Reduced padding and full width on mobile */}
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800">Apply Motor</h2>
-            <p className="text-sm text-gray-500 mt-1">Plant ID: {plant_id || 'Not provided'}</p>
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">Apply Motor</h2>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Plant ID: {plant_id || 'Not provided'}</p>
           </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close modal"
           >
-            <X className="w-6 h-6 text-gray-500" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
           </button>
         </div>
 
         {/* Modal Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {motorsError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
               <div className="flex justify-between items-start">
-                <p className="text-sm font-medium text-red-800">{motorsError}</p>
+                <p className="text-xs sm:text-sm font-medium text-red-800">{motorsError}</p>
                 <button
                   onClick={() => setMotorsError('')}
-                  className="text-red-600 hover:text-red-800 text-lg font-bold"
+                  className="text-red-600 hover:text-red-800 text-base sm:text-lg font-bold"
                 >
                   ×
                 </button>
@@ -386,17 +387,17 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
           )}
 
           {!editingMotor ? (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {motors.map((motor) => (
-                <div key={motor.id} className="grid grid-cols-12 gap-6 items-center">
-                  {/* Select Motor */}
-                  <div className="col-span-3">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                <div key={motor.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 items-center">
+                  {/* Select Motor: Full width on mobile */}
+                  <div className="col-span-1 sm:col-span-3">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Select Motor
                     </label>
                     <div className="relative">
                       <select 
-                        className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                        className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none text-sm sm:text-base"
                         value={motor.selectedMotor}
                         onChange={(e) => handleMotorChange(motor.id, 'selectedMotor', e.target.value)}
                         disabled={isLoadingMotors}
@@ -413,18 +414,18 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                           </option>
                         ))}
                       </select>
-                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
                     </div>
                   </div>
 
-                  {/* Max Running Time */}
-                  <div className="col-span-3">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                  {/* Max Running Time: Full width on mobile */}
+                  <div className="col-span-1 sm:col-span-3">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Max Running Time (Hours)
                     </label>
                     <input
                       type="number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                       value={motor.maxRunningTime}
                       onChange={(e) => handleMotorChange(motor.id, 'maxRunningTime', e.target.value)}
                       placeholder="Maximum 6 Hours"
@@ -434,14 +435,14 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     />
                   </div>
 
-                  {/* Working Order */}
-                  <div className="col-span-3">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                  {/* Working Order: Full width on mobile */}
+                  <div className="col-span-1 sm:col-span-3">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Working Order
                     </label>
                     <input
                       type="number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                       value={motor.workingOrder}
                       onChange={(e) => handleMotorChange(motor.id, 'workingOrder', e.target.value)}
                       placeholder="Enter order"
@@ -450,15 +451,15 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     />
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="col-span-3 flex justify-end space-x-2">
+                  {/* Action Buttons: Touch-friendly size */}
+                  <div className="col-span-1 sm:col-span-3 flex justify-end space-x-2">
                     {motors.length > 1 && (
                       <button
                         onClick={() => removeMotor(motor.id)}
                         className="w-10 h-10 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center transition-colors"
                         title="Remove motor"
                       >
-                        <Minus className="w-5 h-5" />
+                        <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
                     )}
                   </div>
@@ -466,30 +467,30 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
               ))}
             </div>
           ) : (
-            <div className="space-y-6">
-              <h3 className="text-lg font-semibold text-gray-800">Edit Motor</h3>
-              <div className="grid grid-cols-12 gap-6 items-center">
-                {/* Motor Name (Read-only) */}
-                <div className="col-span-3">
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
+            <div className="space-y-4 sm:space-y-6">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-800">Edit Motor</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 items-center">
+                {/* Motor Name: Full width on mobile */}
+                <div className="col-span-1 sm:col-span-3">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Motor Name
                   </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md bg-gray-100 text-gray-700"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-gray-100 text-gray-700 text-sm sm:text-base"
                     value={motorMap.get(String(editingMotor.motor_id)) || '-'}
                     disabled
                   />
                 </div>
 
                 {/* Motor Brand */}
-                <div className="col-span-3">
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                <div className="col-span-1 sm:col-span-3">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Motor Brand
                   </label>
                   <input
                     type="text"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                     value={editingMotor.motor_brand}
                     onChange={(e) => handleEditChange('motor_brand', e.target.value)}
                     placeholder="Enter brand"
@@ -498,13 +499,13 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                 </div>
 
                 {/* Max Running Time */}
-                <div className="col-span-3">
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                <div className="col-span-1 sm:col-span-3">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Max Running Time (Hours)
                   </label>
                   <input
                     type="number"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                     value={editingMotor.motor_running_time}
                     onChange={(e) => handleEditChange('motor_running_time', e.target.value)}
                     placeholder="Maximum 6 Hours"
@@ -515,13 +516,13 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                 </div>
 
                 {/* Working Order */}
-                <div className="col-span-3">
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                <div className="col-span-1 sm:col-span-3">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Working Order
                   </label>
                   <input
                     type="number"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                     value={editingMotor.motor_working_order}
                     onChange={(e) => handleEditChange('motor_working_order', e.target.value)}
                     placeholder="Enter order"
@@ -529,31 +530,30 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     step="1"
                   />
                 </div>
-              </div>
-              <div className="grid grid-cols-12 gap-6 items-center">
+
                 {/* Installation Date */}
-                <div className="col-span-3">
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                <div className="col-span-1 sm:col-span-3">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Installation Date
                   </label>
                   <input
                     type="date"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                     value={editingMotor.installation_date}
                     onChange={(e) => handleEditChange('installation_date', e.target.value)}
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-4">
+              <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4">
                 <button
                   onClick={() => setEditingMotor(null)}
-                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="px-4 py-2 sm:px-6 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base"
                 >
                   Cancel Edit
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+                  className="px-6 py-2 sm:px-8 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors text-sm sm:text-base"
                 >
                   Save Edit
                 </button>
@@ -564,16 +564,16 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
 
         {/* Modal Footer */}
         {!editingMotor && (
-          <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
+          <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
             <button
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+              className="px-4 py-2 sm:px-6 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+              className="px-6 py-2 sm:px-8 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors text-sm sm:text-base"
               disabled={isLoadingMotors}
             >
               Save Changes
@@ -582,11 +582,11 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         )}
 
         {/* Plant Motors Table Section */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-            <div className="py-6 px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-                <h2 className="text-2xl font-semibold text-gray-900">
+            <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                   {isLoadingPlantName ? 'Loading plant name...' : `Applied Motors for ${plantName}`}
                 </h2>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -596,13 +596,13 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                       placeholder="Search applied motors..."
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full sm:w-64 px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                     />
                   </div>
                   <select 
                     value={motorsPerPage}
                     onChange={handleShowChange}
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base"
                   >
                     <option value={1}>Show 1</option>
                     <option value={10}>Show 10</option>
@@ -613,10 +613,10 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
               </div>
 
               {plantNameError && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                   <div className="flex justify-between items-start">
                     <div className="text-yellow-800">
-                      <p className="text-sm font-medium">{plantNameError}</p>
+                      <p className="text-xs sm:text-sm font-medium">{plantNameError}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -637,7 +637,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                         };
                         fetchPlantName();
                       }}
-                      className="text-sm underline hover:no-underline"
+                      className="text-xs sm:text-sm underline hover:no-underline"
                     >
                       Retry
                     </button>
@@ -646,10 +646,10 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
               )}
 
               {plantMotorsError && (
-                <div className="bg-red-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div className="bg-red-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                   <div className="flex justify-between items-start">
                     <div className="text-red-800">
-                      <p className="text-sm font-medium">{plantMotorsError}</p>
+                      <p className="text-xs sm:text-sm font-medium">{plantMotorsError}</p>
                     </div>
                     <button
                       onClick={() => {
@@ -671,7 +671,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                         };
                         fetchPlantMotors();
                       }}
-                      className="text-sm underline hover:no-underline"
+                      className="text-xs sm:text-sm underline hover:no-underline"
                     >
                       Retry
                     </button>
@@ -680,8 +680,8 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
               )}
 
               {isLoadingPlantMotors ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading applied motors...</p>
+                <div className="text-center py-6 sm:py-8">
+                  <p className="text-gray-500 text-sm sm:text-base">Loading applied motors...</p>
                 </div>
               ) : (
                 <>
@@ -703,7 +703,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                       <tbody className="bg-white">
                         {paginatedPlantMotors.length === 0 ? (
                           <tr>
-                            <td colSpan="8" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                            <td colSpan="8" className="border border-gray-300 px-4 py-8 text-center text-gray-500 text-sm sm:text-base">
                               {searchQuery ? 'No motors found matching your search.' : 'No motors applied to this plant yet.'}
                             </td>
                           </tr>
@@ -747,21 +747,21 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     </table>
                   </div>
 
-                  {/* Mobile Card View */}
-                  <div className="md:hidden space-y-4">
+                  {/* Mobile Card View: Enhanced spacing and font sizes */}
+                  <div className="md:hidden space-y-3">
                     {paginatedPlantMotors.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-6 text-gray-500 text-sm">
                         {searchQuery ? 'No motors found matching your search.' : 'No motors applied to this plant yet.'}
                       </div>
                     ) : (
                       paginatedPlantMotors.map((motor, index) => (
-                        <div key={motor.plant_motor_id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="flex justify-between items-start mb-3">
+                        <div key={motor.plant_motor_id} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                          <div className="flex justify-between items-start mb-2">
                             <div className="flex items-center gap-2">
                               <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
                                 #{startIndex + index + 1}
                               </span>
-                              <h3 className="font-semibold text-gray-900 text-lg">
+                              <h3 className="font-semibold text-gray-900 text-base">
                                 {motorMap.get(String(motor.motor_id)) || 'Unknown'}
                               </h3>
                             </div>
@@ -773,29 +773,29 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                               Edit
                             </button>
                           </div>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="grid grid-cols-2 gap-3 text-sm">
                             <div className="flex flex-col">
-                              <span className="text-gray-500 font-medium">Motor ID:</span>
+                              <span className="text-gray-500 font-medium text-xs">Motor ID:</span>
                               <span className="text-gray-900">{motor.motor_id}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-gray-500 font-medium">Motor Name:</span>
+                              <span className="text-gray-500 font-medium text-xs">Motor Name:</span>
                               <span className="text-gray-900">{motorMap.get(String(motor.motor_id)) || '-'}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-gray-500 font-medium">Motor Brand:</span>
+                              <span className="text-gray-500 font-medium text-xs">Motor Brand:</span>
                               <span className="text-gray-900">{motor.motor_brand}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-gray-500 font-medium">Max Running Time:</span>
+                              <span className="text-gray-500 font-medium text-xs">Max Running Time:</span>
                               <span className="text-gray-900">{motor.motor_running_time} Hours</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-gray-500 font-medium">Working Order:</span>
+                              <span className="text-gray-500 font-medium text-xs">Working Order:</span>
                               <span className="text-gray-900">{motor.motor_working_order}</span>
                             </div>
                             <div className="flex flex-col">
-                              <span className="text-gray-500 font-medium">Installation Date:</span>
+                              <span className="text-gray-500 font-medium text-xs">Installation Date:</span>
                               <span className="text-gray-900">{new Date(motor.installation_date).toLocaleDateString()}</span>
                             </div>
                           </div>
@@ -804,13 +804,13 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     )}
                   </div>
 
-                  {/* Pagination */}
+                  {/* Pagination: Adjusted for mobile */}
                   {totalPages > 1 && (
-                    <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:mt-6">
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 text-sm font-medium rounded ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium rounded ${
                           currentPage === 1
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                             : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
@@ -833,7 +833,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                           <button
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
-                            className={`px-3 py-2 text-sm font-medium rounded ${
+                            className={`px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm font-medium rounded ${
                               currentPage === pageNum
                                 ? 'bg-blue-500 text-white'
                                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -846,7 +846,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 text-sm font-medium rounded ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium rounded ${
                           currentPage === totalPages
                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                             : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
@@ -865,5 +865,3 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
     </div>
   );
 }
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

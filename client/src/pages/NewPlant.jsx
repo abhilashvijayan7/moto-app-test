@@ -69,7 +69,7 @@ function NewPlant() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("Fetched plants:", data); // Debug log
+      console.log("Fetched plants:", data);
       const sortedPlants = data.sort((a, b) => {
         if (a.created_at && b.created_at) {
           return new Date(b.created_at) - new Date(a.created_at);
@@ -94,7 +94,7 @@ function NewPlant() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("Fetched locations:", data); // Debug log
+      console.log("Fetched locations:", data);
       setLocations(data);
     } catch (error) {
       console.error("Error fetching locations:", error);
@@ -121,7 +121,7 @@ function NewPlant() {
       contactPerson: plant.contact_person || "",
       phone: plant.contact_phone || "",
       email: plant.contact_email || "",
-      deviceId: plant.device_id ? plant.device_id.toString() : "", // Ensure device_id is a string
+      deviceId: plant.device_id ? plant.device_id.toString() : "",
     });
     setIsEditing(true);
     setEditingPlantId(plant.plant_id);
@@ -170,7 +170,7 @@ function NewPlant() {
         contact_person: formData.contactPerson.trim(),
         contact_email: formData.email.trim(),
         contact_phone: formData.phone.trim(),
-        device_id: formData.deviceId.trim(), // Use the raw deviceId string
+        device_id: formData.deviceId.trim(),
       };
 
       if (isEditing) {
@@ -405,25 +405,10 @@ function NewPlant() {
 
   return (
     <div className="flex-1">
-      {/* <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px] lg:px-11 lg:w-full">
-        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
-          <div>
-            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
-              {isEditing ? "Edit Plant" : "Add New Plant"}
-            </p>
-            <div className="flex bg-gray-100 w-[166px] py-1 px-2 rounded-sm mb-[18px] items-center">
-              <p>Home</p>
-              <ChevronRight className="w-[20px] h-[20px] text-gray-500" />
-              <p className="text-[#208CD4]">{isEditing ? "Edit Plant" : "Add New Plant"}</p>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="p-3 sm:p-4 lg:p-6 max-w-[640px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1440px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-8">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-8">
               {isEditing ? "Edit Plant" : "New Plant"}
             </h1>
 
@@ -444,7 +429,7 @@ function NewPlant() {
             )}
 
             {submitError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="bg-red-50 border border-green-200 rounded-lg p-4 mb-6">
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium text-red-800">{submitError}</p>
                   <button
@@ -472,7 +457,7 @@ function NewPlant() {
             )}
 
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="plantName" className="block text-sm font-medium text-gray-700 mb-2">
                     Plant Name *
@@ -528,7 +513,7 @@ function NewPlant() {
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700 mb-2">
                     Contact Person *
@@ -577,7 +562,7 @@ function NewPlant() {
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="font-medium py-3 px-8 rounded-md transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    className="font-medium py-2.5 sm:py-3 px-6 sm:px-8 rounded-md transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   >
                     Cancel
                   </button>
@@ -586,7 +571,7 @@ function NewPlant() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting || isLoadingLocations}
-                  className={`font-medium py-3 px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`font-medium py-2.5 sm:py-3 px-6 sm:px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     isSubmitting || isLoadingLocations
                       ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-[#208CD4] hover:bg-blue-700 text-white"
@@ -600,23 +585,23 @@ function NewPlant() {
         </div>
       </div>
 
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="p-3 sm:p-4 lg:p-6 max-w-[640px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1440px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-              <h2 className="text-2xl font-semibold text-gray-900">Plants List</h2>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900">Plants List</h2>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <input
                   type="text"
                   placeholder="Search plants..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full sm:w-64 px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
                 <select
                   value={plantsPerPage}
                   onChange={handleShowChange}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
                   <option value={5}>Show 5</option>
                   <option value={10}>Show 10</option>
@@ -676,22 +661,22 @@ function NewPlant() {
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.contact_person}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">{plant.contact_phone}</td>
                             <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
-                              <div className="flex space-x-2">
+                              <div className="flex space-x-2 flex-wrap gap-y-2">
                                 <button
                                   onClick={() => handleEditPlant(plant)}
-                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 underline"
+                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 no-underline"
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => handleApplyMotor(plant)}
-                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 underline"
+                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 no-underline"
                                 >
                                   Apply Motor
                                 </button>
                                 <button
                                   onClick={() => handleApplySensor(plant)}
-                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 underline"
+                                  className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 no-underline"
                                 >
                                   Apply Sensor
                                 </button>
@@ -717,7 +702,7 @@ function NewPlant() {
                           <span className="font-medium">Name:</span> {plant.plant_name}
                         </p>
                         <p className="text-sm text-gray-700">
-                          <span className="font-medium">Location:</span> {plant.address}
+                          <span className="font-medium">Location:</span> {plant.location_name}
                         </p>
                         <p className="text-sm text-gray-700">
                           <span className="font-medium">Contact:</span> {plant.contact_person}
@@ -725,22 +710,22 @@ function NewPlant() {
                         <p className="text-sm text-gray-700">
                           <span className="font-medium">Phone:</span> {plant.contact_phone}
                         </p>
-                        <div className="flex space-x-2 mt-2">
+                        <div className="flex space-x-2 mt-2 flex-wrap gap-y-2">
                           <button
                             onClick={() => handleEditPlant(plant)}
-                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 underline"
+                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 no-underline"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleApplyMotor(plant)}
-                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 underline"
+                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 no-underline"
                           >
                             Apply Motor
                           </button>
                           <button
                             onClick={() => handleApplySensor(plant)}
-                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 underline"
+                            className="px-3 py-1 text-sm text-blue-600 hover:text-blue-800 no-underline"
                           >
                             Apply Sensor
                           </button>
@@ -751,21 +736,21 @@ function NewPlant() {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="flex justify-between items-center mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md w-full sm:w-auto ${
                         currentPage === 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
                       Previous
                     </button>
-                    <div className="flex space-x-1">{renderPagination()}</div>
+                    <div className="flex flex-wrap justify-center space-x-1">{renderPagination()}</div>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md w-full sm:w-auto ${
                         currentPage === totalPages ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >

@@ -235,41 +235,43 @@ function AddMotor() {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 min-h-screen py-6">
-      {/* <div className="max-w-[450px] mx-auto text-[#6B6B6B]  lg:max-w-[1280px] lg:px-11 lg:w-full">
-        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
+    <div className="flex-1 bg-gray-50 min-h-screen py-4 sm:py-6">
+      {/* Header and Breadcrumb: Stacked vertically on mobile */}
+      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-11">
+        <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
           <div>
-            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
+            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
               {editingMotorId ? 'Edit Motor' : 'Add Motor'}
             </p>
-            <div className="flex bg-gray-100 w-[140px] py-1 px-2 rounded-sm mb-[18px] items-center">
-              <p>Home</p>
-              <ChevronRight className="w-[20px] h-[20px] text-gray-500" />
-              <p className="text-[#208CD4]">{editingMotorId ? 'Edit Motor' : 'Add Motor'}</p>
-            </div>
+            {/* <div className="flex bg-gray-100 w-[140px] py-1.5 sm:py-2 px-2 sm:px-3 rounded-sm mb-3 sm:mb-4 items-center gap-1.5 sm:gap-2">
+              <p className="text-xs sm:text-sm">Home</p>
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+              <p className="text-[#208CD4] text-xs sm:text-sm">{editingMotorId ? 'Edit Motor' : 'Add Motor'}</p>
+            </div> */}
           </div>
         </div>
-      </div> */}
+      </div>
 
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      {/* Form Section */}
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 mb-8">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 lg:mb-8">
                 {editingMotorId ? 'Edit Motor' : 'Add Motor'}
               </h1>
               
               {submitSuccess && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 relative">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
                   <div className="flex justify-between items-start">
                     <div className="text-green-800">
-                      <p className="text-sm font-medium">
+                      <p className="text-xs sm:text-sm font-medium">
                         Motor {editingMotorId ? 'updated' : 'added'} successfully!
                       </p>
                     </div>
                     <button
                       onClick={() => setSubmitSuccess(false)}
-                      className="text-green-600 hover:text-green-800 text-lg font-bold leading-none"
+                      className="text-green-600 hover:text-green-800 text-base sm:text-lg font-bold leading-none"
                     >
                       ×
                     </button>
@@ -278,14 +280,14 @@ function AddMotor() {
               )}
 
               {submitError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 relative">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
                   <div className="flex justify-between items-start">
                     <div className="text-red-800">
-                      <p className="text-sm font-medium">{submitError}</p>
+                      <p className="text-xs sm:text-sm font-medium">{submitError}</p>
                     </div>
                     <button
                       onClick={() => setSubmitError('')}
-                      className="text-red-600 hover:text-red-800 text-lg font-bold leading-none"
+                      className="text-red-600 hover:text-red-800 text-base sm:text-lg font-bold leading-none"
                     >
                       ×
                     </button>
@@ -293,10 +295,10 @@ function AddMotor() {
                 </div>
               )}
               
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label htmlFor="motorName" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="motorName" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Motor Name *
                     </label>
                     <input
@@ -307,13 +309,13 @@ function AddMotor() {
                       onChange={handleInputChange}
                       placeholder="Enter Motor Name"
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                       ref={motorNameInputRef}
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="motorType" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="motorType" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Motor Type *
                     </label>
                     <input
@@ -324,14 +326,14 @@ function AddMotor() {
                       onChange={handleInputChange}
                       placeholder="Enter Motor Type"
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label htmlFor="manufacturer" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="manufacturer" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Manufacturer *
                     </label>
                     <input
@@ -342,12 +344,12 @@ function AddMotor() {
                       onChange={handleInputChange}
                       placeholder="Enter Manufacturer"
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                     />
                   </div>
                   
                   <div>
-                    <label htmlFor="modelNumber" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="modelNumber" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Model Number *
                     </label>
                     <input
@@ -358,14 +360,14 @@ function AddMotor() {
                       onChange={handleInputChange}
                       placeholder="Enter Model Number"
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <label htmlFor="installationDate" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="installationDate" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                       Installation Date *
                     </label>
                     <input
@@ -375,18 +377,18 @@ function AddMotor() {
                       value={formData.installationDate}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                     />
                   </div>
                 </div>
 
                 {/* Submit/Cancel Buttons */}
-                <div className="flex justify-end pt-6 gap-4">
+                <div className="flex flex-col sm:flex-row justify-end pt-4 sm:pt-6 gap-2 sm:gap-4">
                   {editingMotorId && (
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="font-medium py-3 px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 bg-gray-200 text-gray-700 hover:bg-gray-300"
+                      className="font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 bg-gray-200 text-gray-700 hover:bg-gray-300 text-sm sm:text-base"
                     >
                       Cancel
                     </button>
@@ -395,7 +397,7 @@ function AddMotor() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className={`font-medium py-3 px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    className={`font-medium py-2 sm:py-3 px-6 sm:px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm sm:text-base ${
                       isSubmitting
                         ? 'bg-gray-400 text-white cursor-not-allowed'
                         : 'bg-[#208CD4] hover:bg-blue-700 text-white'
@@ -411,25 +413,25 @@ function AddMotor() {
       </div>
 
       {/* Motors Table Section */}
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-              <h2 className="text-2xl font-semibold text-gray-900">Motors List</h2>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">Motors List</h2>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="Search motors..."
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full sm:w-64 px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                   />
                 </div>
                 <select 
                   value={motorsPerPage}
                   onChange={handleShowChange}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base"
                 >
                   <option value={1}>Show 1</option>
                   <option value={10}>Show 10</option>
@@ -440,14 +442,14 @@ function AddMotor() {
             </div>
 
             {motorsError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                 <div className="flex justify-between items-start">
                   <div className="text-red-800">
-                    <p className="text-sm font-medium">{motorsError}</p>
+                    <p className="text-xs sm:text-sm font-medium">{motorsError}</p>
                   </div>
                   <button
                     onClick={fetchMotors}
-                    className="text-sm underline hover:no-underline"
+                    className="text-xs sm:text-sm underline hover:no-underline"
                   >
                     Retry
                   </button>
@@ -456,8 +458,8 @@ function AddMotor() {
             )}
 
             {isLoadingMotors ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Loading motors...</p>
+              <div className="text-center py-6 sm:py-8">
+                <p className="text-gray-500 text-sm sm:text-base">Loading motors...</p>
               </div>
             ) : (
               <>
@@ -466,52 +468,52 @@ function AddMotor() {
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">S/No</th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Motor Name</th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Motor Type</th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Manufacturer</th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Model Number</th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Installation Date</th>
-                        <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">S/No</th>
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Motor Name</th>
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Motor Type</th>
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Manufacturer</th>
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Model Number</th>
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Installation Date</th>
+                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white">
                       {paginatedMotors.length === 0 ? (
                         <tr>
-                          <td colSpan="7" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                          <td colSpan="7" className="border border-gray-300 px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm sm:text-base">
                             {searchQuery ? 'No motors found matching your search.' : 'No motors added yet.'}
                           </td>
                         </tr>
                       ) : (
                         paginatedMotors.map((motor, index) => (
                           <tr key={motor.id || `motor-${index}`} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {startIndex + index + 1}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {motor.motor_name}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {motor.motor_type}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {motor.manufacturer}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {motor.model_number}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               {motor.installation_date}
                             </td>
-                            <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               <div className="flex gap-2">
                                 <button 
                                   onClick={() => handleEdit(motor)}
-                                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                  className="text-blue-600 hover:text-blue-800 text-xs sm:text-sm font-medium"
                                 >
                                   Edit
                                 </button>
-                                <button className="text-red-600 hover:text-red-800 text-sm font-medium">
+                                <button className="text-red-600 hover:text-red-800 text-xs sm:text-sm font-medium">
                                   Delete
                                 </button>
                               </div>
@@ -524,35 +526,35 @@ function AddMotor() {
                 </div>
 
                 {/* Mobile Card View */}
-                <div className="md:hidden space-y-4">
+                <div className="md:hidden space-y-3">
                   {paginatedMotors.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-6 text-gray-500 text-sm">
                       {searchQuery ? 'No motors found matching your search.' : 'No motors added yet.'}
                     </div>
                   ) : (
                     paginatedMotors.map((motor, index) => (
-                      <div key={motor.id || `motor-${index}`} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <div className="flex justify-between items-start mb-3">
+                      <div key={motor.id || `motor-${index}`} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                        <div className="flex justify-between items-start mb-2">
                           <div className="flex items-center gap-2">
                             <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
                               #{startIndex + index + 1}
                             </span>
-                            <h3 className="font-semibold text-gray-900 text-lg">{motor.motor_name}</h3>
+                            <h3 className="font-semibold text-gray-900 text-base">{motor.motor_name}</h3>
                           </div>
                           <div className="flex gap-2">
                             <button 
                               onClick={() => handleEdit(motor)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                              className="text-blue-600 hover:text-blue-800 text-xs font-medium"
                             >
                               Edit
                             </button>
-                            <button className="text-red-600 hover:text-red-800 text-sm font-medium">
+                            <button className="text-red-600 hover:text-red-800 text-xs font-medium">
                               Delete
                             </button>
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="grid grid-cols-2 gap-3 text-xs">
                           <div className="flex flex-col">
                             <span className="text-gray-500 font-medium">Motor Type:</span>
                             <span className="text-gray-900">{motor.motor_type}</span>
@@ -580,11 +582,11 @@ function AddMotor() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-4 py-2 text-sm font-medium rounded ${
+                      className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                         currentPage === 1
                           ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
@@ -609,7 +611,7 @@ function AddMotor() {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-2 text-sm font-medium rounded ${
+                          className={`px-2.5 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                             currentPage === pageNum
                               ? 'bg-blue-500 text-white'
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -623,7 +625,7 @@ function AddMotor() {
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`px-4 py-2 text-sm font-medium rounded ${
+                      className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                         currentPage === totalPages
                           ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                           : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
@@ -643,5 +645,3 @@ function AddMotor() {
 }
 
 export default AddMotor;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

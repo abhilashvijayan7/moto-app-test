@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef, useContext } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import icon from "../images/Icon.png";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { UserContext } from "../context/UserContext"; 
 
 // Initialize socket connections
 const socketMoto = io("https://moto-app-test.onrender.com", {
@@ -17,7 +18,8 @@ const socketWaterPump = io("https://water-pump.onrender.com", {
   rejectUnauthorized: false,
 });
 
-const Home = ({ user }) => {
+const Home = () => {
+  const { user } = useContext(UserContext); 
   const [sensorMoto, setSensorMoto] = useState({});
   const [sensorWaterPump, setSensorWaterPump] = useState({});
   const [motorStatuses, setMotorStatuses] = useState({});
@@ -34,6 +36,16 @@ const Home = ({ user }) => {
   const lastUpdateTimes = useRef({});
   const location = useLocation();
   const navigate = useNavigate();
+
+  // This ensures none of the code below runs until the user object is available.
+  useEffect(() => {
+    if (!user) {
+      const timer = setTimeout(() => {
+          if (!user) navigate("/login");
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, navigate]);
 
   // Derive user role and permissions
   const userRole = user?.role?.toLowerCase() || "normal";
@@ -173,7 +185,6 @@ const Home = ({ user }) => {
       setLoading(true);
       setError({});
 
-      // Fetch only the plants from userPlants
       const apiPromises = loginPlantIds.map((plantId) =>
         axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`, {
           withCredentials: true,
@@ -470,7 +481,7 @@ const Home = ({ user }) => {
 
     const handleSensorDataMoto = async (data) => {
       const plantId = data.data.id;
-      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
+      if (!loginPlantIds.includes(plantId)) return;
       const sensorData = data.data.sensordata;
 
       console.log("Received moto sensor data for plant:", plantId, sensorData);
@@ -509,7 +520,7 @@ const Home = ({ user }) => {
 
     const handleSensor = async (data) => {
       const plantId = data.plant_id;
-      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
+      if (!loginPlantIds.includes(plantId)) return;
       console.log("Received water pump sensor data for plant:", plantId, data);
       setSensorWaterPump(data);
       const plantStatus = data.plant_status;
@@ -595,7 +606,7 @@ const Home = ({ user }) => {
 
     const handleMotorStatusUpdate = (data) => {
       const { plantId, timestamp } = data;
-      if (!loginPlantIds.includes(plantId)) return; // Restrict to login plants
+      if (!loginPlantIds.includes(plantId)) return;
       const sensor = getSensorForPlant(plantId);
       const plantStatus = sensor.plant_status;
       if (
@@ -705,9 +716,9 @@ const Home = ({ user }) => {
   // Loading state
   if (loading) {
     return (
-      <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
+      <div className="w-full mx-auto mb-16 lg:mb-[110px]">
         <div className="flex justify-center items-center h-64">
-          <div className="text-lg">Loading plant data...</div>
+          <div className="text-base lg:text-lg">Loading plant data...</div>
         </div>
       </div>
     );
@@ -716,30 +727,30 @@ const Home = ({ user }) => {
   // Global error state
   if (error.global) {
     return (
-      <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
+      <div className="w-full mx-auto mb-16 lg:mb-[110px]">
         <div className="flex justify-center items-center h-64">
-          <div className="text-lg text-red-500">Error: {error.global}</div>
+          <div className="text-base text-red-500 lg:text-lg">Error: {error.global}</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[380px] mx-auto mb-[110px] lg:max-w-none lg:mx-0">
+    <div className="w-full mx-auto mb-16 lg:mb-[110px]">
       <div className="flex-1 w-full">
-        <div className="mb-6 lg:px-[22px]">
-          <div className="relative mt-9">
-            <MagnifyingGlassIcon className="absolute left-3 top-6.5 transform -translate-y-1/2 h-5 w-5 text-[#6B6B6B]" />
+        <div className="mb-4 lg:mb-6 lg:px-[22px]">
+          <div className="relative mt-6 lg:mt-9">
+            <MagnifyingGlassIcon className="absolute left-3 top-6.5 transform -translate-y-1/2 h-4 w-4 text-[#6B6B6B] lg:h-5 lg:w-5" />
             <input
               type="text"
               value={searchQuery}
               onChange={handleSearchChange}
               placeholder="Search plants by name..."
-              className="w-full pl-10 pr-4 py-3 border border-[#DADADA] rounded-[12px] text-[16px] text-[#4E4D4D] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] lg:w-[417px] lg:shadow-sm lg:mb-5"
+              className="w-full pl-10 pr-4 py-2 border border-[#DADADA] rounded-[12px] text-sm text-[#4E4D4D] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4] lg:w-[417px] lg:py-3 lg:text-[16px] lg:shadow-sm lg:mb-5"
             />
           </div>
         </div>
-        <div className="flex flex-col gap-6 items-start lg:flex-row lg:flex-wrap lg:gap-[12px] lg:px-[22px] lg:pb-[110px]">
+        <div className="flex flex-col gap-4 items-start lg:flex-row lg:flex-wrap lg:gap-[24px] lg:px-[22px] lg:pb-[110px] lg:max-w-full">
           {filteredPlants.length > 0 ? (
             filteredPlants.map((plant, index) => {
               const plantSensors = getMappedSensorsForPlant(plant.plant_id);
@@ -759,10 +770,10 @@ const Home = ({ user }) => {
               return (
                 <div
                   key={plant.plant_id || `plant-${index}`}
-                  className="w-[380px] px-[10px] py-[13px] border border-[#DADADA] rounded-[12px] bg-[#FFFFFF] lg:w-[417px]"
+                  className="w-full max-w-[360px] px-2 py-2 border border-[#DADADA] rounded-[12px] bg-[#FFFFFF] lg:w-[417px] lg:max-w-[417px] lg:px-[10px] lg:py-[13px]"
                 >
-                  <div className="flex justify-between mb-[10px] items-center">
-                    <p className="text-[#4E4D4D] text-[17px] font-[700] max-w-[70%] overflow-wrap-break-word">
+                  <div className="flex justify-between mb-2 items-center lg:mb-[10px]">
+                    <p className="text-[#4E4D4D] text-base font-[700] max-w-[70%] overflow-wrap-break-word lg:text-[17px]">
                       {plant.plant_name || "Unknown Plant"}
                     </p>
                     {canControlPlant && (
@@ -774,55 +785,55 @@ const Home = ({ user }) => {
                             isButtonDisabled[plant.plant_id] ||
                             connectionStatus === "Disconnected"
                           }
-                          className={`flex items-center py-[10px] px-[18px] ml-[10px] rounded-[6px] gap-[10px] justify-center text-[16px] text-[#FFFFFF] ${
+                          className={`flex items-center py-2 px-4 ml-2 rounded-[6px] gap-2 justify-center text-sm text-[#FFFFFF] ${
                             isButtonDisabled[plant.plant_id] ||
                             connectionStatus === "Disconnected"
                               ? "bg-[#DADADA] cursor-not-allowed"
                               : currentMotorStatus === "ON"
                               ? "bg-[#EF5350]"
                               : "bg-[#66BB6A]"
-                          }`}
+                          } lg:py-[10px] lg:px-[18px] lg:ml-[10px] lg:gap-[10px] lg:text-[16px]`}
                         >
                           <img
                             src={icon}
                             alt="Icon"
-                            className="w-[20px] h-[20px]"
+                            className="w-4 h-4 lg:w-[20px] lg:h-[20px]"
                           />
                           {currentMotorStatus === "ON" ? "STOP" : "START"}
                         </button>
                         {error[plant.plant_id] && (
-                          <p className="text-red-500 text-sm mt-2">
+                          <p className="text-red-500 text-xs mt-1 lg:text-sm lg:mt-2">
                             {error[plant.plant_id]}
                           </p>
                         )}
                       </div>
                     )}
                   </div>
-                  <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
-                    <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
+                  <div className="flex text-xs text-[#6B6B6B] mb-2 font-[400] justify-between lg:text-[14px] lg:mb-[10px]">
+                    <div className="pr-2 max-w-[33%] text-center lg:pr-[10px] lg:max-w-[30%]">
                       <p>Connection</p>
                       <p
-                        className={`text-[18px] font-[600] ${
+                        className={`text-base font-[600] ${
                           connectionStatus === "Disconnected"
                             ? "text-[#EF5350]"
                             : "text-[#4CAF50]"
-                        }`}
+                        } lg:text-[18px]`}
                       >
                         {connectionStatus.charAt(0).toUpperCase() +
                           connectionStatus.slice(1).toLowerCase()}
                       </p>
                     </div>
-                    <div className="pr-[10px] max-w-[33%] lg:max-w-[30%] text-center">
+                    <div className="pr-2 max-w-[33%] text-center lg:pr-[10px] lg:max-w-[30%]">
                       <p>Status</p>
                       <p
-                        className={`text-[18px] font-[600] ${
+                        className={`text-base font-[600] ${
                           displayedPlantStatus === "Disconnected" ||
                           displayedPlantStatus === "POWER-OK"
                             ? "text-[#EF5350]"
                             : displayedPlantStatus === "RUNNING"
                             ? "text-[#4CAF50]"
                             : "text-[#208CD4]"
-                        }`}
+                        } lg:text-[18px]`}
                       >
                         {displayedPlantStatus
                           ? displayedPlantStatus.charAt(0).toUpperCase() +
@@ -830,19 +841,19 @@ const Home = ({ user }) => {
                           : "NA"}
                       </p>
                     </div>
-                    <div className="max-w-[33%] lg:max-w-[30%] text-center">
+                    <div className="max-w-[33%] text-center lg:max-w-[30%]">
                       <p>Mode</p>
-                      <p className="text-[18px] text-[#4CAF50] font-[600]">
+                      <p className="text-base text-[#4CAF50] font-[600] lg:text-[18px]">
                         {connectionStatus === "Disconnected"
                           ? "NA"
                           : manualMode}
                       </p>
                     </div>
                   </div>
-                  <div className="flex text-[14px] text-[#6B6B6B] mb-[10px] font-[400] justify-between">
-                    <div className="pr-[10px] max-w-[50%] text-center">
+                  <div className="flex text-xs text-[#6B6B6B] mb-2 font-[400] justify-between lg:text-[14px] lg:mb-[10px]">
+                    <div className="pr-2 max-w-[50%] text-center lg:pr-[10px]">
                       <p>V (V1/ V2/ V3)</p>
-                      <p className="text-[18px] text-[#208CD4] font-[600]">
+                      <p className="text-base text-[#208CD4] font-[600] lg:text-[18px]">
                         {connectionStatus === "Disconnected"
                           ? "NA"
                           : `${
@@ -865,7 +876,7 @@ const Home = ({ user }) => {
                     </div>
                     <div className="max-w-[50%] text-center">
                       <p>I (I1/ I2/ I3)</p>
-                      <p className="text-[18px] text-[#208CD4] font-[600]">
+                      <p className="text-base text-[#208CD4] font-[600] lg:text-[18px]">
                         {connectionStatus === "Disconnected"
                           ? "NA"
                           : `${
@@ -887,8 +898,8 @@ const Home = ({ user }) => {
                       </p>
                     </div>
                   </div>
-                  <div className="mb-[6px]">
-                    <p className="text-[17px] text-[#4E4D4D] mb-[6px] font-[700]">
+                  <div className="mb-2 lg:mb-[6px]">
+                    <p className="text-base text-[#4E4D4D] mb-2 font-[700] lg:text-[17px] lg:mb-[6px]">
                       Motor & Power
                     </p>
                     <div className="grid grid-cols-2 gap-2">
@@ -904,27 +915,27 @@ const Home = ({ user }) => {
                           return (
                             <div
                               key={motor.motor_id}
-                              className="border border-[#DADADA] rounded-[8px] p-1 text-[14px] font-[400] text-[#6B6B6B]"
+                              className="border border-[#DADADA] rounded-[8px] p-1 text-xs font-[400] text-[#6B6B6B] lg:p-1 lg:text-[14px]"
                             >
                               <div className="flex items-center justify-between font-[700] text-[#4E4D4D]">
                                 <div className="text-start">
                                   <div className="flex items-center gap-1">
-                                    <p className="text-[16px]">
+                                    <p className="text-sm lg:text-[16px]">
                                       {motor.motor_name}
                                     </p>
-                                    <span className="text-[13px]">
+                                    <span className="text-[11px] lg:text-[13px]">
                                       ({getMotorLabel(motor.motor_working_order)})
                                     </span>
                                   </div>
                                 </div>
                                 <p
-                                  className={`text-[16px] ${
+                                  className={`text-sm ${
                                     status === "ON"
                                       ? "text-[#4CAF50]"
                                       : status === "OFF"
                                       ? "text-[#EF5350]"
                                       : "text-[#208CD4]"
-                                  }`}
+                                  } lg:text-[16px]`}
                                 >
                                   {status}
                                 </p>
@@ -945,7 +956,7 @@ const Home = ({ user }) => {
                       )}
                     </div>
                     {motors.length > 0 && (
-                      <div className="mt-2 text-[14px] text-[#6B6B6B] font-[400] flex justify-between">
+                      <div className="mt-2 text-xs text-[#6B6B6B] font-[400] flex justify-between lg:text-[14px]">
                         <p className="font-[700] text-[#4E4D4D]">Total Time</p>
                         <p className="text-[#208CD4] font-[600]">
                           {connectionStatus === "Disconnected"
@@ -958,11 +969,11 @@ const Home = ({ user }) => {
                     )}
                   </div>
                   <div>
-                    <p className="border-b border-b-[#208CD4] mb-[6px] text-[#4E4D4D] font-[700] text-[18px]">
+                    <p className="border-b border-b-[#208CD4] mb-2 text-[#4E4D4D] font-[700] text-base lg:mb-[6px] lg:text-[18px]">
                       Sensors & Actuators
                     </p>
-                    <div className="mt-[6px] text-[#6B6B6B] text-[14px] font-[400]">
-                      <div className="grid grid-cols-4 gap-2 border-b border-b-[#DADADA] pb-[6px]">
+                    <div className="mt-2 text-[#6B6B6B] text-xs font-[400] lg:mt-[6px] lg:text-[14px]">
+                      <div className="grid grid-cols-4 gap-2 border-b border-b-[#DADADA] pb-2 lg:pb-[6px]">
                         {plantSensors.length > 0 ? (
                           plantSensors
                             .filter(
@@ -991,7 +1002,7 @@ const Home = ({ user }) => {
                                     {apidata.sensor_name || "Sensor"}
                                   </p>
                                   <p
-                                    className={`text-[15px] font-[600] ${
+                                    className={`text-sm font-[600] ${
                                       isVacuumSwitch
                                         ? sensorValue === "OK"
                                           ? "text-[#4CAF50]"
@@ -1002,7 +1013,7 @@ const Home = ({ user }) => {
                                           sensorValue === "NA"
                                         ? "text-[#EF5350]"
                                         : "text-[#208CD4]"
-                                    }`}
+                                    } lg:text-[15px]`}
                                   >
                                     {sensorValue}
                                   </p>
@@ -1021,7 +1032,7 @@ const Home = ({ user }) => {
               );
             })
           ) : (
-            <div className="w-full text-center text-[#6B6B6B]">
+            <div className="w-full text-center text-[#6B6B6B] text-sm lg:text-base">
               No plants found matching your search.
             </div>
           )}
@@ -1032,5 +1043,3 @@ const Home = ({ user }) => {
 };
 
 export default Home;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

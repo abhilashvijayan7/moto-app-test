@@ -293,10 +293,10 @@ function AddLocation() {
 
   return (
     <div className="flex-1">
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="p-3 sm:p-4 lg:p-6 max-w-[640px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1440px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-semibold text-gray-900 mb-8">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-8">
               {isEditing ? "Edit Location" : "Add New Location"}
             </h1>
 
@@ -345,7 +345,7 @@ function AddLocation() {
             )}
 
             <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="locationName" className="block text-sm font-medium text-gray-700 mb-2">
                     Location Name *
@@ -393,7 +393,7 @@ function AddLocation() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-2">
                     Country *
@@ -458,7 +458,7 @@ function AddLocation() {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="zipcode" className="block text-sm font-medium text-gray-700 mb-2">
                     ZIP Code *
@@ -495,7 +495,7 @@ function AddLocation() {
                   <button
                     type="button"
                     onClick={handleCancelEdit}
-                    className="font-medium py-3 px-8 rounded-md transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    className="font-medium py-2.5 sm:py-3 px-6 sm:px-8 rounded-md transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   >
                     Cancel
                   </button>
@@ -504,7 +504,7 @@ function AddLocation() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className={`font-medium py-3 px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  className={`font-medium py-2.5 sm:py-3 px-6 sm:px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
                     isSubmitting
                       ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-[#208CD4] hover:bg-blue-700 text-white"
@@ -518,23 +518,23 @@ function AddLocation() {
         </div>
       </div>
 
-      <div className="p-4 lg:p-6 max-w-[480px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1280px]">
+      <div className="p-3 sm:p-4 lg:p-6 max-w-[640px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1440px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-              <h2 className="text-2xl font-semibold text-gray-900">Locations List</h2>
+              <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900">Locations List</h2>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <input
                   type="text"
                   placeholder="Search locations..."
                   value={searchQuery}
                   onChange={handleSearchChange}
-                  className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full sm:w-64 px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
                 <select
                   value={locationsPerPage}
                   onChange={handleShowChange}
-                  className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
                   <option value={5}>Show 5</option>
                   <option value={10}>Show 10</option>
@@ -648,21 +648,21 @@ function AddLocation() {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="flex justify-between items-center mt-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md w-full sm:w-auto ${
                         currentPage === 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >
                       Previous
                     </button>
-                    <div className="flex space-x-1">{renderPagination()}</div>
+                    <div className="flex flex-wrap justify-center space-x-1">{renderPagination()}</div>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
                       disabled={currentPage === totalPages}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-md ${
+                      className={`px-3 py-1.5 text-sm font-medium rounded-md w-full sm:w-auto ${
                         currentPage === totalPages ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                     >

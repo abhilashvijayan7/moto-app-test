@@ -10,8 +10,10 @@ const DataTable = ({
   defaultPageSize = 5,
   onExportCSV,
   onExportExcel,
-  mode = 'client', // NEW: 'client' or 'server'
-  fetchData = null, // NEW: fetch function for server mode
+  mode = 'client',
+  fetchData = null,
+  paginationClassName = 'flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 mt-4',
+  paginationButtonClassName = 'px-4 py-2 text-sm font-medium text-white bg-[#208CD4] border border-[#208CD4] rounded-md hover:bg-[#1A73B0] focus:outline-none focus:ring-2 focus:ring-[#208CD4] disabled:opacity-50 disabled:cursor-not-allowed min-w-[40px] touch-manipulation',
 }) => {
   const [search, setSearch] = useState('');
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -172,34 +174,33 @@ const DataTable = ({
           onChange={setVisibleColumns}
         />
 
-        <div className="flex flex-wrap items-center space-x-2">
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="border rounded-md px-3 py-2 text-gray-700"
-          >
-            {pageSizeOptions.map(size => (
-              <option key={size} value={size}>{size} / page</option>
-            ))}
-          </select>
-
+        <div className="flex flex-col max-sm:w-full sm:flex-row items-center sm:space-x-2 space-y-2 sm:space-y-0">
           <button
             onClick={() => (onExportCSV ? onExportCSV() : exportCSV())}
-            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="max-sm:w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={!currentData.length}
           >
             Export CSV
           </button>
           <button
             onClick={() => (onExportExcel ? onExportExcel() : exportExcel())}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="max-sm:w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded shadow disabled:bg-gray-400 disabled:cursor-not-allowed"
             disabled={!currentData.length}
           >
             Export Excel
           </button>
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="max-sm:w-full border rounded-md px-3 py-2 text-gray-700 max-sm:text-xs"
+          >
+            {pageSizeOptions.map(size => (
+              <option key={size} value={size}>{size} / page</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -266,33 +267,33 @@ const DataTable = ({
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-center items-center space-x-2">
+      <div className={paginationClassName}>
         <button
           onClick={() => setCurrentPage(1)}
           disabled={currentPage === 1}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
+          className={paginationButtonClassName}
         >
           First
         </button>
         <button
           onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
           disabled={currentPage === 1}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
+          className={paginationButtonClassName}
         >
           Previous
         </button>
-        <span>Page {currentPage} of {totalPages || 1}</span>
+        <span className="text-sm max-sm:text-xs text-gray-700">Page {currentPage} of {totalPages || 1}</span>
         <button
           onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
+          className={paginationButtonClassName}
         >
           Next
         </button>
         <button
           onClick={() => setCurrentPage(totalPages)}
           disabled={currentPage === totalPages || totalPages === 0}
-          className="px-3 py-2 rounded bg-indigo-600 text-white disabled:bg-gray-300"
+          className={paginationButtonClassName}
         >
           Last
         </button>

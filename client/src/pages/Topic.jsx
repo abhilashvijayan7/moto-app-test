@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import axios from 'axios';
 
 export default function ApplyTopicPage() {
@@ -231,203 +231,213 @@ export default function ApplyTopicPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
-
-     {/* <div className="max-w-[450px] mx-auto text-[#6B6B6B]  lg:max-w-[1280px] lg:px-11 lg:w-full lg:mb-8">
-        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-6">
+      {/* Header and Breadcrumb: Stacked vertically on mobile */}
+      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-11">
+        <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
           <div>
-            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
-              Add Topic
+            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
+              {isEditMode ? "Edit Topic" : "Apply Topic"}
             </p>
-            <div className="flex bg-gray-100 w-[140px] py-1 px-2 rounded-sm mb-[18px] items-center">
-              <p>Home</p>
-              <ChevronRight className="w-[20px] h-[20px] text-gray-500" />
-              <p className="text-[#208CD4]">{editingMotorId ? 'Edit Motor' : 'Add Motor'}</p>
-            </div>
+            {/* <div className="flex bg-gray-100 w-[140px] py-1.5 sm:py-2 px-2 sm:px-3 rounded-sm mb-3 sm:mb-4 items-center gap-1.5 sm:gap-2">
+              <p className="text-xs sm:text-sm">Home</p>
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+              <p className="text-[#208CD4] text-xs sm:text-sm">
+                {isEditMode ? "Edit Topic" : "Apply Topic"}
+              </p>
+            </div> */}
           </div>
         </div>
-      </div> */}
+      </div>
 
-      <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl p-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 pb-4 mb-6">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800">{isEditMode ? 'Edit Topic' : 'Apply Topic'}</h2>
-            <p className="text-sm text-gray-500 mt-1">{isEditMode ? 'Edit topic details' : 'Select a plant and enter topic details'}</p>
-          </div>
-        </div>
-
-        {/* Page Content */}
-        <div className="space-y-6">
-          {/* Success Message */}
-          {successMessage && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-              <div className="flex justify-between items-start">
-                <p className="text-sm font-medium text-green-800">{successMessage}</p>
-                <button
-                  className="text-green-600 hover:text-green-800 text-lg font-bold"
-                  onClick={() => setSuccessMessage(null)}
-                >
-                  ×
-                </button>
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
+        <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
+          <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-gray-200 pb-3 sm:pb-4 mb-4 sm:mb-6">
+              <div>
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-800">
+                  {isEditMode ? 'Edit Topic' : 'Apply Topic'}
+                </h2>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">
+                  {isEditMode ? 'Edit topic details' : 'Select a plant and enter topic details'}
+                </p>
               </div>
             </div>
-          )}
 
-          {/* Error Message for API Failure */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-              <div className="flex justify-between items-start">
-                <p className="text-sm font-medium text-red-800">{error}</p>
-                <button
-                  className="text-red-600 hover:text-red-800 text-lg font-bold"
-                  onClick={() => setError(null)}
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Input Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
-              {/* Select Plant */}
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Select Plant
-                </label>
-                <div className="relative">
-                  <select
-                    name="plant_id"
-                    value={formData.plant_id}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                    required
-                    disabled={isEditMode}
-                  >
-                    <option value="">Select a plant...</option>
-                    {plants.length === 0 ? (
-                      <option value="" disabled>
-                        No plants available
-                      </option>
-                    ) : (
-                      plants.map((plant) => (
-                        <option key={plant.plant_id} value={plant.plant_id}>
-                          {plant.plant_name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            {/* Page Content */}
+            <div className="space-y-4 sm:space-y-6">
+              {/* Success Message */}
+              {successMessage && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs sm:text-sm font-medium text-green-800">{successMessage}</p>
+                    <button
+                      className="text-green-600 hover:text-green-800 text-base sm:text-lg font-bold leading-none"
+                      onClick={() => setSuccessMessage(null)}
+                    >
+                      ×
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* Motor Topic */}
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Motor Topic
-                </label>
-                <input
-                  type="text"
-                  name="motor_topic"
-                  value={formData.motor_topic}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter motor topic"
-                  required
-                />
-              </div>
+              {/* Error Message for API Failure */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 relative">
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs sm:text-sm font-medium text-red-800">{error}</p>
+                    <button
+                      className="text-red-600 hover:text-red-800 text-base sm:text-lg font-bold leading-none"
+                      onClick={() => setError(null)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              )}
 
-              {/* Sensor Topic */}
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Sensor Topic
-                </label>
-                <input
-                  type="text"
-                  name="sensor_topic"
-                  value={formData.sensor_topic}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter sensor topic"
-                  required
-                />
-              </div>
+              {/* Input Form */}
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                  {/* Select Plant */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                      Select Plant
+                    </label>
+                    <div className="relative">
+                      <select
+                        name="plant_id"
+                        value={formData.plant_id}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none text-sm sm:text-base"
+                        required
+                        disabled={isEditMode}
+                      >
+                        <option value="">Select a plant...</option>
+                        {plants.length === 0 ? (
+                          <option value="" disabled>
+                            No plants available
+                          </option>
+                        ) : (
+                          plants.map((plant) => (
+                            <option key={plant.plant_id} value={plant.plant_id}>
+                              {plant.plant_name}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
 
-              {/* Valve Topic */}
-              <div className="sm:col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Valve Topic
-                </label>
-                <input
-                  type="text"
-                  name="valve_topic"
-                  value={formData.valve_topic}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter valve topic"
-                  required
-                />
-              </div>
+                  {/* Motor Topic */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                      Motor Topic
+                    </label>
+                    <input
+                      type="text"
+                      name="motor_topic"
+                      value={formData.motor_topic}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                      placeholder="Enter motor topic"
+                      required
+                    />
+                  </div>
+
+                  {/* Sensor Topic */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                      Sensor Topic
+                    </label>
+                    <input
+                      type="text"
+                      name="sensor_topic"
+                      value={formData.sensor_topic}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                      placeholder="Enter sensor topic"
+                      required
+                    />
+                  </div>
+
+                  {/* Valve Topic */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
+                      Valve Topic
+                    </label>
+                    <input
+                      type="text"
+                      name="valve_topic"
+                      value={formData.valve_topic}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                      placeholder="Enter valve topic"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Page Footer */}
+                <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4 pt-4 sm:pt-6 border-t border-gray-200">
+                  <button
+                    type="button"
+                    className="px-6 py-2 sm:px-8 sm:py-3 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm sm:text-base"
+                    onClick={() => {
+                      setFormData({
+                        plant_id: '',
+                        motor_topic: '',
+                        sensor_topic: '',
+                        valve_topic: '',
+                      });
+                      setIsEditMode(false);
+                      setEditTopicId(null);
+                      setSuccessMessage(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 sm:px-8 sm:py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm sm:text-base"
+                  >
+                    {isEditMode ? 'Update Topic' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
             </div>
-
-            {/* Page Footer */}
-            <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
-              <button
-                type="button"
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
-                onClick={() => {
-                  setFormData({
-                    plant_id: '',
-                    motor_topic: '',
-                    sensor_topic: '',
-                    valve_topic: '',
-                  });
-                  setIsEditMode(false);
-                  setEditTopicId(null);
-                  setSuccessMessage(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
-              >
-                {isEditMode ? 'Update Topic' : 'Save Changes'}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
 
         {/* Topics Table Section */}
-        <div className="p-6">
+        <div className="mt-4 sm:mt-6">
           <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-            <div className="py-6 px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-                <h2 className="text-2xl font-semibold text-gray-900">
+            <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+                <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">
                   Applied Topics
                 </h2>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <div className="relative">
                     <input
                       type="text"
                       placeholder="Search applied topics..."
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full sm:w-64 px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                     />
                   </div>
                   <select
                     value={motorsPerPage}
                     onChange={handleMotorsPerPageChange}
-                    className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base"
                   >
-                    <option value={1}>Show 1</option>
-                    <option value={10}>Show 10</option>
-                    <option value={25}>Show 25</option>
-                    <option value={50}>Show 50</option>
+                    <option value="1">Show 1</option>
+                    <option value="10">Show 10</option>
+                    <option value="25">Show 25</option>
+                    <option value="50">Show 50</option>
                   </select>
                 </div>
               </div>
@@ -437,53 +447,67 @@ export default function ApplyTopicPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-50">
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[60px]">S/No</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[100px]">Plant ID</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[150px]">Plant Name</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Motor Topic</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[150px]">Sensor Topic</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[120px]">Valve Topic</th>
-                      <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[150px]">Actions</th>
+                      <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 min-w-[60px]">
+                        S/No
+                      </th>
+                      <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 min-w-[100px]">
+                        Plant ID
+                      </th>
+                      <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 min-w-[150px]">
+                        Plant Name
+                      </th>
+                      <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 min-w-[120px]">
+                        Motor Topic
+                      </th>
+                      <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 min-w-[150px]">
+                        Sensor Topic
+                      </th>
+                      <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 min-w-[120px]">
+                        Valve Topic
+                      </th>
+                      <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700 min-w-[150px]">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
                     {paginatedPlantTopics.length === 0 ? (
                       <tr>
-                        <td colSpan="7" className="border border-gray-300 px-4 py-8 text-center text-gray-500">
+                        <td colSpan="7" className="border border-gray-300 px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm sm:text-base">
                           {searchQuery ? 'No topics found matching your search.' : 'No topics applied yet.'}
                         </td>
                       </tr>
                     ) : (
                       paginatedPlantTopics.map((topic, index) => (
                         <tr key={topic.plant_topic_id} className="hover:bg-gray-50">
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                          <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {(currentPage - 1) * motorsPerPage + index + 1}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                          <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {topic.plant_id || '-'}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                          <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {topic.plant_name || '-'}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                          <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {topic.motor_topic || '-'}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                          <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {topic.sensor_topic || '-'}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                          <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                             {topic.valve_topic || '-'}
                           </td>
-                          <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900 ">
+                          <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900 flex gap-2">
                             <button
-                              className="px-2.5 py-1 bg-blue-500 mr-2 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
+                              className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-md transition-colors"
                               title="Edit topic"
                               onClick={() => handleEdit(topic)}
                             >
                               Edit
                             </button>
                             <button
-                              className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-colors"
+                              className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-medium rounded-md transition-colors"
                               title="Delete topic"
                               onClick={() => handleDelete(topic.plant_topic_id)}
                             >
@@ -498,33 +522,33 @@ export default function ApplyTopicPage() {
               </div>
 
               {/* Mobile Card View */}
-              <div className="md:hidden space-y-4">
+              <div className="md:hidden space-y-3">
                 {paginatedPlantTopics.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-6 text-gray-500 text-sm">
                     {searchQuery ? 'No topics found matching your search.' : 'No topics applied yet.'}
                   </div>
                 ) : (
                   paginatedPlantTopics.map((topic, index) => (
-                    <div key={topic.plant_topic_id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                      <div className="flex justify-between items-start mb-3">
+                    <div key={topic.plant_topic_id} className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                      <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
                             #{(currentPage - 1) * motorsPerPage + index + 1}
                           </span>
-                          <h3 className="font-semibold text-gray-900 text-lg">
+                          <h3 className="font-semibold text-gray-900 text-base">
                             {topic.plant_name || 'Unknown'}
                           </h3>
                         </div>
-                        <div className="flex space-x-2">
+                        <div className="flex gap-2">
                           <button
-                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-md transition-colors"
+                            className="px-2.5 py-1 bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium rounded-md transition-colors"
                             title="Edit topic"
                             onClick={() => handleEdit(topic)}
                           >
                             Edit
                           </button>
                           <button
-                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-colors"
+                            className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-medium rounded-md transition-colors"
                             title="Delete topic"
                             onClick={() => handleDelete(topic.plant_topic_id)}
                           >
@@ -532,7 +556,7 @@ export default function ApplyTopicPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div className="grid grid-cols-2 gap-3 text-xs">
                         <div className="flex flex-col">
                           <span className="text-gray-500 font-medium">Plant ID:</span>
                           <span className="text-gray-900">{topic.plant_id || '-'}</span>
@@ -561,11 +585,11 @@ export default function ApplyTopicPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
                   <button
                     disabled={currentPage === 1}
                     onClick={() => handlePageChange(currentPage - 1)}
-                    className={`px-4 py-2 text-sm font-medium rounded ${
+                    className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                       currentPage === 1
                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                         : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
@@ -580,7 +604,7 @@ export default function ApplyTopicPage() {
                         <button
                           key={`page-${pageNum}`}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`px-3 py-2 text-sm font-medium rounded ${
+                          className={`px-2.5 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                             currentPage === pageNum
                               ? 'bg-blue-500 text-white'
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -595,7 +619,7 @@ export default function ApplyTopicPage() {
                   <button
                     disabled={currentPage === totalPages}
                     onClick={() => handlePageChange(currentPage + 1)}
-                    className={`px-4 py-2 text-sm font-medium rounded ${
+                    className={`px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium rounded ${
                       currentPage === totalPages
                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                         : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
@@ -612,5 +636,3 @@ export default function ApplyTopicPage() {
     </div>
   );
 }
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

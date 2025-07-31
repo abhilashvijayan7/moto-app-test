@@ -45,7 +45,7 @@ export default function ApplySensorModal({
       try {
         const response = await axios.get(
           "https://water-pump.onrender.com/api/sensors/relations",
-          { timeout: 10000 } // 10-second timeout
+          { timeout: 10000 }
         );
         console.log("Sensor Types API response:", response.data);
         setSensorTypes(Array.isArray(response.data) ? response.data : []);
@@ -72,7 +72,7 @@ export default function ApplySensorModal({
         setPlantNameError("");
         const response = await axios.get(
           `https://water-pump.onrender.com/api/plants/${plantId}`,
-          { timeout: 10000 } // 10-second timeout
+          { timeout: 10000 }
         );
         console.log("Plant API response:", response.data);
         setPlantName(response.data.plant_name || "Unknown");
@@ -102,7 +102,7 @@ export default function ApplySensorModal({
         setPlantSensorsError("");
         const response = await axios.get(
           "https://water-pump.onrender.com/api/plantsensors",
-          { timeout: 10000 } // 10-second timeout
+          { timeout: 10000 }
         );
         console.log("Plant Sensors API response:", response.data);
         const filteredSensors = Array.isArray(response.data)
@@ -116,7 +116,6 @@ export default function ApplySensorModal({
         );
         setPlantSensors(sortedSensors);
 
-        // Log sensor_name for each plant sensor
         const loggingSensorTypeMap = new Map(
           sensorTypes.map((type) => [String(type.id), type.sensor_name])
         );
@@ -297,20 +296,19 @@ export default function ApplySensorModal({
             is_sensor_enabled: payload.is_sensor_enabled,
             sensor_key: payload.sensor_key,
           },
-          { timeout: 10000 } // 10-second timeout
+          { timeout: 10000 }
         );
       } else {
         await axios.post(
           "https://water-pump.onrender.com/api/plantsensors",
           payload,
-          { timeout: 10000 } // 10-second timeout
+          { timeout: 10000 }
         );
       }
 
-      // Refresh plant sensors
       const plantSensorsResponse = await axios.get(
         "https://water-pump.onrender.com/api/plantsensors",
-        { timeout: 10000 } // 10-second timeout
+        { timeout: 10000 }
       );
       console.log("Plant Sensors refresh response:", plantSensorsResponse.data);
       const filteredSensors = Array.isArray(plantSensorsResponse.data)
@@ -398,15 +396,16 @@ export default function ApplySensorModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+      {/* Modal Container: Full width on mobile, reduced padding */}
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-semibold text-gray-800">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
               {isEditing ? "Edit Sensor" : "Apply Sensor"}
             </h2>
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Plant ID: {plantId || "Not provided"}
             </p>
           </div>
@@ -418,21 +417,21 @@ export default function ApplySensorModal({
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             aria-label="Close modal"
           >
-            <X className="w-6 h-6 text-gray-500" />
+            <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
           </button>
         </div>
 
         {/* Modal Content */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {sensorsError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
               <div className="flex justify-between items-start">
-                <p className="text-sm font-medium text-red-800">
+                <p className="text-xs sm:text-sm font-medium text-red-800">
                   {sensorsError}
                 </p>
                 <button
                   onClick={() => setSensorsError("")}
-                  className="text-red-600 hover:text-red-800 text-lg font-medium"
+                  className="text-red-600 hover:text-red-800 text-base sm:text-lg font-medium"
                 >
                   ×
                 </button>
@@ -440,15 +439,16 @@ export default function ApplySensorModal({
             </div>
           )}
 
-          <div className="space-y-6">
-            <div className="grid grid-cols-12 gap-6 items-start">
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 items-start">
+              {/* Select Sensor: Full width on mobile */}
+              <div className="col-span-1 sm:col-span-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                   Select Sensor
                 </label>
                 <div className="relative">
                   <select
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none text-sm sm:text-base"
                     value={sensor.sensorType}
                     onChange={(e) =>
                       handleInputChange("sensorType", e.target.value)
@@ -470,7 +470,7 @@ export default function ApplySensorModal({
                       </option>
                     )}
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
                 </div>
                 {selectedSensor && (
                   <p className="text-xs text-gray-500 mt-1 capitalize">
@@ -478,13 +478,14 @@ export default function ApplySensorModal({
                   </p>
                 )}
               </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+              {/* Serial Number */}
+              <div className="col-span-1 sm:col-span-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                   Serial Number
                 </label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                   value={sensor.serialNumber}
                   onChange={(e) =>
                     handleInputChange("serialNumber", e.target.value)
@@ -493,8 +494,9 @@ export default function ApplySensorModal({
                   ref={serialNumberInputRef}
                 />
               </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+              {/* Sensor Status */}
+              <div className="col-span-1 sm:col-span-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                   Sensor Status
                 </label>
                 <div className="flex items-center">
@@ -505,23 +507,24 @@ export default function ApplySensorModal({
                     onChange={(e) =>
                       handleInputChange("is_sensor_enabled", e.target.checked)
                     }
-                    className="h-5 w-5 text-blue-500 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <label
                     htmlFor="is_sensor_enabled"
-                    className="ml-2 text-sm text-gray-700"
+                    className="ml-2 text-xs sm:text-sm text-gray-700"
                   >
                     Active
                   </label>
                 </div>
               </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+              {/* Key Field */}
+              <div className="col-span-1 sm:col-span-3">
+                <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                   Key Field
                 </label>
                 <input
                   type="text"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                   value={sensor.sensor_key}
                   onChange={(e) =>
                     handleInputChange("sensor_key", e.target.value)
@@ -531,13 +534,14 @@ export default function ApplySensorModal({
               </div>
               {isMinMaxSensor && (
                 <>
-                  <div className="col-span-3">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                  {/* Min Value */}
+                  <div className="col-span-1 sm:col-span-3">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Min Value
                     </label>
                     <input
                       type="number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                       value={sensor.minValue}
                       onChange={(e) =>
                         handleInputChange("minValue", e.target.value)
@@ -545,13 +549,14 @@ export default function ApplySensorModal({
                       placeholder="1"
                     />
                   </div>
-                  <div className="col-span-3">
-                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                  {/* Max Value */}
+                  <div className="col-span-1 sm:col-span-3">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Max Value
                     </label>
                     <input
                       type="number"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                       value={sensor.maxValue}
                       onChange={(e) =>
                         handleInputChange("maxValue", e.target.value)
@@ -561,12 +566,13 @@ export default function ApplySensorModal({
                   </div>
                 </>
               )}
-              <div className="col-span-6">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
+              {/* Notes */}
+              <div className="col-span-1 sm:col-span-6">
+                <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                   Notes (Optional)
                 </label>
                 <textarea
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                   value={sensor.notes}
                   onChange={(e) => handleInputChange("notes", e.target.value)}
                   placeholder="Enter any notes"
@@ -578,19 +584,19 @@ export default function ApplySensorModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
           <button
             onClick={() => {
               resetForm();
               onClose();
             }}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 sm:px-6 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-8 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
+            className="px-6 py-2 sm:px-8 sm:py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors text-sm sm:text-base"
             disabled={
               sensor.sensorType === "" ||
               !sensor.sensorTypeRelationId ||
@@ -608,11 +614,11 @@ export default function ApplySensorModal({
         </div>
 
         {/* Plant Sensors Table Section */}
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
-            <div className="py-6 px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-                <h2 className="text-2xl font-semibold text-gray-900">
+            <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
                   Applied Sensors for {plantName || "Unknown"}
                 </h2>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -622,13 +628,13 @@ export default function ApplySensorModal({
                       placeholder="Search applied sensors..."
                       value={searchQuery}
                       onChange={handleSearchChange}
-                      className="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      className="w-full sm:w-64 px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm sm:text-base"
                     />
                   </div>
                   <select
                     value={sensorsPerPage}
                     onChange={handleShowChange}
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="px-3 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:text-base"
                   >
                     <option value={1}>Show 1</option>
                     <option value={10}>Show 10</option>
@@ -639,9 +645,9 @@ export default function ApplySensorModal({
               </div>
 
               {plantNameError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                   <div className="flex justify-between items-start">
-                    <p className="text-sm font-medium text-red-800">
+                    <p className="text-xs sm:text-sm font-medium text-red-800">
                       {plantNameError}
                     </p>
                     <button
@@ -666,7 +672,7 @@ export default function ApplySensorModal({
                           console.log("isLoadingPlantName set to false (retry)");
                         }
                       }}
-                      className="text-sm underline hover:no-underline"
+                      className="text-xs sm:text-sm underline hover:no-underline"
                     >
                       Retry
                     </button>
@@ -675,9 +681,9 @@ export default function ApplySensorModal({
               )}
 
               {plantSensorsError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                   <div className="flex justify-between items-start">
-                    <p className="text-sm font-medium text-red-800">
+                    <p className="text-xs sm:text-sm font-medium text-red-800">
                       {plantSensorsError}
                     </p>
                     <button
@@ -719,7 +725,7 @@ export default function ApplySensorModal({
                           console.log("isLoadingPlantSensors set to false (retry)");
                         }
                       }}
-                      className="text-sm underline hover:no-underline"
+                      className="text-xs sm:text-sm underline hover:no-underline"
                     >
                       Retry
                     </button>
@@ -728,8 +734,8 @@ export default function ApplySensorModal({
               )}
 
               {isLoadingPlantSensors || isLoadingPlantName ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Loading applied sensors...</p>
+                <div className="text-center py-6 sm:py-8">
+                  <p className="text-gray-500 text-sm sm:text-base">Loading applied sensors...</p>
                 </div>
               ) : (
                 <>
@@ -778,7 +784,7 @@ export default function ApplySensorModal({
                           <tr>
                             <td
                               colSpan="11"
-                              className="border border-gray-300 px-4 py-8 text-center text-gray-500"
+                              className="border border-gray-300 px-4 py-8 text-center text-gray-500 text-sm sm:text-base"
                             >
                               {searchQuery
                                 ? "No sensors found matching your search."
@@ -845,9 +851,9 @@ export default function ApplySensorModal({
                   </div>
 
                   {/* Mobile Card View */}
-                  <div className="md:hidden space-y-4">
+                  <div className="md:hidden space-y-3">
                     {paginatedPlantSensors.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
+                      <div className="text-center py-6 text-gray-500 text-sm">
                         {searchQuery
                           ? "No sensors found matching your search."
                           : "No sensors applied to this plant yet."}
@@ -859,14 +865,14 @@ export default function ApplySensorModal({
                         return (
                           <div
                             key={sensor.plant_sensor_id}
-                            className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                            className="bg-white border border-gray-200 rounded-lg p-3 shadow-sm"
                           >
-                            <div className="flex justify-between items-start mb-3">
+                            <div className="flex justify-between items-start mb-2">
                               <div className="flex items-center gap-2">
                                 <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded">
                                   #{startIndex + index + 1}
                                 </span>
-                                <h3 className="font-semibold text-gray-900 text-lg">
+                                <h3 className="font-semibold text-gray-900 text-base">
                                   {matchedSensor?.sensor_name || "Unknown"}
                                 </h3>
                               </div>
@@ -877,9 +883,9 @@ export default function ApplySensorModal({
                                 Edit
                               </button>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div className="grid grid-cols-2 gap-3 text-sm">
                               <div className="flex flex-col">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Sensor:
                                 </span>
                                 <span className="text-gray-900">
@@ -887,7 +893,7 @@ export default function ApplySensorModal({
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Serial Number:
                                 </span>
                                 <span className="text-gray-900">
@@ -895,7 +901,7 @@ export default function ApplySensorModal({
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Min Value:
                                 </span>
                                 <span className="text-gray-900">
@@ -903,7 +909,7 @@ export default function ApplySensorModal({
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Max Value:
                                 </span>
                                 <span className="text-gray-900">
@@ -911,7 +917,7 @@ export default function ApplySensorModal({
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Status:
                                 </span>
                                 <span className="text-gray-900">
@@ -919,7 +925,7 @@ export default function ApplySensorModal({
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Key Field:
                                 </span>
                                 <span className="text-gray-900">
@@ -927,7 +933,7 @@ export default function ApplySensorModal({
                                 </span>
                               </div>
                               <div className="flex flex-col col-span-2">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Notes:
                                 </span>
                                 <span className="text-gray-900">
@@ -935,7 +941,7 @@ export default function ApplySensorModal({
                                 </span>
                               </div>
                               <div className="flex flex-col">
-                                <span className="text-gray-500 font-medium">
+                                <span className="text-gray-500 font-medium text-xs">
                                   Installation Date:
                                 </span>
                                 <span className="text-gray-900">
@@ -955,11 +961,11 @@ export default function ApplySensorModal({
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:mt-6">
                       <button
                         onClick={() => handlePageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className={`px-4 py-2 text-sm font-medium rounded ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium rounded ${
                           currentPage === 1
                             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                             : "bg-gray-300 text-gray-700 hover:bg-gray-400"
@@ -984,7 +990,7 @@ export default function ApplySensorModal({
                             <button
                               key={pageNum}
                               onClick={() => handlePageChange(pageNum)}
-                              className={`px-3 py-2 text-sm font-medium rounded ${
+                              className={`px-2.5 py-1.5 sm:px-3 sm:py-2 text-sm font-medium rounded ${
                                 currentPage === pageNum
                                   ? "bg-blue-500 text-white"
                                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
@@ -998,7 +1004,7 @@ export default function ApplySensorModal({
                       <button
                         onClick={() => handlePageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className={`px-4 py-2 text-sm font-medium rounded ${
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm font-medium rounded ${
                           currentPage === totalPages
                             ? "bg-gray-200 text-gray-400 cursor-not-allowed"
                             : "bg-gray-300 text-gray-700 hover:bg-gray-400"
@@ -1017,5 +1023,3 @@ export default function ApplySensorModal({
     </div>
   );
 }
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk
