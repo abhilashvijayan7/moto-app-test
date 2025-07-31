@@ -9,6 +9,7 @@ import {
   faHouse,
   faLocation,
   faBuilding,
+  faVenusMars,
   faIndustry,
 } from "@fortawesome/free-solid-svg-icons";
 import { useLocation } from "react-router-dom";
@@ -29,7 +30,7 @@ import user from "../images/user.svg";
 import users from "../images/users.svg";
 
 function UserManager() {
-  const { user, isCheckingSession } = useContext(UserContext);
+   const { user, isCheckingSession } = useContext(UserContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("add");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -263,16 +264,16 @@ function UserManager() {
 
   if (isCheckingSession || loading) {
     return (
-      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1680px] lg:px-11">
-        <div className="font-medium text-sm sm:text-base lg:flex lg:justify-between lg:items-center">
+      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
+        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
           <div>
-            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-4 sm:mb-5">
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
               User Manager
             </p>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 sm:p-6 text-center">
-          <p className="text-sm sm:text-base text-gray-500">Loading users...</p>
+        <div className="bg-[#FFFFFF] rounded-xl p-1 text-center">
+          <p>Loading users...</p>
         </div>
       </div>
     );
@@ -280,16 +281,16 @@ function UserManager() {
 
   if (error) {
     return (
-      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1680px] lg:px-11">
-        <div className="font-medium text-sm sm:text-base lg:flex lg:justify-between lg:items-center">
+      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
+        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
           <div>
-            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-4 sm:mb-5">
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
               User Manager
             </p>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 sm:p-6 text-center text-red-500">
-          <p className="text-sm sm:text-base">{error}</p>
+        <div className="bg-[#FFFFFF] rounded-xl p-1 text-center text-red-500">
+          <p>{error}</p>
         </div>
       </div>
     );
@@ -297,52 +298,52 @@ function UserManager() {
 
   return (
     <div>
-      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1680px] lg:px-11">
-        <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
+      <div className="max-w-[450px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1680px] lg:px-11 lg:w-full">
+        <div className="font-[500] text-[14px] lg:flex lg:justify-between lg:items-center">
           <div>
-            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
+            <p className="text-[#4E4D4D] font-[700] text-[28px] mb-[20px]">
               User Manager
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:h-10 lg:h-12">
+          <div className="flex gap-2 mb-[24px] lg:h-12">
             <input
               type="text"
               placeholder="Search users..."
-              className="w-full sm:w-[287.4px] px-2 py-1.5 sm:px-3 sm:py-2 border border-[#DADADA] rounded text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
+              className="border border-[#DADADA] rounded px-2 py-1 w-[287.4px] lg:bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
             <button
               onClick={handleOpenAddModal}
-              className="bg-[#208CD4] flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-sm hover:bg-[#1b7bb9] transition-colors"
+              className="bg-[#208CD4] flex items-center gap-2 px-3 py-1 rounded-sm hover:bg-[#1b7bb9] transition-colors"
             >
-              <img src={add} alt="Add User" className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              <p className="font-normal text-xs sm:text-sm text-white">Add User</p>
+              <img src={add} alt="Add User" className="w-[10px] h-[10px]" />
+              <p className="font-[400] text-[12px] text-[#FFFFFF]">Add User</p>
             </button>
           </div>
         </div>
-        <div className="bg-white rounded-xl lg:mt-5">
-          <div className="columns-1 sm:columns-2 lg:columns-4 gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl">
+        <div className="bg-[#FFFFFF] rounded-xl">
+          <div className="columns-1 lg:columns-4 gap-4 p-4 rounded-xl">
             {paginatedData.map((card, cardIndex) => (
               <div
-                className="card-div font-normal text-xs sm:text-sm border border-[#DADADA] rounded-lg px-3 sm:px-4 py-4 sm:py-6 mb-3 sm:mb-4 break-inside-avoid"
+                className="card-div font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4 break-inside-avoid"
                 key={`${card.user_id}-${card.status}`}
               >
-                <div className="flex flex-col w-full border-b border-[#208CD4] pb-3 sm:pb-4">
+                <div className="flex flex-col w-full border-b border-[#208CD4] pb-[16px]">
                   <div className="flex flex-col">
-                    <p className="text-[#4E4D4D] font-semibold text-sm sm:text-base break-words max-w-[90%]">
+                    <p className="text-[#4E4D4D] font-[600] text-[16px] break-words max-w-[200px]">
                       {card.full_name}
                     </p>
-                    <p className="text-[#aba6a6] font-medium text-xs">
+                    <p className="text-[#aba6a6] font-[500] text-[12px]">
                       {card.role}
                     </p>
                   </div>
-                  <div className="flex items-center w-full gap-2 sm:gap-3 mt-2">
+                  <div className="flex items-center w-full doom gap-4 mt-2">
                     <div className="flex-1 flex justify-center border border-blue-300 rounded">
                       <img
                         src={link}
                         alt="Upload"
-                        className="w-8 h-7 sm:w-9 sm:h-8 p-1.5 sm:p-2"
+                        className="w-[36px] h-[32px] p-1"
                         onClick={handleOpenUpload}
                       />
                     </div>
@@ -350,39 +351,41 @@ function UserManager() {
                       <img
                         src={edit}
                         alt="Edit"
-                        className="w-8 h-7 sm:w-9 sm:h-8 p-1.5 sm:p-2"
+                        className="w-[36px] h-[32px] p-1"
                         onClick={() => handleOpenEditModal(card)}
                       />
                     </div>
-                    {card.user_id !== user?.user_id &&
-                      ((user.role.toLowerCase() === "super admin") ||
-                        (user.role.toLowerCase() === "admin" &&
-                          !["super admin", "admin"].includes(
-                            card.role.toLowerCase()
-                          ))) && (
-                        <div className="flex-1 flex justify-center border border-blue-300 rounded">
-                          <img
-                            src={card?.status === "Active" ? active : inactive}
-                            alt={card?.status === "Active" ? "Active" : "Inactive"}
-                            className="w-8 h-7 sm:w-9 sm:h-8 p-1.5 sm:p-2"
-                            style={{
-                              color: card?.status === "Active" ? "#22C55E" : "#EF4444",
-                            }}
-                            onClick={() =>
-                              handleOpen(
-                                card,
-                                card.status === "Active" ? "Inactive" : "Active"
-                              )
-                            }
-                          />
-                        </div>
-                      )}
+                    {card.user_id !== user?.user_id  && 
+                    (
+  (user.role.toLowerCase() === "super admin") || 
+  (user.role.toLowerCase() === "admin" && !["super admin", "admin"].includes(card.role.toLowerCase()))
+)
+                    
+                    &&
+                    (
+                      <div className="flex-1 flex justify-center border border-blue-300 rounded">
+                        {/* {user.role} */}
+                      
+                        <img
+                          src={card?.status === "Active" ? active : inactive}
+                          alt={card?.status === "Active" ? "Active" : "Inactive"}
+                          className="w-[36px] h-[32px] p-1"
+                          style={{ color: card?.status === "Active" ? "#22C55E" : "#EF4444" }}
+                          onClick={() =>
+                            handleOpen(
+                              card,
+                              card.status === "Active" ? "Inactive" : "Active"
+                            )
+                          }
+                        />
+                      </div>
+                    )}
                     {shouldShowResetIcon(card.role) && (
                       <div className="flex-1 flex justify-center border border-blue-300 rounded">
                         <img
                           src={password}
                           alt="Reset Password"
-                          className="w-8 h-7 sm:w-9 sm:h-8 p-1.5 sm:p-2"
+                          className="w-[36px] h-[32px] p-1"
                           style={{ color: "#F59E0B" }}
                           onClick={() => handleOpenResetPassword(card)}
                         />
@@ -390,7 +393,7 @@ function UserManager() {
                     )}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 sm:pt-4">
+                <div className="grid grid-cols-2 gap-4 pt-[16px]">
                   <div>
                     {[
                       { icon: faUser, value: card.designation },
@@ -401,15 +404,13 @@ function UserManager() {
                     ].map((item, detailIndex) => (
                       <div
                         key={detailIndex}
-                        className="flex items-center gap-0.5 py-2 sm:py-2.5 min-h-[32px] sm:min-h-[40px] border-b border-[#DADADA]"
+                        className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
                       >
                         <FontAwesomeIcon
                           icon={item.icon}
-                          className="text-blue-400 text-lg sm:text-xl"
+                          className="text-blue-400 text-xl"
                         />
-                        <p className="break-words max-w-[90%] text-xs sm:text-sm">
-                          {item.value}
-                        </p>
+                        <p className="break-words max-w-[90%]">{item.value}</p>
                       </div>
                     ))}
                   </div>
@@ -417,22 +418,17 @@ function UserManager() {
                     {[
                       { icon: faCalendarDays, value: `DOJ: ${card.displayDoj}` },
                       { icon: faBuilding, value: card.company },
-                      {
-                        icon: faIndustry,
-                        value: `Assigned Plant: ${card.assignedPlant}`,
-                      },
+                      { icon: faIndustry, value: `Assigned Plant: ${card.assignedPlant}` },
                     ].map((item, detailIndex) => (
                       <div
                         key={detailIndex}
-                        className="flex items-center gap-0.5 py-2 sm:py-2.5 min-h-[32px] sm:min-h-[40px] border-b border-[#DADADA]"
+                        className="flex items-center gap-0.5 py-[8px] min-h-[40px] border-b border-[#DADADA]"
                       >
                         <FontAwesomeIcon
                           icon={item.icon}
-                          className="text-blue-400 text-lg sm:text-xl"
+                          className="text-blue-400 text-xl"
                         />
-                        <p className="break-words max-w-[90%] text-xs sm:text-sm">
-                          {item.value}
-                        </p>
+                        <p className="break-words max-w-[90%]">{item.value}</p>
                       </div>
                     ))}
                   </div>
@@ -440,11 +436,11 @@ function UserManager() {
               </div>
             ))}
           </div>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-3 mt-3 sm:mt-4 pb-3 sm:pb-4">
+          <div className="col-span-1 lg:col-span-4 flex justify-center items-center gap-2 mt-4 pb-4">
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-[#208CD4] text-white rounded text-xs sm:text-sm disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
+              className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
             >
               Previous
             </button>
@@ -452,7 +448,7 @@ function UserManager() {
               <button
                 key={page}
                 onClick={() => handlePageChange(page)}
-                className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded text-xs sm:text-sm ${
+                className={`px-3 py-1 rounded ${
                   currentPage === page
                     ? "bg-[#208CD4] text-white"
                     : "bg-gray-100 hover:bg-gray-200"
@@ -464,14 +460,14 @@ function UserManager() {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-2.5 py-1 sm:px-3 sm:py-1.5 bg-[#208CD4] text-white rounded text-xs sm:text-sm disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
+              className="px-3 py-1 bg-[#208CD4] text-white rounded disabled:bg-gray-300 hover:bg-[#1b7bb9] transition-colors"
             >
               Next
             </button>
             <select
               value={itemsPerPage}
               onChange={handleItemsPerPageChange}
-              className="px-2.5 py-1 sm:px-3 sm:py-1.5 border border-[#DADADA] rounded bg-gray-100 text-[#6B6B6B] text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#208CD4] hover:bg-gray-200 transition-colors"
+              className="px-3 py-1 border border-[#DADADA] rounded bg-gray-100 text-[#6B6B6B] text-[14px] focus:outline-none focus:ring-2 focus:ring-[#208CD4] hover:bg-gray-200 transition-colors"
             >
               {itemsPerPageOptions.map((option) => (
                 <option key={option} value={option}>
@@ -499,17 +495,17 @@ function UserManager() {
         userName={selectedUser?.full_name}
       />
       {isResetPasswordOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-[400px]">
-            <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4">Reset Password</h2>
-            <p className="mb-3 sm:mb-4 text-sm sm:text-base">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-[400px]">
+            <h2 className="text-xl font-bold mb-4">Reset Password</h2>
+            <p className="mb-4">
               Reset password for {selectedUser?.full_name} (
               {selectedUser?.username})
             </p>
-            <div className="mb-3 sm:mb-4">
+            <div className="mb-4">
               <label
                 htmlFor="newPassword"
-                className="block text-xs sm:text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-gray-700 mb-1"
               >
                 New Password
               </label>
@@ -519,12 +515,12 @@ function UserManager() {
                 placeholder="Enter new password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-2 py-1.5 sm:px-3 sm:py-2 border rounded text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               />
             </div>
             {message && (
               <p
-                className={`mb-3 sm:mb-4 text-xs sm:text-sm ${
+                className={`mb-4 text-sm ${
                   message.includes("success")
                     ? "text-green-500"
                     : "text-red-500"
@@ -536,13 +532,13 @@ function UserManager() {
             <div className="flex justify-end gap-2">
               <button
                 onClick={handleCloseResetPassword}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-200 rounded text-xs sm:text-sm hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleResetPasswordConfirm}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-[#208CD4] text-white rounded text-xs sm:text-sm hover:bg-[#1b7bb9] transition-colors"
+                className="px-4 py-2 bg-[#208CD4] text-white rounded hover:bg-[#1b7bb9] transition-colors"
               >
                 Confirm
               </button>
