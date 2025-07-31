@@ -20,6 +20,11 @@ const io = new Server(server, {
 app.use(cors());
 app.use(bodyParser.json());
 
+// Health check endpoint for Render
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // Firebase Admin Setup
 const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
@@ -35,12 +40,27 @@ admin.initializeApp({
 let savedTokens = [];
 
 app.post("/save-token", (req, res) => {
+  console.log("Received /save-token request body:", req.body); // Log for debugging
+  if (!req.body || !req.body.data || !req.body.data.token) {
+    console.error("Invalid request body:", req.body);
+    return res.status(400).json({ 
+      success: false, 
+      message: "Expected request body with 'data.token' property" 
+    });
+  }
+
   const { token } = req.body.data;
   if (token && !savedTokens.includes(token)) {
     savedTokens.push(token);
     console.log("Token saved:", token);
+  } else if (!token) {
+    console.error("Token is empty or invalid:", token);
+    return res.status(400).json({ 
+      success: false, 
+      message: "Token is empty or invalid" 
+    });
   }
-  res.sendStatus(200);
+  res.status(200).json({ success: true, message: "Token saved successfully" });
 });
 
 app.get("/send", async (req, res) => {
@@ -162,7 +182,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
 };
 
 // MQTT Setup
-const mqttClient = mqtt.connect("mqtts://mosquitto-fsogoowk8okc0c0ccwk0k8ow.195.200.14.84.sslip.io");
+const mqttClient = mqtt.connect("mqtt://mosquitto-fsogoowk8okc0c0ccwk0k8ow.195.200.14.84.sslip.io:1883");
 let latestSensorData = {};
 
 // Cache for plant topics
@@ -357,5 +377,3 @@ const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-// perfectgggggg
