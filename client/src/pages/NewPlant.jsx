@@ -171,7 +171,7 @@ if (!response.ok) {
 
       const plantData = {
         plant_name: formData.plantName.trim(),
-        plant_location_id: selectedLocation.location_id,
+        location_id: selectedLocation.location_id,
         contact_person: formData.contactPerson.trim(),
         contact_email: formData.email.trim(),
         contact_phone: formData.phone.trim(),
@@ -794,3 +794,6 @@ if (!response.ok) {
 }
 
 export default NewPlant;
+
+
+// last
