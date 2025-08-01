@@ -43,11 +43,10 @@ export default function ApplySensorModal({
 
     const fetchSensorTypes = async () => {
       try {
-      const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/api/sensors/relations`,
-  { timeout: 10000 }
-);
-
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/sensors/relations`,
+          { timeout: 10000 }
+        );
         console.log("Sensor Types API response:", response.data);
         setSensorTypes(Array.isArray(response.data) ? response.data : []);
       } catch (error) {
@@ -71,10 +70,10 @@ export default function ApplySensorModal({
       try {
         setIsLoadingPlantName(true);
         setPlantNameError("");
-    const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/plants/${plantId}`,
-  { timeout: 10000 }
-);
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/plants/${plantId}`,
+          { timeout: 10000 }
+        );
         console.log("Plant API response:", response.data);
         setPlantName(response.data.plant_name || "Unknown");
       } catch (error) {
@@ -101,11 +100,10 @@ export default function ApplySensorModal({
       try {
         setIsLoadingPlantSensors(true);
         setPlantSensorsError("");
-     const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/api/plant-sensors`,
-  { timeout: 10000 }
-);
-
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_BASE_URL}/plantsensors`,
+          { timeout: 10000 }
+        );
         console.log("Plant Sensors API response:", response.data);
         const filteredSensors = Array.isArray(response.data)
           ? response.data.filter(
@@ -288,35 +286,32 @@ export default function ApplySensorModal({
       }
 
       if (isEditing) {
-  await axios.put(
-  `${import.meta.env.VITE_API_BASE_URL}/api/plant-sensors/${editingSensorId}`,
-  {
-    installation_date: payload.installation_date,
-    serial_number: payload.serial_number,
-    min_value: payload.min_value,
-    max_value: payload.max_value,
-    notes: payload.notes,
-    is_sensor_enabled: payload.is_sensor_enabled,
-    sensor_key: payload.sensor_key,
-  },
-  { timeout: 10000 }
-);
-
+        await axios.put(
+          `${import.meta.env.VITE_API_BASE_URL}/plantsensors/${editingSensorId}`,
+          {
+            installation_date: payload.installation_date,
+            serial_number: payload.serial_number,
+            min_value: payload.min_value,
+            max_value: payload.max_value,
+            notes: payload.notes,
+            is_sensor_enabled: payload.is_sensor_enabled,
+            sensor_key: payload.sensor_key,
+          },
+          { timeout: 10000 }
+        );
       } else {
-   await axios.post(
-  `${import.meta.env.VITE_API_BASE_URL}/api/plant-sensors`,
-  payload,
-  { timeout: 10000 }
-);
-
+        await axios.post(
+          `${import.meta.env.VITE_API_BASE_URL}/plantsensors`,
+          payload,
+          { timeout: 10000 }
+        );
       }
 
       // Refresh plant sensors
-    const plantSensorsResponse = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/api/plant-sensors`,
-  { timeout: 10000 }
-);
-
+      const plantSensorsResponse = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/plantsensors`,
+        { timeout: 10000 }
+      );
       console.log("Plant Sensors refresh response:", plantSensorsResponse.data);
       const filteredSensors = Array.isArray(plantSensorsResponse.data)
         ? plantSensorsResponse.data.filter(
@@ -654,11 +649,10 @@ export default function ApplySensorModal({
                         setPlantNameError("");
                         try {
                           setIsLoadingPlantName(true);
-                        const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/api/plants/${plantId}`,
-  { timeout: 10000 }
-);
-
+                          const response = await axios.get(
+                            `${import.meta.env.VITE_API_BASE_URL}/plants/${plantId}`,
+                            { timeout: 10000 }
+                          );
                           console.log("Retry Plant API response:", response.data);
                           setPlantName(response.data.plant_name || "Unknown");
                         } catch (error) {
@@ -691,11 +685,10 @@ export default function ApplySensorModal({
                         setPlantSensorsError("");
                         try {
                           setIsLoadingPlantSensors(true);
-                    const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/api/plant-sensors`,
-  { timeout: 10000 }
-);
-
+                          const response = await axios.get(
+                            `${import.meta.env.VITE_API_BASE_URL}/plantsensors`,
+                            { timeout: 10000 }
+                          );
                           console.log(
                             "Retry Plant Sensors response:",
                             response.data

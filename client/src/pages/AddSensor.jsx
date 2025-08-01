@@ -17,8 +17,6 @@ function AddSensorAndMotor() {
     sensorName: "",
     sensorType: "",
     deviceType: "sensor",
-    onTime: "",
-    offTime: "",
   });
   const [sensors, setSensors] = useState([]);
   const [isSubmittingSensor, setIsSubmittingSensor] = useState(false);
@@ -96,9 +94,9 @@ function AddSensorAndMotor() {
 
   const fetchSensorTypes = async () => {
     try {
-    const data = await apiCall(
-  `${import.meta.env.VITE_API_BASE_URL}/sensors/sensor-types`
-);
+      const data = await apiCall(
+        `${import.meta.env.VITE_API_BASE_URL}/sensors/sensor-types`
+      );
       console.log("Fetched sensor types:", data);
       setSensorTypes(data);
       setHasSensorType(data.length > 0);
@@ -112,9 +110,9 @@ function AddSensorAndMotor() {
     try {
       setIsLoadingSensors(true);
       setSensorsError("");
-    const data = await apiCall(
-  `${import.meta.env.VITE_API_BASE_URL}/sensors/relations`
-);
+      const data = await apiCall(
+        `${import.meta.env.VITE_API_BASE_URL}/sensors/relations`
+      );
       setSensors(data);
     } catch (error) {
       setSensorsError("Failed to load sensors. Please refresh the page.");
@@ -140,15 +138,15 @@ function AddSensorAndMotor() {
         throw new Error("Sensor type name is required");
       }
 
-   const response = await apiCall(
-  `${import.meta.env.VITE_API_BASE_URL}/sensors/types`,
-  {
-    method: "POST",
-    body: JSON.stringify({
-      sensor_type_name: sensorTypeForm.sensorTypeName.trim(),
-    }),
-  }
-);
+      const response = await apiCall(
+        `${import.meta.env.VITE_API_BASE_URL}/sensors/types`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            sensor_type_name: sensorTypeForm.sensorTypeName.trim(),
+          }),
+        }
+      );
 
       const createdSensorTypeId = response.id || response.sensor_type_id;
       console.log("Created sensor type with ID:", createdSensorTypeId);
@@ -184,13 +182,13 @@ function AddSensorAndMotor() {
 
       console.log("Creating sensor relation with data:", relationData);
 
-  const response = await apiCall(
-  `${import.meta.env.VITE_API_BASE_URL}/sensors/relation`,
-  {
-    method: "POST",
-    body: JSON.stringify(relationData),
-  }
-);
+      const response = await apiCall(
+        `${import.meta.env.VITE_API_BASE_URL}/sensors/relation`,
+        {
+          method: "POST",
+          body: JSON.stringify(relationData),
+        }
+      );
 
       console.log("Sensor relation created successfully:", response);
       return response;
@@ -213,12 +211,6 @@ function AddSensorAndMotor() {
         throw new Error("Sensor type is required");
       if (!sensorForm.deviceType)
         throw new Error("Device type is required");
-      if (sensorForm.deviceType === "valve") {
-        if (!sensorForm.onTime || isNaN(sensorForm.onTime) || sensorForm.onTime <= 0)
-          throw new Error("On time must be a positive number");
-        if (!sensorForm.offTime || isNaN(sensorForm.offTime) || sensorForm.offTime <= 0)
-          throw new Error("Off time must be a positive number");
-      }
 
       const selectedSensorType = sensorTypes.find(
         (type) => type.sensor_type_name === sensorForm.sensorType.trim()
@@ -239,26 +231,24 @@ function AddSensorAndMotor() {
         const editSensorData = {
           sensor_name: sensorForm.sensorName.trim(),
           sensor_type_id: sensorTypeId,
-          device_type: sensorForm.deviceType,
-          on_time: sensorForm.deviceType === "valve" ? Number(sensorForm.onTime) : null,
-          off_time: sensorForm.deviceType === "valve" ? Number(sensorForm.offTime) : null,
+          sensor_device_type: sensorForm.deviceType,
         };
 
         try {
           console.log("Editing sensor with ID:", editingSensorId);
 
-      const response = await apiCall(
-  `${import.meta.env.VITE_API_BASE_URL}/sensors/${editingSensorId}`,
-  {
-    method: "PUT",
-    body: JSON.stringify(editSensorData),
-  }
-);
+          const response = await apiCall(
+            `${import.meta.env.VITE_API_BASE_URL}/sensors/${editingSensorId}`,
+            {
+              method: "PUT",
+              body: JSON.stringify(editSensorData),
+            }
+          );
 
           console.log("Sensor updated successfully:", response);
 
           setSubmitSensorSuccess(true);
-          setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor", onTime: "", offTime: "" });
+          setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
           setEditingSensorId(null);
           await fetchSensors();
         } catch (error) {
@@ -270,20 +260,18 @@ function AddSensorAndMotor() {
       } else {
         const sensorData = {
           sensor_name: sensorForm.sensorName.trim(),
-          sensor_type_name: sensorForm.sensorType.trim(),
-          device_type: sensorForm.deviceType,
-          on_time: sensorForm.deviceType === "valve" ? Number(sensorForm.onTime) : null,
-          off_time: sensorForm.deviceType === "valve" ? Number(sensorForm.offTime) : null,
+          sensor_device_type: sensorForm.deviceType,
+          sensor_type_id: sensorTypeId,
         };
 
         console.log("Creating sensor with data:", sensorData);
-    const sensorResponse = await apiCall(
-  `${import.meta.env.VITE_API_BASE_URL}/sensors`,
-  {
-    method: "POST",
-    body: JSON.stringify(sensorData),
-  }
-);
+        const sensorResponse = await apiCall(
+          `${import.meta.env.VITE_API_BASE_URL}/sensors`,
+          {
+            method: "POST",
+            body: JSON.stringify(sensorData),
+          }
+        );
 
         const createdSensorId =
           sensorResponse.id ||
@@ -309,7 +297,7 @@ function AddSensorAndMotor() {
         }
 
         setSubmitSensorSuccess(true);
-        setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor", onTime: "", offTime: "" });
+        setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
         await fetchSensors();
       }
     } catch (error) {
@@ -328,9 +316,7 @@ function AddSensorAndMotor() {
     setSensorForm({
       sensorName: sensor.sensor_name || "",
       sensorType: sensor.sensor_type_name || "",
-      deviceType: sensor.device_type || "sensor",
-      onTime: sensor.on_time || "",
-      offTime: sensor.off_time || "",
+      deviceType: sensor.sensor_device_type || "sensor",
     });
     setEditingSensorId(sensor.sensor_id);
 
@@ -341,7 +327,7 @@ function AddSensorAndMotor() {
   };
 
   const handleCancelEdit = () => {
-    setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor", onTime: "", offTime: "" });
+    setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
     setEditingSensorId(null);
     if (sensorNameInputRef.current) {
       sensorNameInputRef.current.blur();
@@ -353,7 +339,7 @@ function AddSensorAndMotor() {
     (sensor) =>
       sensor.sensor_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sensor.sensor_type_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sensor.device_type?.toLowerCase().includes(searchQuery.toLowerCase())
+      sensor.sensor_device_type?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredSensors.length / sensorsPerPage);
@@ -386,13 +372,6 @@ function AddSensorAndMotor() {
             <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
               {editingSensorId ? "Edit Sensor/Valve" : "Add Sensor/Valve"}
             </p>
-            {/* <div className="flex bg-gray-100 w-[148px] py-1.5 sm:py-2 px-2 sm:px-3 rounded-sm mb-3 sm:mb-4 items-center gap-1.5 sm:gap-2">
-              <p className="text-xs sm:text-sm">Home</p>
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-              <p className="text-[#208CD4] text-xs sm:text-sm">
-                {editingSensorId ? "Edit Sensor/Valve" : "Add Sensor/Valve"}
-              </p>
-            </div> */}
           </div>
         </div>
       </div>
@@ -592,47 +571,6 @@ function AddSensorAndMotor() {
                       <option value="valve">Valve</option>
                     </select>
                   </div>
-
-                  {sensorForm.deviceType === "valve" && (
-                    <>
-                      <div>
-                        <label
-                          htmlFor="onTime"
-                          className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
-                        >
-                          On Time (seconds)
-                        </label>
-                        <input
-                          type="number"
-                          id="onTime"
-                          name="onTime"
-                          value={sensorForm.onTime}
-                          onChange={handleSensorChange}
-                          placeholder="Enter On Time"
-                          min="0"
-                          className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="offTime"
-                          className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2"
-                        >
-                          Off Time (seconds)
-                        </label>
-                        <input
-                          type="number"
-                          id="offTime"
-                          name="offTime"
-                          value={sensorForm.offTime}
-                          onChange={handleSensorChange}
-                          placeholder="Enter Off Time"
-                          min="0"
-                          className="w-full px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400 text-sm sm:text-base"
-                        />
-                      </div>
-                    </>
-                  )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
@@ -739,12 +677,6 @@ function AddSensorAndMotor() {
                           Device Type
                         </th>
                         <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
-                          On Time
-                        </th>
-                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
-                          Off Time
-                        </th>
-                        <th className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-medium text-gray-700">
                           Actions
                         </th>
                       </tr>
@@ -753,7 +685,7 @@ function AddSensorAndMotor() {
                       {paginatedSensors.length === 0 ? (
                         <tr>
                           <td
-                            colSpan="7"
+                            colSpan="5"
                             className="border border-gray-300 px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm sm:text-base"
                           >
                             {searchQuery
@@ -777,13 +709,7 @@ function AddSensorAndMotor() {
                               {sensor.sensor_type_name}
                             </td>
                             <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
-                              {sensor.device_type}
-                            </td>
-                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
-                              {sensor.on_time ? `${sensor.on_time} sec` : '-'}
-                            </td>
-                            <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
-                              {sensor.off_time ? `${sensor.off_time} sec` : '-'}
+                              {sensor.sensor_device_type}
                             </td>
                             <td className="border border-gray-300 px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm text-gray-900">
                               <button
@@ -846,23 +772,7 @@ function AddSensorAndMotor() {
                               Device Type:
                             </span>
                             <span className="text-gray-900">
-                              {sensor.device_type}
-                            </span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-gray-500 font-medium">
-                              On Time:
-                            </span>
-                            <span className="text-gray-900">
-                              {sensor.on_time ? `${sensor.on_time} sec` : '-'}
-                            </span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="text-gray-500 font-medium">
-                              Off Time:
-                            </span>
-                            <span className="text-gray-900">
-                              {sensor.off_time ? `${sensor.off_time} sec` : '-'}
+                              {sensor.sensor_device_type}
                             </span>
                           </div>
                         </div>
