@@ -38,9 +38,7 @@ const SavedLog = () => {
   useEffect(() => {
     const fetchPlantNames = async () => {
       try {
-const response = await axios.get(
-  `${import.meta.env.VITE_API_BASE_URL}/plants`
-);
+        const response = await axios.get('https://water-pump.onrender.com/api/plants');
         const plants = Array.isArray(response.data) ? response.data : [];
         const names = plants.reduce(
           (acc, plant) => ({
@@ -88,7 +86,7 @@ const response = await axios.get(
     try {
       console.log('Fetching motor summary data for plant:', tableFilters.plantId, 'start:', startDate, 'end:', endDate);
       const response = await fetch(
-        `${import.meta.env.VITE_API_MOTOR_SUMMARY}/${tableFilters.plantId}/motors/summary?start=${startDate}&end=${endDate}`
+        `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/summary?start=${startDate}&end=${endDate}`
       );
       if (!response.ok) throw new Error(`Failed to load motor summary data: ${response.status}`);
       const json = await response.json();
@@ -194,7 +192,7 @@ const response = await axios.get(
     }
 
     const offset = (page - 1) * pageSize;
-    const url = `${import.meta.env.VITE_API_MOTOR_PAGINATED}/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${pageSize}&offset=${offset}`;
+    const url = `https://water-pump.onrender.com/api/plantops/plant/${tableFilters.plantId}/motors/motordynamicpaginated?start=${startDate}&end=${endDate}&limit=${pageSize}&offset=${offset}`;
     
     try {
       const response = await fetch(url);
@@ -339,7 +337,7 @@ const response = await axios.get(
                   summaryType === 'plant'
                     ? () => {
                         window.open(
-                          `${import.meta.env.VITE_API_EXPORT_CSV}/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+                          `https://water-pump.onrender.com/api/export/plantcsv/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
                           '_blank'
                         );
                       }
@@ -349,7 +347,7 @@ const response = await axios.get(
                   summaryType === 'plant'
                     ? () => {
                         window.open(
-                          `${import.meta.env.VITE_API_EXPORT_EXCEL}/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
+                          `https://water-pump.onrender.com/api/export/plantexcel/${tableFilters.plantId}/motors?start=${startDate}&end=${endDate}`,
                           '_blank'
                         );
                       }
@@ -369,4 +367,4 @@ const response = await axios.get(
 export default SavedLog;
 
 
-// gggoooooooooooooooooooooooo
+  // sssssssssssssssssssssssssssssssssssssssssss
