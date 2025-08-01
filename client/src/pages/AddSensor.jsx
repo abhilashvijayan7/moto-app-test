@@ -96,9 +96,9 @@ function AddSensorAndMotor() {
 
   const fetchSensorTypes = async () => {
     try {
-      const data = await apiCall(
-        "https://water-pump.onrender.com/api/sensors/sensor-types"
-      );
+    const data = await apiCall(
+  `${import.meta.env.VITE_API_BASE_URL}/sensors/sensor-types`
+);
       console.log("Fetched sensor types:", data);
       setSensorTypes(data);
       setHasSensorType(data.length > 0);
@@ -112,9 +112,9 @@ function AddSensorAndMotor() {
     try {
       setIsLoadingSensors(true);
       setSensorsError("");
-      const data = await apiCall(
-        "https://water-pump.onrender.com/api/sensors/relations"
-      );
+    const data = await apiCall(
+  `${import.meta.env.VITE_API_BASE_URL}/sensors/relations`
+);
       setSensors(data);
     } catch (error) {
       setSensorsError("Failed to load sensors. Please refresh the page.");
@@ -140,15 +140,15 @@ function AddSensorAndMotor() {
         throw new Error("Sensor type name is required");
       }
 
-      const response = await apiCall(
-        "https://water-pump.onrender.com/api/sensors/types",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            sensor_type_name: sensorTypeForm.sensorTypeName.trim(),
-          }),
-        }
-      );
+   const response = await apiCall(
+  `${import.meta.env.VITE_API_BASE_URL}/sensors/types`,
+  {
+    method: "POST",
+    body: JSON.stringify({
+      sensor_type_name: sensorTypeForm.sensorTypeName.trim(),
+    }),
+  }
+);
 
       const createdSensorTypeId = response.id || response.sensor_type_id;
       console.log("Created sensor type with ID:", createdSensorTypeId);
@@ -184,13 +184,13 @@ function AddSensorAndMotor() {
 
       console.log("Creating sensor relation with data:", relationData);
 
-      const response = await apiCall(
-        "https://water-pump.onrender.com/api/sensors/relation",
-        {
-          method: "POST",
-          body: JSON.stringify(relationData),
-        }
-      );
+  const response = await apiCall(
+  `${import.meta.env.VITE_API_BASE_URL}/sensors/relation`,
+  {
+    method: "POST",
+    body: JSON.stringify(relationData),
+  }
+);
 
       console.log("Sensor relation created successfully:", response);
       return response;
@@ -247,13 +247,13 @@ function AddSensorAndMotor() {
         try {
           console.log("Editing sensor with ID:", editingSensorId);
 
-          const response = await apiCall(
-            `https://water-pump.onrender.com/api/sensors/${editingSensorId}`,
-            {
-              method: "PUT",
-              body: JSON.stringify(editSensorData),
-            }
-          );
+      const response = await apiCall(
+  `${import.meta.env.VITE_API_BASE_URL}/sensors/${editingSensorId}`,
+  {
+    method: "PUT",
+    body: JSON.stringify(editSensorData),
+  }
+);
 
           console.log("Sensor updated successfully:", response);
 
@@ -277,13 +277,13 @@ function AddSensorAndMotor() {
         };
 
         console.log("Creating sensor with data:", sensorData);
-        const sensorResponse = await apiCall(
-          "https://water-pump.onrender.com/api/sensors",
-          {
-            method: "POST",
-            body: JSON.stringify(sensorData),
-          }
-        );
+    const sensorResponse = await apiCall(
+  `${import.meta.env.VITE_API_BASE_URL}/sensors`,
+  {
+    method: "POST",
+    body: JSON.stringify(sensorData),
+  }
+);
 
         const createdSensorId =
           sensorResponse.id ||

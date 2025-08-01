@@ -64,7 +64,9 @@ function NewPlant() {
     try {
       setIsLoadingPlants(true);
       setPlantsError("");
-      const response = await fetch("https://water-pump.onrender.com/api/plants");
+const response = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/plants`
+);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -89,8 +91,11 @@ function NewPlant() {
     try {
       setIsLoadingLocations(true);
       setLocationsError("");
-      const response = await fetch("https://water-pump.onrender.com/api/locations");
-      if (!response.ok) {
+const response = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/locations`
+);
+
+if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
@@ -174,11 +179,14 @@ function NewPlant() {
       };
 
       if (isEditing) {
-        const response = await fetch(`https://water-pump.onrender.com/api/plants/${editingPlantId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(plantData),
-        });
+    const response = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/plants/${editingPlantId}`,
+  {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(plantData),
+  }
+);
 
         const responseText = await response.text();
         if (!response.ok) {
@@ -194,11 +202,14 @@ function NewPlant() {
         await fetchPlants();
         handleCancelEdit();
       } else {
-        const plantResponse = await fetch("https://water-pump.onrender.com/api/plants", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(plantData),
-        });
+     const plantResponse = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/plants`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(plantData),
+  }
+);
 
         const plantResponseText = await plantResponse.text();
         if (!plantResponse.ok) {
@@ -217,11 +228,14 @@ function NewPlant() {
           installation_date: new Date().toISOString().split("T")[0],
         };
 
-        const plantLocationResponse = await fetch("https://water-pump.onrender.com/api/plant-locations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(plantLocationData),
-        });
+    const plantLocationResponse = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/plant-locations`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(plantLocationData),
+  }
+);
 
         const plantLocationResponseText = await plantLocationResponse.text();
         if (!plantLocationResponse.ok) {
@@ -318,11 +332,11 @@ function NewPlant() {
         plant_id: plantId,
       }));
 
-      const response = await fetch(`https://water-pump.onrender.com/api/plants/${plantId}/sensors`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sensorData),
-      });
+   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plants/${plantId}/sensors`, {  
+  method: "POST",  
+  headers: { "Content-Type": "application/json" },  
+  body: JSON.stringify(sensorData),  
+});  
 
       const responseText = await response.text();
       if (!response.ok) {

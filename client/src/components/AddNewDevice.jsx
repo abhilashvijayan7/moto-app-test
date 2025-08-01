@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import axios from 'axios';
 
-export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-pump.onrender.com/api/locations' }) {
+export default function AddNewDevice({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     location_name: '',
     city: '',
@@ -34,11 +34,16 @@ export default function AddNewDevice({ isOpen, onClose, apiUrl = 'https://water-
     setSubmitSuccess(false);
 
     try {
-      const response = await axios.post(apiUrl, formData, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+ const response = await axios.post(
+  `${import.meta.env.VITE_API_BASE_URL}/locations`,
+  formData,
+  {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    timeout: 10000,
+  }
+);
 
       console.log('Device added successfully:', response.data);
       setSubmitSuccess(true);

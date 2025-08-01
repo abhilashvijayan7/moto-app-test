@@ -53,7 +53,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       try {
         setLoadingPlants(true);
         setError(null);
-        const response = await axios.get('https://water-pump.onrender.com/api/plants');
+const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/plants`, { timeout: 10000 });
         const plantData = Array.isArray(response.data) ? response.data : [];
         setPlants(plantData);
       } catch (error) {
@@ -74,7 +74,10 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       try {
         setLoadingRoles(true);
         setError(null);
-        const response = await axios.get('https://water-pump.onrender.com/api/roles');
+const response = await axios.get(  
+  `${import.meta.env.VITE_API_BASE_URL}/roles`,  
+  { timeout: 10000 }  
+);  
         const roleData = Array.isArray(response.data) ? response.data : [];
         setRoles(roleData);
         if (roleData.length > 0 && name !== "Edit User") {
@@ -255,10 +258,11 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
       setLoadingPlants(true);
       setError(null);
 
-      const url = name === "Edit User" && user?.user_id
-        ? `https://water-pump.onrender.com/api/users/${user.user_id}`
-        : 'https://water-pump.onrender.com/api/users';
-      const method = name === "Edit User" ? 'PUT' : 'POST';
+const url = name === "Edit User" && user?.user_id  
+  ? `${import.meta.env.VITE_API_BASE_URL}/users/${user.user_id}`  
+  : `${import.meta.env.VITE_API_BASE_URL}/users`;  
+const method = name === "Edit User" ? 'PUT' : 'POST';  
+
 
       const response = await axios({
         method,
@@ -267,6 +271,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
         headers: {
           'Content-Type': 'application/json',
         },
+        timeout: 10000,
       });
 
       const formatDisplayDate = (dateStr) => {

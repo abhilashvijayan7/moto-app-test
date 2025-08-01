@@ -7,11 +7,11 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { UserContext } from "../context/UserContext"; 
 
 // Initialize socket connections
-const socketMoto = io("https://moto-app-test.onrender.com", {
+const socketMoto = io(import.meta.env.VITE_SOCKET_IO_MOTO_URL, {
   transports: ["websocket"],
 });
 
-const socketWaterPump = io("https://water-pump.onrender.com", {
+const socketWaterPump = io(import.meta.env.VITE_SOCKET_IO_WATER_PUMP_URL, {
   transports: ["websocket"],
   secure: true,
   reconnection: true,
@@ -102,7 +102,7 @@ const Home = () => {
       const apiPromises = plants.map((plant) =>
         axios
           .get(
-            `https://water-pump.onrender.com/api/plantmotors/plant/${plant.plant_id}`,
+            `${import.meta.env.VITE_API_BASE_URL}/plantmotors/plant/${plant.plant_id}`,
             { withCredentials: true }
           )
           .catch((error) => {
@@ -146,7 +146,7 @@ const Home = () => {
       const apiPromises = plants.map((plant) =>
         axios
           .get(
-            `https://water-pump.onrender.com/api/plantsensors/details/${plant.plant_id}`,
+            `${import.meta.env.VITE_API_BASE_URL}/plantsensors/details/${plant.plant_id}`,
             { withCredentials: true }
           )
           .catch((error) => {
@@ -199,7 +199,7 @@ const Home = () => {
       console.log("Fetching initial plant data for plant IDs:", loginPlantIds); // Log fetch start
 
       const apiPromises = loginPlantIds.map((plantId) =>
-        axios.get(`https://water-pump.onrender.com/api/plants/${plantId}`, {
+        axios.get(`${import.meta.env.VITE_API_BASE_URL}/plants/${plantId}`, {
           withCredentials: true,
         })
       );

@@ -3,7 +3,7 @@ import { io } from 'socket.io-client';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 
-const socketMoto = io("https://moto-app-test.onrender.com", {
+const socketMoto = io(import.meta.env.VITE_SOCKET_IO_MOTO_URL, {
   transports: ["websocket"],
 });
 
@@ -17,7 +17,9 @@ const DataLog = () => {
   useEffect(() => {
     const fetchPlantNames = async () => {
       try {
-        const response = await axios.get("https://water-pump.onrender.com/api/plants");
+const response = await axios.get(
+  `${import.meta.env.VITE_API_BASE_URL}/plants`
+);
         const plants = Array.isArray(response.data) ? response.data : [];
         console.log("Fetched plant names:", plants);
         const names = plants.reduce((acc, plant) => ({

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { io } from "socket.io-client";
-const socket = io("https://moto-app-test.onrender.com", {
+const socket = io(import.meta.env.VITE_SOCKET_IO_MOTO_URL, {
   transports: ["websocket"],
 });
 
@@ -38,6 +38,3 @@ function Motor() {
 }
 
 export default Motor;
-
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

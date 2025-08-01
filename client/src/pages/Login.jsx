@@ -19,19 +19,20 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(
-        'https://water-pump.onrender.com/api/users/login',
-        {
-          username: loginInput,
-          password: password,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          withCredentials: true,
-        }
-      );
+ const response = await axios.post(  
+  `${import.meta.env.VITE_API_BASE_URL}/users/login`,  
+  {  
+    username: loginInput,  
+    password: password,  
+  },  
+  {  
+    headers: {  
+      'Content-Type': 'application/json',  
+    },  
+    withCredentials: true,  
+  }  
+);  
+
 
       console.log('Login API Response:', response.data);
       login(response.data); // Set user data in context
@@ -109,6 +110,3 @@ const Login = () => {
 };
 
 export default Login;
-
-
-// kjshdfkjhskjdfkjsgdfjkgshdjfghjgsdhjfgjhgjshdgfgkjhkjgds

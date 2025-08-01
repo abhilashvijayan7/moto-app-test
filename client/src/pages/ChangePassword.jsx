@@ -43,10 +43,10 @@ function ChangePassword() {
     try {
       setLoading(true);
       // 3. Use the consistent 'id' variable in the API call.
-      const response = await axios.get(`https://water-pump.onrender.com/api/UserPlantAccess/${id}`, {
-        headers: { 'Content-Type': 'application/json' },
-        withCredentials: true,
-      });
+    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/UserPlantAccess/${id}`, {
+  headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
+});
 
       console.log("UserPlantAccess Response:", response.data);
 
@@ -107,17 +107,18 @@ function ChangePassword() {
     }
 
     try {
-      await axios.post(
-        'https://water-pump.onrender.com/api/users/change-password',
-        {
-          current_password: currentPassword,
-          new_password: newPassword,
-        },
-        {
-          headers: { 'Content-Type': 'application/json' },
-          withCredentials: true,
-        }
-      );
+ await axios.post(  
+  `${import.meta.env.VITE_API_BASE_URL}/users/change-password`,  
+  {  
+    current_password: currentPassword,  
+    new_password: newPassword,  
+  },  
+  {  
+    headers: { 'Content-Type': 'application/json' },  
+    withCredentials: true,  
+  }  
+);  
+
       setMessage('Password updated successfully.');
       toast.success('Password updated successfully.');
       setTimeout(() => {
@@ -304,8 +305,6 @@ function ChangePassword() {
         </div>
       </div>
     </div>
-
-
   );
 }
 

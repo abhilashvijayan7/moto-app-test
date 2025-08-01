@@ -30,7 +30,7 @@ import user from "../images/user.svg";
 import users from "../images/users.svg";
 
 function UserManager() {
-   const { user, isCheckingSession } = useContext(UserContext);
+  const { user, isCheckingSession } = useContext(UserContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState("add");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -65,10 +65,10 @@ function UserManager() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        "https://water-pump.onrender.com/api/UserPlantAccess/",
-        { withCredentials: true }
-      );
+   const response = await axios.get(
+  `${import.meta.env.VITE_API_BASE_URL}/UserPlantAccess`,
+  { withCredentials: true }
+);
       console.log("UserPlantAccess Response:", response.data);
 
       const mappedData = response.data.map((user) => ({
@@ -228,17 +228,17 @@ function UserManager() {
       return;
     }
     try {
-      const response = await axios.post(
-        "https://water-pump.onrender.com/api/users/reset-password",
-        {
-          target_user_id: selectedUser.user_id,
-          new_password: newPassword,
-        },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
+ const response = await axios.post(
+  `${import.meta.env.VITE_API_BASE_URL}/users/reset-password`,
+  {
+    target_user_id: selectedUser.user_id,
+    new_password: newPassword,
+  },
+  {
+    headers: { "Content-Type": "application/json" },
+    withCredentials: true,
+  }
+);
       setMessage("Password reset successful.");
       console.log(
         `Password reset successful for ${selectedUser?.full_name}:`,

@@ -28,7 +28,10 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         try {
           setIsLoadingMotors(true);
           setMotorsError('');
-          const response = await axios.get('https://water-pump.onrender.com/api/motors');
+const response = await axios.get(  
+  `${import.meta.env.VITE_API_BASE_URL}/motors`,  
+  { timeout: 10000 }  
+);  
           setAvailableMotors(response.data);
         } catch (error) {
           console.error('Error fetching motors:', error);
@@ -48,7 +51,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         try {
           setIsLoadingPlantName(true);
           setPlantNameError('');
-          const response = await axios.get('https://water-pump.onrender.com/api/plants');
+const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/plants`, { timeout: 10000 });
           const plant = response.data.find(p => p.plant_id === parseInt(plant_id, 10));
           if (plant) {
             setPlantName(plant.plant_name || `Plant ${plant_id}`);
@@ -75,8 +78,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         try {
           setIsLoadingPlantMotors(true);
           setPlantMotorsError('');
-          const response = await axios.get('https://water-pump.onrender.com/api/plantmotors');
-          const filteredMotors = response.data.filter(motor => motor.plant_id === parseInt(plant_id, 10));
+const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/plantmotors`, { timeout: 10000 });          const filteredMotors = response.data.filter(motor => motor.plant_id === parseInt(plant_id, 10));
           const sortedMotors = filteredMotors.sort((a, b) => 
             new Date(b.installation_date) - new Date(a.installation_date)
           );
@@ -212,9 +214,17 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         return;
       }
 
-      await axios.post('https://water-pump.onrender.com/api/plantmotors', singlePayload);
-      await axios.get('https://water-pump.onrender.com/api/plants');
-      const plantMotorsResponse = await axios.get('https://water-pump.onrender.com/api/plantmotors');
+await axios.post(  
+  `${import.meta.env.VITE_API_BASE_URL}/plantmotors`,  
+  singlePayload,  
+  { timeout: 10000 }  
+);  
+await axios.get(`${import.meta.env.VITE_API_BASE_URL}/plants`, { timeout: 10000 });
+
+const plantMotorsResponse = await axios.get(  
+  `${import.meta.env.VITE_API_BASE_URL}/plantmotors`,  
+  { timeout: 10000 }  
+);  
       const filteredMotors = plantMotorsResponse.data.filter(motor => motor.plant_id === plantIdNum);
       setPlantMotors(filteredMotors.sort((a, b) => 
         new Date(b.installation_date) - new Date(a.installation_date)
@@ -275,8 +285,15 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
         motor_working_order: parseInt(editingMotor.motor_working_order, 10)
       };
 
-      await axios.put(`https://water-pump.onrender.com/api/plantmotors/${editingMotor.plant_motor_id}`, payload);
-      const plantMotorsResponse = await axios.get('https://water-pump.onrender.com/api/plantmotors');
+await axios.put(  
+  `${import.meta.env.VITE_API_BASE_URL}/plantmotors/${editingMotor.plant_motor_id}`,  
+  payload,  
+  { timeout: 10000 }  
+);  
+const plantMotorsResponse = await axios.get(  
+  `${import.meta.env.VITE_API_BASE_URL}/plantmotors`,  
+  { timeout: 10000 }  
+);  
       const filteredMotors = plantMotorsResponse.data.filter(motor => motor.plant_id === parseInt(plant_id, 10));
       setPlantMotors(filteredMotors.sort((a, b) => 
         new Date(b.installation_date) - new Date(a.installation_date)
@@ -353,9 +370,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-      {/* Modal Container: Reduced padding and full width on mobile */}
       <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-6xl max-h-[90vh] overflow-y-auto">
-        {/* Modal Header */}
         <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
           <div>
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">Apply Motor</h2>
@@ -370,7 +385,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
           </button>
         </div>
 
-        {/* Modal Content */}
         <div className="p-4 sm:p-6">
           {motorsError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
@@ -390,7 +404,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
             <div className="space-y-4 sm:space-y-6">
               {motors.map((motor) => (
                 <div key={motor.id} className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 items-center">
-                  {/* Select Motor: Full width on mobile */}
                   <div className="col-span-1 sm:col-span-3">
                     <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Select Motor
@@ -418,7 +431,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     </div>
                   </div>
 
-                  {/* Max Running Time: Full width on mobile */}
                   <div className="col-span-1 sm:col-span-3">
                     <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Max Running Time (Hours)
@@ -435,7 +447,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     />
                   </div>
 
-                  {/* Working Order: Full width on mobile */}
                   <div className="col-span-1 sm:col-span-3">
                     <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                       Working Order
@@ -451,7 +462,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     />
                   </div>
 
-                  {/* Action Buttons: Touch-friendly size */}
                   <div className="col-span-1 sm:col-span-3 flex justify-end space-x-2">
                     {motors.length > 1 && (
                       <button
@@ -470,7 +480,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
             <div className="space-y-4 sm:space-y-6">
               <h3 className="text-base sm:text-lg font-semibold text-gray-800">Edit Motor</h3>
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 sm:gap-6 items-center">
-                {/* Motor Name: Full width on mobile */}
                 <div className="col-span-1 sm:col-span-3">
                   <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Motor Name
@@ -483,7 +492,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                   />
                 </div>
 
-                {/* Motor Brand */}
                 <div className="col-span-1 sm:col-span-3">
                   <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Motor Brand
@@ -498,7 +506,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                   />
                 </div>
 
-                {/* Max Running Time */}
                 <div className="col-span-1 sm:col-span-3">
                   <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Max Running Time (Hours)
@@ -515,7 +522,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                   />
                 </div>
 
-                {/* Working Order */}
                 <div className="col-span-1 sm:col-span-3">
                   <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Working Order
@@ -531,7 +537,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                   />
                 </div>
 
-                {/* Installation Date */}
                 <div className="col-span-1 sm:col-span-3">
                   <label className="block text-xs sm:text-sm font-medium text-gray-600 mb-1 sm:mb-2">
                     Installation Date
@@ -562,7 +567,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
           )}
         </div>
 
-        {/* Modal Footer */}
         {!editingMotor && (
           <div className="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-4 p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
             <button
@@ -581,7 +585,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
           </div>
         )}
 
-        {/* Plant Motors Table Section */}
         <div className="p-4 sm:p-6">
           <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
             <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
@@ -624,8 +627,7 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                         const fetchPlantName = async () => {
                           try {
                             setIsLoadingPlantName(true);
-                            const response = await axios.get('https://water-pump.onrender.com/api/plants');
-                            const plant = response.data.find(p => p.plant_id === parseInt(plant_id, 10));
+const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/plants`, { timeout: 10000 });                            const plant = response.data.find(p => p.plant_id === parseInt(plant_id, 10));
                             setPlantName(plant ? plant.plant_name || `Plant ${plant_id}` : `Plant ${plant_id}`);
                           } catch (error) {
                             console.error('Error retrying plant name fetch:', error);
@@ -657,7 +659,10 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                         const fetchPlantMotors = async () => {
                           try {
                             setIsLoadingPlantMotors(true);
-                            const response = await axios.get('https://water-pump.onrender.com/api/plantmotors');
+const response = await axios.get(  
+  `${import.meta.env.VITE_API_BASE_URL}/plantmotors`,  
+  { timeout: 10000 }  
+);  
                             const filteredMotors = response.data.filter(motor => motor.plant_id === parseInt(plant_id, 10));
                             setPlantMotors(filteredMotors.sort((a, b) => 
                               new Date(b.installation_date) - new Date(a.installation_date)
@@ -685,7 +690,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                 </div>
               ) : (
                 <>
-                  {/* Desktop Table View */}
                   <div className="hidden md:block overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
@@ -747,7 +751,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     </table>
                   </div>
 
-                  {/* Mobile Card View: Enhanced spacing and font sizes */}
                   <div className="md:hidden space-y-3">
                     {paginatedPlantMotors.length === 0 ? (
                       <div className="text-center py-6 text-gray-500 text-sm">
@@ -804,7 +807,6 @@ export default function ApplyMotorModal({ isOpen, onClose, plant_id }) {
                     )}
                   </div>
 
-                  {/* Pagination: Adjusted for mobile */}
                   {totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 mt-4 sm:mt-6">
                       <button

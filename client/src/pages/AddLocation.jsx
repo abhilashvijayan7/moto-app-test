@@ -57,7 +57,9 @@ function AddLocation() {
     try {
       setIsLoadingLocations(true);
       setLocationsError("");
-      const response = await fetch("https://water-pump.onrender.com/api/locations");
+const response = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/locations`
+);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -154,11 +156,14 @@ function AddLocation() {
       };
 
       if (isEditing) {
-        const response = await fetch(`https://water-pump.onrender.com/api/locations/${editingLocationId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(locationData),
-        });
+     const response = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/locations/${editingLocationId}`,
+  {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(locationData),
+  }
+);
 
         const responseText = await response.text();
         if (!response.ok) {
@@ -174,11 +179,14 @@ function AddLocation() {
         await fetchLocations();
         handleCancelEdit();
       } else {
-        const response = await fetch("https://water-pump.onrender.com/api/locations", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(locationData),
-        });
+     const response = await fetch(
+  `${import.meta.env.VITE_API_BASE_URL}/locations`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(locationData),
+  }
+);
 
         const responseText = await response.text();
         if (!response.ok) {

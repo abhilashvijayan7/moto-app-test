@@ -16,11 +16,11 @@ const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate',
         status: actionType,
       };
 
-      const response = await axios.put(
-        'https://water-pump.onrender.com/api/users/reset-status',
-        payload,
-        { withCredentials: true }
-      );
+   const response = await axios.put(
+  `${import.meta.env.VITE_API_BASE_URL}/users/reset-status`,
+  payload,
+  { withCredentials: true }
+);
 
       console.log('Success:', response.data);
       setSuccessMessage(`User ${actionType}d successfully`);
@@ -66,5 +66,3 @@ const UserConfirmation = ({ isOpen, onClose, onConfirm, actionType = 'activate',
 };
 
 export default UserConfirmation;
-
-// kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk

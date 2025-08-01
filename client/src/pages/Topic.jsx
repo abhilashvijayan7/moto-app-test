@@ -29,7 +29,9 @@ export default function ApplyTopicPage() {
   useEffect(() => {
     const fetchPlants = async () => {
       try {
-        const response = await axios.get('https://water-pump.onrender.com/api/plants');
+const response = await axios.get(
+  `${import.meta.env.VITE_API_BASE_URL}/plants`
+);
         console.log('Plants API Response:', response.data);
         setPlants(response.data);
         setError(null);
@@ -45,7 +47,9 @@ export default function ApplyTopicPage() {
   useEffect(() => {
     const fetchPlantTopics = async () => {
       try {
-        const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
+const response = await axios.get(
+  `${import.meta.env.VITE_API_BASE_URL}/planttopics`
+);
         console.log('Plant Topics API Response:', response.data);
         const topics = response.data;
 
@@ -117,7 +121,10 @@ export default function ApplyTopicPage() {
         };
         console.log('Edit Payload:', payload);
         console.log('Edit Topic ID:', editTopicId);
-        await axios.put(`https://water-pump.onrender.com/api/planttopics/${editTopicId}`, payload);
+await axios.put(
+  `${import.meta.env.VITE_API_BASE_URL}/planttopics/${editTopicId}`,
+  payload
+);
         setSuccessMessage(`Topic ID ${editTopicId} updated successfully`);
       } else {
         // Add new topic
@@ -127,8 +134,10 @@ export default function ApplyTopicPage() {
           sensor_topic: formData.sensor_topic,
           valve_topic: formData.valve_topic,
         };
-        await axios.post('https://water-pump.onrender.com/api/planttopics', payload);
-        setSuccessMessage('New topic added successfully');
+await axios.post(
+  `${import.meta.env.VITE_API_BASE_URL}/planttopics`,
+  payload
+);        setSuccessMessage('New topic added successfully');
       }
       setError(null);
       // Reset form
@@ -141,7 +150,9 @@ export default function ApplyTopicPage() {
       setIsEditMode(false);
       setEditTopicId(null);
       // Re-fetch topics to update table
-      const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
+const response = await axios.get(
+  `${import.meta.env.VITE_API_BASE_URL}/planttopics`
+);
       const topics = response.data;
       const validTopics = topics.filter(topic => topic.plant_topic_id != null);
       const topicsWithPlantNames = validTopics.map(topic => ({
@@ -193,13 +204,18 @@ export default function ApplyTopicPage() {
   const handleDelete = async (id) => {
     if (!confirm(`Are you sure you want to delete topic ID ${id}?`)) return;
     try {
-      await axios.delete(`https://water-pump.onrender.com/api/planttopics/${id}`);
+await axios.delete(
+  `${import.meta.env.VITE_API_BASE_URL}/planttopics/${id}`
+);
       setPaginatedPlantTopics(paginatedPlantTopics.filter(topic => topic.plant_topic_id !== id));
       setSuccessMessage(`Topic ID ${id} deleted successfully`);
       setError(null);
       // Re-fetch topics to ensure consistency
-      const response = await axios.get('https://water-pump.onrender.com/api/planttopics');
-      const topics = response.data;
+const response = await axios.get(
+  `${import.meta.env.VITE_API_BASE_URL}/planttopics`
+);
+
+const topics = response.data;
       const validTopics = topics.filter(topic => topic.plant_topic_id != null);
       const topicsWithPlantNames = validTopics.map(topic => ({
         ...topic,
@@ -474,7 +490,7 @@ export default function ApplyTopicPage() {
                     {paginatedPlantTopics.length === 0 ? (
                       <tr>
                         <td colSpan="7" className="border border-gray-300 px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500 text-sm sm:text-base">
-                          {searchQuery ? 'No topics found matching your search.' : 'No topics applied yet.'}
+ pods: {searchQuery ? 'No topics found matching your search.' : 'No topics applied yet.'}
                         </td>
                       </tr>
                     ) : (

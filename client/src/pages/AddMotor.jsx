@@ -56,7 +56,7 @@ function AddMotor() {
       setIsLoadingMotors(true);
       setMotorsError('');
       
-      const response = await fetch('https://water-pump.onrender.com/api/motors');
+const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/motors`);  
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -129,9 +129,10 @@ function AddMotor() {
 
       console.log('Submitting motor data:', motorData);
 
-      const url = editingMotorId 
-        ? `https://water-pump.onrender.com/api/motors/${editingMotorId}`
-        : 'https://water-pump.onrender.com/api/motors';
+      const url = editingMotorId   
+  ? `${import.meta.env.VITE_API_BASE_URL}/motors/${editingMotorId}`  
+  : `${import.meta.env.VITE_API_BASE_URL}/motors`;  
+
 
       console.log(url);
       
