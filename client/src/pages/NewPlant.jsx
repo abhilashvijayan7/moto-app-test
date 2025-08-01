@@ -64,9 +64,7 @@ function NewPlant() {
     try {
       setIsLoadingPlants(true);
       setPlantsError("");
-const response = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/plants`
-);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plants`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -91,11 +89,8 @@ const response = await fetch(
     try {
       setIsLoadingLocations(true);
       setLocationsError("");
-const response = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/locations`
-);
-
-if (!response.ok) {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/locations`);
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
@@ -165,9 +160,11 @@ if (!response.ok) {
       if (!formData.deviceId.trim()) throw new Error("Device ID is required");
 
       const selectedLocation = locations.find((loc) => loc.location_name === formData.location);
-      console.log(selectedLocation);
-      
-      if (!selectedLocation) throw new Error("Please select a valid location");
+      console.log("Selected Location:", selectedLocation);
+
+      if (!selectedLocation || !selectedLocation.location_id) {
+        throw new Error("Invalid location selected. Please choose a valid location.");
+      }
 
       const plantData = {
         plant_name: formData.plantName.trim(),
@@ -178,17 +175,17 @@ if (!response.ok) {
         device_id: formData.deviceId.trim(),
       };
 
+      console.log("Request Payload:", JSON.stringify(plantData));
+
       if (isEditing) {
-    const response = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/plants/${editingPlantId}`,
-  {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(plantData),
-  }
-);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plants/${editingPlantId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(plantData),
+        });
 
         const responseText = await response.text();
+        console.log("PUT Response:", responseText);
         if (!response.ok) {
           try {
             const errorData = JSON.parse(responseText);
@@ -202,16 +199,14 @@ if (!response.ok) {
         await fetchPlants();
         handleCancelEdit();
       } else {
-     const plantResponse = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/plants`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(plantData),
-  }
-);
+        const plantResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plants`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(plantData),
+        });
 
         const plantResponseText = await plantResponse.text();
+        console.log("POST Response:", plantResponseText);
         if (!plantResponse.ok) {
           try {
             const errorData = JSON.parse(plantResponseText);
@@ -224,20 +219,18 @@ if (!response.ok) {
         const plantResult = JSON.parse(plantResponseText);
         const plantLocationData = {
           plant_id: plantResult.plant_id,
-          location_id: plantResult.plant_location_id,
+          location_id: plantResult.location_id,
           installation_date: new Date().toISOString().split("T")[0],
         };
 
-    const plantLocationResponse = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/plant-locations`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(plantLocationData),
-  }
-);
+        const plantLocationResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plant-locations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(plantLocationData),
+        });
 
         const plantLocationResponseText = await plantLocationResponse.text();
+        console.log("Plant Location Response:", plantLocationResponseText);
         if (!plantLocationResponse.ok) {
           try {
             const errorData = JSON.parse(plantLocationResponseText);
@@ -332,11 +325,11 @@ if (!response.ok) {
         plant_id: plantId,
       }));
 
-   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plants/${plantId}/sensors`, {  
-  method: "POST",  
-  headers: { "Content-Type": "application/json" },  
-  body: JSON.stringify(sensorData),  
-});  
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plants/${plantId}/sensors`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(sensorData),
+      });
 
       const responseText = await response.text();
       if (!response.ok) {
@@ -417,6 +410,8 @@ if (!response.ok) {
     return pages;
   };
 
+  const isSubmitDisabled = isSubmitting || isLoadingLocations || locations.length === 0;
+
   return (
     <div className="flex-1">
       <div className="p-3 sm:p-4 lg:p-6 max-w-[640px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1440px]">
@@ -468,6 +463,10 @@ if (!response.ok) {
                   </button>
                 </div>
               </div>
+            )}
+
+            {locations.length === 0 && !isLoadingLocations && (
+              <p className="text-red-500 text-sm mt-2">No locations available. Please add a location first.</p>
             )}
 
             <div className="space-y-6">
@@ -584,11 +583,9 @@ if (!response.ok) {
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={isSubmitting || isLoadingLocations}
+                  disabled={isSubmitDisabled}
                   className={`font-medium py-2.5 sm:py-3 px-6 sm:px-8 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    isSubmitting || isLoadingLocations
-                      ? "bg-gray-400 text-white cursor-not-allowed"
-                      : "bg-[#208CD4] hover:bg-blue-700 text-white"
+                    isSubmitDisabled ? "bg-gray-400 text-white cursor-not-allowed" : "bg-[#208CD4] hover:bg-blue-700 text-white"
                   }`}
                 >
                   {isSubmitting ? "Saving..." : isEditing ? "Update Plant" : "Save Changes"}
@@ -794,6 +791,3 @@ if (!response.ok) {
 }
 
 export default NewPlant;
-
-
-// last
