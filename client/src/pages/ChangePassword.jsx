@@ -1,4 +1,3 @@
-// ChangePassword.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -281,6 +280,9 @@ function ChangePassword() {
             {passwordMismatch && (
               <p className="text-sm text-red-600">Passwords do not match.</p>
             )}
+            {!passwordMismatch && newPassword && confirmPassword && (
+              <p className="text-sm text-green-600">Passwords match.</p>
+            )}
 
             {/* Message */}
             {message && (
@@ -353,6 +355,7 @@ function ChangePassword() {
 }
 
 export default ChangePassword;
+
 
 
 // eye for password
