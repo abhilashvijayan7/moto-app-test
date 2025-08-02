@@ -1,4 +1,3 @@
-// AddUserModal.jsx
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { X, Eye, EyeOff } from "lucide-react";
@@ -191,7 +190,13 @@ const response = await axios.get(
   const handleChange = (e) => {
     const { name, value } = e.target;
     const formDataKey = nameToKeyMap[name];
-    setFormData((prev) => ({ ...prev, [formDataKey]: value }));
+    if (formDataKey === "userName") {
+      // Allow alphabets, numbers, and special characters (., _, -)
+      const validValue = value.replace(/[^A-Za-z0-9._-]/g, '');
+      setFormData((prev) => ({ ...prev, [formDataKey]: validValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [formDataKey]: value }));
+    }
   };
 
 
@@ -666,5 +671,4 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
 export default AddUserModal;
 
 
-
-// added eye for password
+// user name correction
