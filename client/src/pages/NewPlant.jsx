@@ -11,6 +11,7 @@ function NewPlant() {
     phone: "",
     email: "",
     deviceId: "",
+    installationDate: new Date().toISOString().split("T")[0], // Default to current date
   });
   const [isEditing, setIsEditing] = useState(false);
   const [editingPlantId, setEditingPlantId] = useState(null);
@@ -122,6 +123,7 @@ function NewPlant() {
       phone: plant.contact_phone || "",
       email: plant.contact_email || "",
       deviceId: plant.device_id ? plant.device_id.toString() : "",
+      installationDate: plant.installation_date || new Date().toISOString().split("T")[0],
     });
     setIsEditing(true);
     setEditingPlantId(plant.plant_id);
@@ -137,6 +139,7 @@ function NewPlant() {
       phone: "",
       email: "",
       deviceId: "",
+      installationDate: new Date().toISOString().split("T")[0],
     });
     setIsEditing(false);
     setEditingPlantId(null);
@@ -158,6 +161,7 @@ function NewPlant() {
       if (!formData.phone.trim()) throw new Error("Phone number is required");
       if (!formData.email.trim()) throw new Error("Email is required");
       if (!formData.deviceId.trim()) throw new Error("Device ID is required");
+      if (!formData.installationDate.trim()) throw new Error("Installation date is required");
 
       const selectedLocation = locations.find((loc) => loc.location_name === formData.location);
       console.log("Selected Location:", selectedLocation);
@@ -168,14 +172,15 @@ function NewPlant() {
 
       const plantData = {
         plant_name: formData.plantName.trim(),
-        location_id: selectedLocation.location_id,
+        plant_location_id: Number(selectedLocation.location_id),
+        installation_date: formData.installationDate,
         contact_person: formData.contactPerson.trim(),
         contact_email: formData.email.trim(),
         contact_phone: formData.phone.trim(),
         device_id: formData.deviceId.trim(),
       };
 
-      console.log("Request Payload:", JSON.stringify(plantData));
+      console.log("Request Payload for Plant:", JSON.stringify(plantData));
 
       if (isEditing) {
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plants/${editingPlantId}`, {
@@ -206,37 +211,13 @@ function NewPlant() {
         });
 
         const plantResponseText = await plantResponse.text();
-        console.log("POST Response:", plantResponseText);
+        console.log("POST Response for Plant:", plantResponseText);
         if (!plantResponse.ok) {
           try {
             const errorData = JSON.parse(plantResponseText);
             throw new Error(errorData.message || errorData.error || `Server Error: ${plantResponse.status}`);
           } catch (parseError) {
             throw new Error(`Server Error (${plantResponse.status}): ${plantResponseText || "Unknown error"}`);
-          }
-        }
-
-        const plantResult = JSON.parse(plantResponseText);
-        const plantLocationData = {
-          plant_id: plantResult.plant_id,
-          location_id: plantResult.location_id,
-          installation_date: new Date().toISOString().split("T")[0],
-        };
-
-        const plantLocationResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/plant-locations`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(plantLocationData),
-        });
-
-        const plantLocationResponseText = await plantLocationResponse.text();
-        console.log("Plant Location Response:", plantLocationResponseText);
-        if (!plantLocationResponse.ok) {
-          try {
-            const errorData = JSON.parse(plantLocationResponseText);
-            throw new Error(errorData.message || errorData.error || `Server Error: ${plantLocationResponse.status}`);
-          } catch (parseError) {
-            throw new Error(`Server Error (${plantLocationResponse.status}): ${plantLocationResponseText || "Unknown error"}`);
           }
         }
 
@@ -438,7 +419,7 @@ function NewPlant() {
             )}
 
             {submitError && (
-              <div className="bg-red-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                 <div className="flex justify-between items-start">
                   <p className="text-sm font-medium text-red-800">{submitError}</p>
                   <button
@@ -528,6 +509,20 @@ function NewPlant() {
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
+                  <label htmlFor="installationDate" className="block text-sm font-medium text-gray-700 mb-2">
+                    Installation Date *
+                  </label>
+                  <input
+                    type="date"
+                    id="installationDate"
+                    name="installationDate"
+                    value={formData.installationDate}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                </div>
+                <div>
                   <label htmlFor="contactPerson" className="block text-sm font-medium text-gray-700 mb-2">
                     Contact Person *
                   </label>
@@ -555,6 +550,8 @@ function NewPlant() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                   />
                 </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     Email *

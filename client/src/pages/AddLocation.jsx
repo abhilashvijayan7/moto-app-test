@@ -24,6 +24,10 @@ function AddLocation() {
   const [searchQuery, setSearchQuery] = useState("");
   const [locationsPerPage, setLocationsPerPage] = useState(10);
   const locationNameInputRef = useRef(null);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [fetchError, setFetchError] = useState("");
 
   useEffect(() => {
     if (submitSuccess) {
@@ -53,13 +57,79 @@ function AddLocation() {
     fetchLocations();
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setFetchError("");
+        const response = await fetch("https://countriesnow.space/api/v0.1/countries/states");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setCountries(data.data);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+        setFetchError("Failed to load country data. Please try again later.");
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchStates = async () => {
+      if (formData.country && countries.length) {
+        try {
+          const response = await fetch("https://countriesnow.space/api/v0.1/countries/states", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country: formData.country }),
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          setStates(data.data.states || []);
+          setCities([]); // Reset cities when country changes
+        } catch (error) {
+          console.error("Error fetching states:", error);
+        }
+      } else {
+        setStates([]);
+        setCities([]);
+      }
+    };
+    fetchStates();
+  }, [formData.country, countries]);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      if (formData.country && formData.state && states.length) {
+        try {
+          const response = await fetch("https://countriesnow.space/api/v0.1/countries/state/cities", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ country: formData.country, state: formData.state }),
+          });
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          setCities(data.data || []);
+        } catch (error) {
+          console.error("Error fetching cities:", error);
+        }
+      } else {
+        setCities([]);
+      }
+    };
+    fetchCities();
+  }, [formData.country, formData.state, states]);
+
   const fetchLocations = async () => {
     try {
       setIsLoadingLocations(true);
       setLocationsError("");
-const response = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/locations`
-);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/locations`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -156,14 +226,11 @@ const response = await fetch(
       };
 
       if (isEditing) {
-     const response = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/locations/${editingLocationId}`,
-  {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(locationData),
-  }
-);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/locations/${editingLocationId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(locationData),
+        });
 
         const responseText = await response.text();
         if (!response.ok) {
@@ -179,14 +246,11 @@ const response = await fetch(
         await fetchLocations();
         handleCancelEdit();
       } else {
-     const response = await fetch(
-  `${import.meta.env.VITE_API_BASE_URL}/locations`,
-  {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(locationData),
-  }
-);
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/locations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(locationData),
+        });
 
         const responseText = await response.text();
         if (!response.ok) {
@@ -352,6 +416,12 @@ const response = await fetch(
               </div>
             )}
 
+            {fetchError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-sm font-medium text-red-800">{fetchError}</p>
+              </div>
+            )}
+
             <div className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
@@ -415,14 +485,11 @@ const response = await fetch(
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   >
                     <option value="">Select Country</option>
-                    <option value="us">United States</option>
-                    <option value="ca">Canada</option>
-                    <option value="uk">United Kingdom</option>
-                    <option value="au">Australia</option>
-                    <option value="de">Germany</option>
-                    <option value="fr">France</option>
-                    <option value="in">India</option>
-                    <option value="jp">Japan</option>
+                    {countries.map((country) => (
+                      <option key={country.iso2} value={country.name}>
+                        {country.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -438,32 +505,32 @@ const response = await fetch(
                     className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
                   >
                     <option value="">Select State</option>
-                    <option value="al">Alabama</option>
-                    <option value="ak">Alaska</option>
-                    <option value="az">Arizona</option>
-                    <option value="ar">Arkansas</option>
-                    <option value="ca">California</option>
-                    <option value="co">Colorado</option>
-                    <option value="ct">Connecticut</option>
-                    <option value="de">Delaware</option>
-                    <option value="fl">Florida</option>
-                    <option value="ga">Georgia</option>
+                    {states.map((state) => (
+                      <option key={state.name} value={state.name}>
+                        {state.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
                     City *
                   </label>
-                  <input
-                    type="text"
+                  <select
                     id="city"
                     name="city"
                     value={formData.city}
                     onChange={handleInputChange}
-                    placeholder="Enter city"
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors placeholder-gray-400"
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  >
+                    <option value="">Select City</option>
+                    {cities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -688,3 +755,6 @@ const response = await fetch(
 }
 
 export default AddLocation;
+
+
+// added location from api
