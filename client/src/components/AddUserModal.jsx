@@ -1,3 +1,4 @@
+// AddUserModal.jsx
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { X, Eye, EyeOff } from "lucide-react";
@@ -630,7 +631,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
                           onClick={() => setFormData((prev) => ({ ...prev, showPassword: !prev.showPassword }))}
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                         >
-                          {formData.showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          {formData.showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                         </button>
                       </div>
                     </div>
@@ -663,6 +664,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
 
 
 export default AddUserModal;
+
 
 
 // added eye for password

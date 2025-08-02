@@ -1,3 +1,4 @@
+// ChangePassword.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -226,7 +227,7 @@ function ChangePassword() {
                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                 className="absolute right-3 top-9 text-gray-500"
               >
-                {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showCurrentPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
             </div>
 
@@ -249,7 +250,7 @@ function ChangePassword() {
                 onClick={() => setShowNewPassword(!showNewPassword)}
                 className="absolute right-3 top-9 text-gray-500"
               >
-                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showNewPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
             </div>
 
@@ -272,7 +273,7 @@ function ChangePassword() {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-9 text-gray-500"
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirmPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </button>
             </div>
 
@@ -354,3 +355,4 @@ function ChangePassword() {
 export default ChangePassword;
 
 
+// eye for password
