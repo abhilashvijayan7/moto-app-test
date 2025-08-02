@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import draw2 from '../images/draw2.webp';
 import { UserContext } from '../context/UserContext';
+import { Eye, EyeOff } from "lucide-react";
 
 const Login = () => {
   const [loginInput, setLoginInput] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { login } = useContext(UserContext);
 
@@ -19,20 +21,17 @@ const Login = () => {
     setLoading(true);
 
     try {
- const response = await axios.post(  
-  `${import.meta.env.VITE_API_BASE_URL}/users/login`,  
-  {  
-    username: loginInput,  
-    password: password,  
-  },  
-  {  
-    headers: {  
-      'Content-Type': 'application/json',  
-    },  
-    withCredentials: true,  
-  }  
-);  
-
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/users/login`,
+        {
+          username: loginInput,
+          password: password,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        }
+      );
 
       console.log('Login API Response:', response.data);
       login(response.data); // Set user data in context
@@ -77,12 +76,12 @@ const Login = () => {
                 required
               />
             </div>
-            <div className="mb-4">
+            <div className="mb-4 relative">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Password
               </label>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 id="password"
                 placeholder="Password"
                 value={password}
@@ -91,6 +90,13 @@ const Login = () => {
                 disabled={loading}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-9 text-gray-500"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
             <button
               type="submit"
@@ -110,3 +116,6 @@ const Login = () => {
 };
 
 export default Login;
+
+
+// eye icon implemented

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../context/UserContext';
 import toast from 'react-hot-toast';
+import { ChevronRight, Eye, EyeOff } from "lucide-react";
 
 function ChangePassword() {
   const { user, isCheckingSession } = useContext(UserContext);
@@ -14,6 +15,10 @@ function ChangePassword() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordMismatch, setPasswordMismatch] = useState(false);
 
   const formatDisplayDate = (dateStr) => {
     if (!dateStr || dateStr === 'N/A') return 'N/A';
@@ -43,10 +48,10 @@ function ChangePassword() {
     try {
       setLoading(true);
       // 3. Use the consistent 'id' variable in the API call.
-    const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/UserPlantAccess/${id}`, {
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-});
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/UserPlantAccess/${id}`, {
+        headers: { 'Content-Type': 'application/json' },
+        withCredentials: true,
+      });
 
       console.log("UserPlantAccess Response:", response.data);
 
@@ -93,6 +98,18 @@ function ChangePassword() {
     }
   }, [isCheckingSession, user]);
 
+  useEffect(() => {
+    if (newPassword && confirmPassword) {
+      if (newPassword !== confirmPassword) {
+        setPasswordMismatch(true);
+      } else {
+        setPasswordMismatch(false);
+      }
+    } else {
+      setPasswordMismatch(false);
+    }
+  }, [newPassword, confirmPassword]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!currentPassword || !newPassword || !confirmPassword) {
@@ -107,17 +124,17 @@ function ChangePassword() {
     }
 
     try {
- await axios.post(  
-  `${import.meta.env.VITE_API_BASE_URL}/users/change-password`,  
-  {  
-    current_password: currentPassword,  
-    new_password: newPassword,  
-  },  
-  {  
-    headers: { 'Content-Type': 'application/json' },  
-    withCredentials: true,  
-  }  
-);  
+      await axios.post(
+        `${import.meta.env.VITE_API_BASE_URL}/users/change-password`,
+        {
+          current_password: currentPassword,
+          new_password: newPassword,
+        },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        }
+      );
 
       setMessage('Password updated successfully.');
       toast.success('Password updated successfully.');
@@ -154,7 +171,7 @@ function ChangePassword() {
       </div>
     );
   }
-  
+
   // An error state if fetching fails or the user data couldn't be found
   if (error || !userData) {
     return (
@@ -191,12 +208,12 @@ function ChangePassword() {
 
           <div className="space-y-4">
             {/* Current Password */}
-            <div>
+            <div className="relative">
               <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Current Password
               </label>
               <input
-                type="password"
+                type={showCurrentPassword ? "text" : "password"}
                 id="currentPassword"
                 placeholder="Enter current password"
                 value={currentPassword}
@@ -204,15 +221,22 @@ function ChangePassword() {
                 autoComplete="off"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                className="absolute right-3 top-9 text-gray-500"
+              >
+                {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
 
             {/* New Password */}
-            <div>
+            <div className="relative">
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 New Password
               </label>
               <input
-                type="password"
+                type={showNewPassword ? "text" : "password"}
                 id="newPassword"
                 placeholder="Enter new password"
                 value={newPassword}
@@ -220,15 +244,22 @@ function ChangePassword() {
                 autoComplete="new-password"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-3 top-9 text-gray-500"
+              >
+                {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
 
             {/* Confirm Password */}
-            <div>
+            <div className="relative">
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirm New Password
               </label>
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 placeholder="Confirm new password"
                 value={confirmPassword}
@@ -236,7 +267,19 @@ function ChangePassword() {
                 autoComplete="new-password"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#208CD4]"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-9 text-gray-500"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
             </div>
+
+            {/* Password Mismatch Message */}
+            {passwordMismatch && (
+              <p className="text-sm text-red-600">Passwords do not match.</p>
+            )}
 
             {/* Message */}
             {message && (
@@ -309,3 +352,5 @@ function ChangePassword() {
 }
 
 export default ChangePassword;
+
+

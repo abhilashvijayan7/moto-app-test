@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { X } from "lucide-react";
+import { X, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+
 
 const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
 
+
   const nameToKeyMap = {
     "Date Of Joining": "dateOfJoining",
     "User Type": "userType",
@@ -47,6 +49,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     Email: "email",
     Plants: "devices",
   };
+
 
   useEffect(() => {
     const fetchPlants = async () => {
@@ -68,6 +71,7 @@ const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/plants`, 
       fetchPlants();
     }
   }, [isOpen]);
+
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -96,6 +100,7 @@ const response = await axios.get(
     }
   }, [isOpen, name]);
 
+
   useEffect(() => {
     if (user && name === "Edit User") {
       const selectedRole = roles.find((role) => role.role_name === user.role);
@@ -106,6 +111,7 @@ const response = await axios.get(
       const assignedPlantIds = plants
         .filter(plant => assignedPlantNames.includes(plant.plant_name))
         .map(plant => String(plant.plant_id));
+
 
       const formatDate = (dateStr, field) => {
         if (!dateStr || typeof dateStr !== "string" || dateStr === "N/A") {
@@ -129,6 +135,7 @@ const response = await axios.get(
         }
         return date.toISOString().split("T")[0];
       };
+
 
       setFormData({
         dateOfJoining: formatDate(user.doj, "dateOfJoining"),
@@ -166,6 +173,7 @@ const response = await axios.get(
     }
   }, [user, name, isOpen, roles, plants]);
 
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -178,11 +186,13 @@ const response = await axios.get(
     };
   }, []);
 
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     const formDataKey = nameToKeyMap[name];
     setFormData((prev) => ({ ...prev, [formDataKey]: value }));
   };
+
 
   const handleDeviceChange = (plantId) => {
     const stringPlantId = String(plantId);
@@ -194,13 +204,16 @@ const response = await axios.get(
     });
   };
 
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
+
   const toggleDropdown = () => {
     setDropdownOpen((prev) => !prev);
   };
+
 
   const getSelectedPlantNames = () => {
     const selectedPlants = formData.devices
@@ -209,6 +222,7 @@ const response = await axios.get(
         return plant ? plant.plant_name : null;
       })
       .filter(Boolean);
+
 
     if (selectedPlants.length === 0) {
       return "Select plants";
@@ -221,6 +235,7 @@ const response = await axios.get(
     }
   };
 
+
   const filteredAndSortedPlants = plants
     .filter((plant) =>
       plant.plant_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -232,6 +247,7 @@ const response = await axios.get(
       if (!aChecked && bChecked) return 1;
       return 0;
     });
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -254,14 +270,17 @@ const response = await axios.get(
       role_id: Number(formData.userType),
     };
 
+
     try {
       setLoadingPlants(true);
       setError(null);
+
 
 const url = name === "Edit User" && user?.user_id  
   ? `${import.meta.env.VITE_API_BASE_URL}/users/${user.user_id}`  
   : `${import.meta.env.VITE_API_BASE_URL}/users`;  
 const method = name === "Edit User" ? 'PUT' : 'POST';  
+
 
 
       const response = await axios({
@@ -273,6 +292,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
         },
         timeout: 10000,
       });
+
 
       const formatDisplayDate = (dateStr) => {
         if (!dateStr || dateStr === "N/A") return "N/A";
@@ -286,6 +306,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
       };
+
 
       const updatedUser = {
         companyName: response.data.company || formData.company || "N/A",
@@ -312,6 +333,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
         status: response.data.status || "Active",
       };
 
+
       onSuccess(updatedUser);
       toast.success(name === "Edit User" ? "User updated successfully!" : "User added successfully!");
       onClose();
@@ -326,6 +348,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
       setLoadingPlants(false);
     }
   };
+
 
   return (
     isOpen && (
@@ -594,13 +617,22 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
                       <label className="block text-xs sm:text-sm font-medium text-gray-600">
                         Password
                       </label>
-                      <input
-                        type="password"
-                        name="Password"
-                        value={formData.password}
-                        onChange={handleChange}
-                        className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
-                      />
+                      <div className="relative">
+                        <input
+                          type={formData.showPassword ? "text" : "password"}
+                          name="Password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          className="mt-1 block w-full py-2 px-3 border border-[#DADADA] rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, showPassword: !prev.showPassword }))}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        >
+                          {formData.showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -629,4 +661,8 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
   );
 };
 
+
 export default AddUserModal;
+
+
+// added eye for password
