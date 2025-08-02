@@ -59,7 +59,7 @@ function Sidebar() {
   const menuItems = getMenuItems();
 
   return (
-    <div className="left-side text-gray-600 w-[200px] bg-white shrink-0 hidden lg:block">
+    <div className="left-side text-gray-600 w-[200px] bg-white shrink-0 hidden lg:block  border-r-2 border-[#DADADA]">
       <center>
         <img
           src={mainImage}

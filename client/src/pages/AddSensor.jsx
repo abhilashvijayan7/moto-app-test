@@ -173,31 +173,6 @@ function AddSensorAndMotor() {
     if (submitSensorSuccess) setSubmitSensorSuccess(false);
   };
 
-  const createSensorRelation = async (sensorId, sensorTypeId) => {
-    try {
-      const relationData = {
-        sensor_id: sensorId,
-        sensor_type_id: sensorTypeId,
-      };
-
-      console.log("Creating sensor relation with data:", relationData);
-
-      const response = await apiCall(
-        `${import.meta.env.VITE_API_BASE_URL}/sensors/relation`,
-        {
-          method: "POST",
-          body: JSON.stringify(relationData),
-        }
-      );
-
-      console.log("Sensor relation created successfully:", response);
-      return response;
-    } catch (error) {
-      console.error("Error creating sensor relation:", error);
-      throw error;
-    }
-  };
-
   const handleSensorSubmit = async (e) => {
     e.preventDefault();
     setIsSubmittingSensor(true);
@@ -286,16 +261,6 @@ function AddSensorAndMotor() {
           throw new Error("Sensor created but ID not found in response");
         }
 
-        try {
-          await createSensorRelation(createdSensorId, sensorTypeId);
-          console.log("Sensor and relation created successfully");
-        } catch (relationError) {
-          console.error("Sensor created but relation failed:", relationError);
-          setSubmitSensorError(
-            `Sensor created successfully, but there was an issue linking it to the sensor type: ${relationError.message}`
-          );
-        }
-
         setSubmitSensorSuccess(true);
         setSensorForm({ sensorName: "", sensorType: "", deviceType: "sensor" });
         await fetchSensors();
@@ -364,9 +329,9 @@ function AddSensorAndMotor() {
   };
 
   return (
-    <div className="flex-1 bg-gray-50 min-h-screen py-4 sm:py-6">
+    <div className="flex-1  min-h-screen py-4 sm:py-6">
       {/* Header and Breadcrumb: Stacked vertically on mobile */}
-      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-11">
+      {/* <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-11">
         <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
           <div>
             <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
@@ -374,7 +339,7 @@ function AddSensorAndMotor() {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Sensor Type Section */}
       <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">

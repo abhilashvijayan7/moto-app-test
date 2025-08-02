@@ -172,7 +172,7 @@ function NewPlant() {
 
       const plantData = {
         plant_name: formData.plantName.trim(),
-        plant_location_id: Number(selectedLocation.location_id),
+        location_id: Number(selectedLocation.location_id),
         installation_date: formData.installationDate,
         contact_person: formData.contactPerson.trim(),
         contact_email: formData.email.trim(),
@@ -398,7 +398,7 @@ function NewPlant() {
       <div className="p-3 sm:p-4 lg:p-6 max-w-[640px] mx-auto text-[#6B6B6B] my-6 lg:max-w-[1440px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
-            <h1 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-8">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 lg:mb-8">
               {isEditing ? "Edit Plant" : "New Plant"}
             </h1>
 
@@ -597,7 +597,7 @@ function NewPlant() {
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-4">
-              <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900">Plants List</h2>
+              <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6 lg:mb-8">Plants List</h2>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <input
                   type="text"
@@ -788,3 +788,6 @@ function NewPlant() {
 }
 
 export default NewPlant;
+
+
+// kjsfjkhskjdfhsjkdfhkjsdhf

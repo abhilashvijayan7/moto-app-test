@@ -212,18 +212,18 @@ const SavedLog = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-4 sm:py-6">
-      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-8">
+    <div className="min-h-screen  py-4 sm:py-6">
+      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1440px] lg:px-8">
         <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
-          <div>
+          {/* <div>
             <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
               Log
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
 
-      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1440px]">
         <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="p-2 sm:p-6 border-b border-gray-200">
             <h2 className="text-[#4E4D4D] font-bold text-xl sm:text-2xl mb-4">
@@ -365,3 +365,6 @@ const SavedLog = () => {
 };
 
 export default SavedLog;
+
+
+// kjsghfkjhgsdfkjhgsdfjkghsfjhgf

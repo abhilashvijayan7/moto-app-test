@@ -236,14 +236,14 @@ const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/motors`);
   };
 
   return (
-    <div className="flex-1 bg-gray-50 min-h-screen py-4 sm:py-6">
+    <div className="flex-1  min-h-screen py-4 sm:py-6">
       {/* Header and Breadcrumb: Stacked vertically on mobile */}
-      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1280px] lg:px-11">
+      <div className="max-w-full mx-auto text-[#6B6B6B] my-4 sm:my-6 px-4 sm:px-6 lg:max-w-[1440px] lg:px-11">
         <div className="font-medium text-sm sm:text-base flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 sm:gap-4">
           <div>
-            <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
+            {/* <p className="text-[#4E4D4D] font-bold text-xl sm:text-2xl lg:text-3xl mb-3 sm:mb-4">
               {editingMotorId ? 'Edit Motor' : 'Add Motor'}
-            </p>
+            </p> */}
             {/* <div className="flex bg-gray-100 w-[140px] py-1.5 sm:py-2 px-2 sm:px-3 rounded-sm mb-3 sm:mb-4 items-center gap-1.5 sm:gap-2">
               <p className="text-xs sm:text-sm">Home</p>
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
@@ -254,7 +254,7 @@ const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/motors`);
       </div>
 
       {/* Form Section */}
-      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1440px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <div>
@@ -414,7 +414,7 @@ const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/motors`);
       </div>
 
       {/* Motors Table Section */}
-      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1280px]">
+      <div className="px-4 sm:px-6 lg:px-8 max-w-full mx-auto my-4 sm:my-6 lg:max-w-[1440px]">
         <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
           <div className="py-4 sm:py-6 px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
@@ -646,3 +646,6 @@ const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/motors`);
 }
 
 export default AddMotor;
+
+
+// jhdgfjhsgdfjhsgdfjhsgfjhsdf

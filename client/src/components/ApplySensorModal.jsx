@@ -15,7 +15,8 @@ export default function ApplySensorModal({
     serialNumber: "",
     notes: "",
     is_sensor_enabled: true,
-    sensor_key: "",
+    onTime: "",
+    offTime: "",
   });
   const [sensorTypes, setSensorTypes] = useState([]);
   const [plantSensors, setPlantSensors] = useState([]);
@@ -136,7 +137,6 @@ export default function ApplySensorModal({
         console.log("isLoadingPlantSensors set to false");
       }
     };
-
     fetchPlantSensors();
   }, [isOpen, plantId, sensorTypes]);
 
@@ -149,7 +149,7 @@ export default function ApplySensorModal({
 
   // Handle input changes for the sensor form
   const handleInputChange = (field, value) => {
-    if (field === "minValue" || field === "maxValue") {
+    if (field === "minValue" || field === "maxValue" || field === "onTime" || field === "offTime") {
       if (value === "" || !isNaN(value)) {
         setSensor((prev) => ({ ...prev, [field]: value }));
       }
@@ -172,6 +172,7 @@ export default function ApplySensorModal({
     (type) => type.sensor_name === sensor.sensorType
   );
   const isMinMaxSensor = selectedSensor?.sensor_type_name === "min-max";
+  const isValve = selectedSensor?.sensor_device_type === "valve";
 
   // Handle edit action
   const handleEdit = (sensor) => {
@@ -186,7 +187,8 @@ export default function ApplySensorModal({
       serialNumber: sensor.serial_number || "",
       notes: sensor.notes || "",
       is_sensor_enabled: sensor.is_sensor_enabled,
-      sensor_key: sensor.sensor_key || "",
+      onTime: sensor.min_value !== null ? String(sensor.min_value) : "",
+      offTime: sensor.max_value !== null ? String(sensor.max_value) : "",
     });
     setIsEditing(true);
     setEditingSensorId(sensor.plant_sensor_id);
@@ -202,7 +204,8 @@ export default function ApplySensorModal({
       serialNumber: "",
       notes: "",
       is_sensor_enabled: true,
-      sensor_key: "",
+      onTime: "",
+      offTime: "",
     });
     setIsEditing(false);
     setEditingSensorId(null);
@@ -239,19 +242,22 @@ export default function ApplySensorModal({
       sensor.sensorType === "" ||
       !sensor.sensorTypeRelationId ||
       sensor.serialNumber === "" ||
-      sensor.sensor_key === "" ||
       (isMinMaxSensor &&
         (sensor.minValue === "" ||
           isNaN(sensor.minValue) ||
           sensor.maxValue === "" ||
-          isNaN(sensor.maxValue)))
+          isNaN(sensor.maxValue))) ||
+      (isValve &&
+        (sensor.onTime === "" ||
+          isNaN(sensor.onTime) ||
+          sensor.offTime === "" ||
+          isNaN(sensor.offTime)))
     ) {
       setSensorsError(
-        "Please ensure all required fields are filled: Select a sensor, provide a serial number, key field, and for min-max sensors, provide numeric Min and Max Values."
+        "Please ensure all required fields are filled: Select a sensor, provide a serial number, and for min-max sensors, provide numeric Min and Max Values, or for valve sensors, provide numeric On and Off Times."
       );
       return;
     }
-
     try {
       setSensorsError("");
       const payload = {
@@ -259,11 +265,10 @@ export default function ApplySensorModal({
         sensor_type_relation_id: sensor.sensorTypeRelationId,
         installation_date: new Date().toISOString().split("T")[0],
         serial_number: sensor.serialNumber,
-        min_value: isMinMaxSensor ? parseInt(sensor.minValue, 10) : null,
-        max_value: isMinMaxSensor ? parseInt(sensor.maxValue, 10) : null,
+        min_value: isMinMaxSensor ? parseInt(sensor.minValue, 10) : isValve ? parseInt(sensor.onTime, 10) : null,
+        max_value: isMinMaxSensor ? parseInt(sensor.maxValue, 10) : isValve ? parseInt(sensor.offTime, 10) : null,
         notes: sensor.notes || "",
         is_sensor_enabled: sensor.is_sensor_enabled,
-        sensor_key: sensor.sensor_key,
       };
 
       console.log("Payload being sent:", payload);
@@ -273,8 +278,12 @@ export default function ApplySensorModal({
         isNaN(payload.plant_id) ||
         !payload.sensor_type_relation_id ||
         !payload.serial_number ||
-        !payload.sensor_key ||
         (isMinMaxSensor &&
+          (!payload.min_value ||
+            isNaN(payload.min_value) ||
+            !payload.max_value ||
+            isNaN(payload.max_value))) ||
+        (isValve &&
           (!payload.min_value ||
             isNaN(payload.min_value) ||
             !payload.max_value ||
@@ -295,7 +304,6 @@ export default function ApplySensorModal({
             max_value: payload.max_value,
             notes: payload.notes,
             is_sensor_enabled: payload.is_sensor_enabled,
-            sensor_key: payload.sensor_key,
           },
           { timeout: 10000 }
         );
@@ -372,8 +380,7 @@ export default function ApplySensorModal({
       sensor.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       String(sensor.is_sensor_enabled || "")
         .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      sensor.sensor_key?.toLowerCase().includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredPlantSensors.length / sensorsPerPage);
@@ -421,7 +428,6 @@ export default function ApplySensorModal({
             <X className="w-6 h-6 text-gray-500" />
           </button>
         </div>
-
         {/* Modal Content */}
         <div className="p-6">
           {sensorsError && (
@@ -439,7 +445,6 @@ export default function ApplySensorModal({
               </div>
             </div>
           )}
-
           <div className="space-y-6">
             <div className="grid grid-cols-12 gap-6 items-start">
               <div className="col-span-3">
@@ -515,20 +520,6 @@ export default function ApplySensorModal({
                   </label>
                 </div>
               </div>
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Key Field
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={sensor.sensor_key}
-                  onChange={(e) =>
-                    handleInputChange("sensor_key", e.target.value)
-                  }
-                  placeholder="Enter key field"
-                />
-              </div>
               {isMinMaxSensor && (
                 <>
                   <div className="col-span-3">
@@ -561,6 +552,38 @@ export default function ApplySensorModal({
                   </div>
                 </>
               )}
+              {isValve && (
+                <>
+                  <div className="col-span-3">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      On Time (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={sensor.onTime}
+                      onChange={(e) =>
+                        handleInputChange("onTime", e.target.value)
+                      }
+                      placeholder="1"
+                    />
+                  </div>
+                  <div className="col-span-3">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">
+                      Off Time (seconds)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-md bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={sensor.offTime}
+                      onChange={(e) =>
+                        handleInputChange("offTime", e.target.value)
+                      }
+                      placeholder="10"
+                    />
+                  </div>
+                </>
+              )}
               <div className="col-span-6">
                 <label className="block text-sm font-medium text-gray-600 mb-2">
                   Notes (Optional)
@@ -576,7 +599,6 @@ export default function ApplySensorModal({
             </div>
           </div>
         </div>
-
         {/* Modal Footer */}
         <div className="flex justify-end space-x-4 p-6 border-t border-gray-200 bg-gray-50">
           <button
@@ -595,18 +617,21 @@ export default function ApplySensorModal({
               sensor.sensorType === "" ||
               !sensor.sensorTypeRelationId ||
               sensor.serialNumber === "" ||
-              sensor.sensor_key === "" ||
               (isMinMaxSensor &&
                 (!sensor.minValue ||
                   !sensor.maxValue ||
                   isNaN(sensor.minValue) ||
-                  isNaN(sensor.maxValue)))
+                  isNaN(sensor.maxValue))) ||
+              (isValve &&
+                (!sensor.onTime ||
+                  !sensor.offTime ||
+                  isNaN(sensor.onTime) ||
+                  isNaN(sensor.offTime)))
             }
           >
             {isEditing ? "Update Sensor" : "Save Changes"}
           </button>
         </div>
-
         {/* Plant Sensors Table Section */}
         <div className="p-6">
           <div className="max-w-full bg-white rounded-2xl shadow-sm border border-gray-200">
@@ -673,7 +698,6 @@ export default function ApplySensorModal({
                   </div>
                 </div>
               )}
-
               {plantSensorsError && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                   <div className="flex justify-between items-start">
@@ -726,7 +750,6 @@ export default function ApplySensorModal({
                   </div>
                 </div>
               )}
-
               {isLoadingPlantSensors || isLoadingPlantName ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">Loading applied sensors...</p>
@@ -763,6 +786,12 @@ export default function ApplySensorModal({
                             Key Field
                           </th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                            Device Min On Key
+                          </th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
+                            Device Max Off Key
+                          </th>
+                          <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
                             Notes
                           </th>
                           <th className="border border-gray-300 px-4 py-3 text-left text-sm font-medium text-gray-700">
@@ -777,7 +806,7 @@ export default function ApplySensorModal({
                         {paginatedPlantSensors.length === 0 ? (
                           <tr>
                             <td
-                              colSpan="11"
+                              colSpan="13"
                               className="border border-gray-300 px-4 py-8 text-center text-gray-500"
                             >
                               {searchQuery
@@ -819,6 +848,12 @@ export default function ApplySensorModal({
                                   {sensor.sensor_key || "-"}
                                 </td>
                                 <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                                  {matchedSensor?.device_min_on_key || "-"}
+                                </td>
+                                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
+                                  {matchedSensor?.device_max_off_key || "-"}
+                                </td>
+                                <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
                                   {sensor.notes || "-"}
                                 </td>
                                 <td className="border border-gray-300 px-4 py-3 text-sm text-gray-900">
@@ -843,7 +878,6 @@ export default function ApplySensorModal({
                       </tbody>
                     </table>
                   </div>
-
                   {/* Mobile Card View */}
                   <div className="md:hidden space-y-4">
                     {paginatedPlantSensors.length === 0 ? (
@@ -926,6 +960,22 @@ export default function ApplySensorModal({
                                   {sensor.sensor_key || "-"}
                                 </span>
                               </div>
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 font-medium">
+                                  Device Min On Key:
+                                </span>
+                                <span className="text-gray-900">
+                                  {matchedSensor?.device_min_on_key || "-"}
+                                </span>
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-gray-500 font-medium">
+                                  Device Max Off Key:
+                                </span>
+                                <span className="text-gray-900">
+                                  {matchedSensor?.device_max_off_key || "-"}
+                                </span>
+                              </div>
                               <div className="flex flex-col col-span-2">
                                 <span className="text-gray-500 font-medium">
                                   Notes:
@@ -952,7 +1002,6 @@ export default function ApplySensorModal({
                       })
                     )}
                   </div>
-
                   {/* Pagination */}
                   {totalPages > 1 && (
                     <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
@@ -1017,3 +1066,5 @@ export default function ApplySensorModal({
     </div>
   );
 }
+
+// pefect of perfect
