@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 
+
 const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -33,6 +34,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
   const dropdownRef = useRef(null);
 
 
+
   const nameToKeyMap = {
     "Date Of Joining": "dateOfJoining",
     "User Type": "userType",
@@ -49,6 +51,7 @@ const AddUserModal = ({ isOpen, onClose, name, user, onSuccess }) => {
     Email: "email",
     Plants: "devices",
   };
+
 
 
   useEffect(() => {
@@ -71,6 +74,7 @@ const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/plants`, 
       fetchPlants();
     }
   }, [isOpen]);
+
 
 
   useEffect(() => {
@@ -101,6 +105,7 @@ const response = await axios.get(
   }, [isOpen, name]);
 
 
+
   useEffect(() => {
     if (user && name === "Edit User") {
       const selectedRole = roles.find((role) => role.role_name === user.role);
@@ -111,6 +116,7 @@ const response = await axios.get(
       const assignedPlantIds = plants
         .filter(plant => assignedPlantNames.includes(plant.plant_name))
         .map(plant => String(plant.plant_id));
+
 
 
       const formatDate = (dateStr, field) => {
@@ -135,6 +141,7 @@ const response = await axios.get(
         }
         return date.toISOString().split("T")[0];
       };
+
 
 
       setFormData({
@@ -174,6 +181,7 @@ const response = await axios.get(
   }, [user, name, isOpen, roles, plants]);
 
 
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -187,17 +195,21 @@ const response = await axios.get(
   }, []);
 
 
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     const formDataKey = nameToKeyMap[name];
     if (formDataKey === "userName") {
-      // Allow alphabets, numbers, and special characters (., _, -)
-      const validValue = value.replace(/[^A-Za-z0-9._-]/g, '');
-      setFormData((prev) => ({ ...prev, [formDataKey]: validValue }));
+      // Allow only alphabets and numbers
+      const alphanumericRegex = /^[a-zA-Z0-9]*$/;
+      if (alphanumericRegex.test(value)) {
+        setFormData((prev) => ({ ...prev, [formDataKey]: value }));
+      }
     } else {
       setFormData((prev) => ({ ...prev, [formDataKey]: value }));
     }
   };
+
 
 
   const handleDeviceChange = (plantId) => {
@@ -211,14 +223,17 @@ const response = await axios.get(
   };
 
 
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
   };
 
 
+
   const toggleDropdown = () => {
     setDropdownOpen((prev) => !prev);
   };
+
 
 
   const getSelectedPlantNames = () => {
@@ -228,6 +243,7 @@ const response = await axios.get(
         return plant ? plant.plant_name : null;
       })
       .filter(Boolean);
+
 
 
     if (selectedPlants.length === 0) {
@@ -242,6 +258,7 @@ const response = await axios.get(
   };
 
 
+
   const filteredAndSortedPlants = plants
     .filter((plant) =>
       plant.plant_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -253,6 +270,7 @@ const response = await axios.get(
       if (!aChecked && bChecked) return 1;
       return 0;
     });
+
 
 
   const handleSubmit = async (e) => {
@@ -277,15 +295,18 @@ const response = await axios.get(
     };
 
 
+
     try {
       setLoadingPlants(true);
       setError(null);
+
 
 
 const url = name === "Edit User" && user?.user_id  
   ? `${import.meta.env.VITE_API_BASE_URL}/users/${user.user_id}`  
   : `${import.meta.env.VITE_API_BASE_URL}/users`;  
 const method = name === "Edit User" ? 'PUT' : 'POST';  
+
 
 
 
@@ -300,6 +321,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
       });
 
 
+
       const formatDisplayDate = (dateStr) => {
         if (!dateStr || dateStr === "N/A") return "N/A";
         const date = new Date(dateStr);
@@ -312,6 +334,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
       };
+
 
 
       const updatedUser = {
@@ -340,6 +363,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
       };
 
 
+
       onSuccess(updatedUser);
       toast.success(name === "Edit User" ? "User updated successfully!" : "User added successfully!");
       onClose();
@@ -354,6 +378,7 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
       setLoadingPlants(false);
     }
   };
+
 
 
   return (
@@ -668,7 +693,5 @@ const method = name === "Edit User" ? 'PUT' : 'POST';
 };
 
 
+
 export default AddUserModal;
-
-
-// user name correction
