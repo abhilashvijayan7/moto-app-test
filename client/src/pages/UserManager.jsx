@@ -323,7 +323,7 @@ function UserManager() {
           </div>
         </div>
         <div className="bg-[#FFFFFF] rounded-xl">
-          <div className="columns-1 lg:columns-4 gap-4 p-4 rounded-xl">
+          <div className="columns-1 xl:columns-3 2xl:columns-4 gap-4 p-4 rounded-xl">
             {paginatedData.map((card, cardIndex) => (
               <div
                 className="card-div font-[400] text-[14px] border border-[#DADADA] rounded-lg px-[16px] py-[24px] mb-4 break-inside-avoid"
@@ -552,6 +552,4 @@ function UserManager() {
 
 export default UserManager;
 
-
-
-// dtestestestestestestse
+// after 3 card
