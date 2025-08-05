@@ -182,7 +182,10 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
 };
 
 // MQTT Setup
-const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL);
+const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL,{
+  clientId:'krp-aquatech-pvt-ltd',
+  clean:false,
+});
 let latestSensorData = {};
 
 // Cache for plant topics
