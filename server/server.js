@@ -8,6 +8,7 @@ const bodyParser = require("body-parser");
 const admin = require("firebase-admin");
 const axios = require("axios");
 
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -17,17 +18,21 @@ const io = new Server(server, {
   },
 });
 
+
 app.use(cors());
 app.use(bodyParser.json());
+
 
 // Health check endpoint for Render
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
+
 // Firebase Admin Setup
 const serviceAccount = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON);
 serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -36,8 +41,10 @@ admin.initializeApp({
   },
 });
 
+
 // FCM Token Storage
 let savedTokens = [];
+
 
 app.post("/save-token", (req, res) => {
   console.log("Received /save-token request body:", req.body); // Log for debugging
@@ -48,6 +55,7 @@ app.post("/save-token", (req, res) => {
       message: "Expected request body with 'data.token' property" 
     });
   }
+
 
   const { token } = req.body.data;
   if (token && !savedTokens.includes(token)) {
@@ -63,10 +71,12 @@ app.post("/save-token", (req, res) => {
   res.status(200).json({ success: true, message: "Token saved successfully" });
 });
 
+
 app.get("/send", async (req, res) => {
   if (!savedTokens.length) {
     res.status(400).send({ success: false, message: "No device tokens saved." });
   }
+
 
   const message = {
     notification: {
@@ -75,6 +85,7 @@ app.get("/send", async (req, res) => {
     },
     tokens: savedTokens,
   };
+
 
   try {
     const response = await admin.messaging().sendEachForMulticast(message);
@@ -85,6 +96,7 @@ app.get("/send", async (req, res) => {
     res.status(500).json({ success: false, error });
   }
 });
+
 
 // Fetch plant topics from API
 const loadPlantTopics = async () => {
@@ -104,6 +116,7 @@ const loadPlantTopics = async () => {
   }
 };
 
+
 // Fetch motor data for a specific plant
 const fetchMotorData = async (plantId) => {
   try {
@@ -115,12 +128,14 @@ const fetchMotorData = async (plantId) => {
   }
 };
 
+
 // Build API payload
 const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
   const secondsToTimeString = (seconds) => {
     const date = new Date(seconds * 1000);
     return date.toISOString().substr(11, 8);
   };
+
 
   const motors = [
     { key: "motor1_status", name: "motor1" },
@@ -139,6 +154,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
     })
     .filter(motor => motor.is_running); // Only include motors that are ON
 
+
   const generateCurrentTimestamp = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -149,6 +165,7 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
     const seconds = String(now.getSeconds()).padStart(2, '0');
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
+
 
   const payload = {
     plant_id: plantId,
@@ -178,18 +195,25 @@ const buildApiPayload = (plantId, sensorData, motorsFromApi) => {
     motors,
   };
 
+
   return payload;
 };
 
+
 // MQTT Setup
-const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL,{
-  clientId:'krp-aquatech-pvt-ltd',
-  clean:false,
+const mqttClient = mqtt.connect(process.env.MQTT_BROKER_URL, {
+  clientId: 'krp-aquatech-pvt-ltd-' + Math.random().toString(16).substr(2, 8), // Add unique suffix to prevent ID conflicts
+  clean: false,
+  reconnectPeriod: 1000, // Retry every 1 second (default, but explicit for clarity)
+  keepalive: 60, // Send pings every 60 seconds to detect disconnections
+  resubscribe: true // Automatically resubscribe on reconnect
 });
 let latestSensorData = {};
 
+
 // Cache for plant topics
 let cachedPlantTopics = [];
+
 
 // Subscribe to sensor topics from cached plant topics
 const subscribeToSensorTopics = async () => {
@@ -197,10 +221,12 @@ const subscribeToSensorTopics = async () => {
     cachedPlantTopics = await loadPlantTopics();
   }
 
+
   if (!cachedPlantTopics.length) {
     console.error("No plant topics found, subscribing to default topic.");
     return;
   }
+
 
   cachedPlantTopics.forEach((plant) => {
     mqttClient.subscribe(plant.SENSOR_TOPIC, (err) => {
@@ -213,26 +239,32 @@ const subscribeToSensorTopics = async () => {
   });
 };
 
+
 // Post sensor data to API every 30 seconds
 const logRuntimeAndSensorData = async () => {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] Posting sensor data to API for all plants`);
 
+
   for (const plant of cachedPlantTopics) {
     const plantId = plant.plant_id;
     const sensorData = latestSensorData[plantId];
+
 
     if (!sensorData) {
       console.log(`[${timestamp}] No sensor data for plant ${plantId}`);
       continue;
     }
 
+
     console.log(`[${timestamp}] Processing data for plant ${plantId}`, sensorData);
+
 
     try {
       const motorsFromApi = await fetchMotorData(plantId);
       const payload = buildApiPayload(plantId, sensorData, motorsFromApi);
       console.log(`[${timestamp}] Posting payload for plant ${plantId}:`, payload);
+
 
       const response = await axios.post(
         process.env.PLANT_OPS_URL,
@@ -257,17 +289,39 @@ const logRuntimeAndSensorData = async () => {
   }
 };
 
+
 // Initialize plant topics and MQTT subscriptions on startup
 const initializeServer = async () => {
   cachedPlantTopics = await loadPlantTopics();
   await subscribeToSensorTopics();
 };
 
+
+// Add these event handlers right after mqttClient definition
+mqttClient.on('reconnect', () => {
+  console.log(`[${new Date().toISOString()}] MQTT client is reconnecting...`);
+});
+
+mqttClient.on('close', () => {
+  console.log(`[${new Date().toISOString()}] MQTT connection closed. Will attempt to reconnect.`);
+});
+
+mqttClient.on('offline', () => {
+  console.log(`[${new Date().toISOString()}] MQTT client is offline.`);
+});
+
+mqttClient.on('error', (error) => {
+  console.error(`[${new Date().toISOString()}] MQTT error:`, error.message);
+});
+
+
+// Existing 'connect' handler with re-initialization for safety
 mqttClient.on("connect", async () => {
   console.log("Connected to MQTT broker");
   await initializeServer();
   setInterval(logRuntimeAndSensorData, 30 * 1000); // Run every 30 seconds
 });
+
 
 mqttClient.on("message", async (topic, message) => {
   try {
@@ -277,14 +331,18 @@ mqttClient.on("message", async (topic, message) => {
       return;
     }
 
+
     const plantId = plant.plant_id;
     const data = JSON.parse(message.toString());
     console.log(`[${new Date().toISOString()}] Received data for plant ${plantId}:`, data);
 
+
     latestSensorData[plantId] = data;
     const motoBoundData = { id: plantId, sensordata: data };
 
+
     io.emit("sensor_data", { data: motoBoundData });
+
 
     let motorStatus = "OFF";
     let motorNumber = 1;
@@ -296,12 +354,14 @@ mqttClient.on("message", async (topic, message) => {
       motorNumber = 2;
     }
 
+
     io.emit("motor_status_update", {
       plantId,
       command: motorStatus,
       motorNumber,
       timestamp: Date.now(),
     });
+
 
     const residualCl = parseFloat(data.residual_chlorine_plant);
     if (!isNaN(residualCl) && residualCl > 5 && savedTokens.length > 0) {
@@ -313,6 +373,7 @@ mqttClient.on("message", async (topic, message) => {
         tokens: savedTokens,
       };
 
+
       await admin.messaging().sendEachForMulticast(chlorineAlert);
       console.log(`[${new Date().toISOString()}] Chlorine alert notification sent for plant ${plantId}`);
     }
@@ -321,30 +382,37 @@ mqttClient.on("message", async (topic, message) => {
   }
 });
 
+
 // Socket.IO Connection
 io.on("connection", (socket) => {
   console.log(`[${new Date().toISOString()}] Frontend connected:`, socket.id);
 
+
   socket.emit("sensor_data", { data: latestSensorData });
+
 
   socket.on("motor_control", async (data) => {
     console.log(`[${new Date().toISOString()}] Received motor_control:`, data);
     const { command, plantId } = data;
+
 
     if (!plantId) {
       console.warn(`[${new Date().toISOString()}] No plantId provided in motor_control message`);
       return socket.emit("error", { message: "plantId is required" });
     }
 
+
     if (!["ON", "OFF"].includes(command)) {
       console.warn(`[${new Date().toISOString()}] Invalid command received: ${command}`);
       return socket.emit("error", { message: "Invalid command. Use 'ON' or 'OFF'" });
     }
 
+
     if (!mqttClient.connected) {
       console.warn(`[${new Date().toISOString()}] MQTT client not connected, cannot publish`);
       return socket.emit("error", { message: "MQTT client not connected" });
     }
+
 
     const plant = cachedPlantTopics.find((p) => p.plant_id.toString() === plantId.toString());
     if (!plant) {
@@ -352,8 +420,10 @@ io.on("connection", (socket) => {
       return socket.emit("error", { message: `No plant found for plantId: ${plantId}` });
     }
 
+
     const motorTopic = plant.MOTOR_TOPIC;
     const payload = String(command);
+
 
     mqttClient.publish(motorTopic, payload, { qos: 1 }, (err) => {
       if (err) {
@@ -370,16 +440,15 @@ io.on("connection", (socket) => {
     });
   });
 
+
   socket.on("disconnect", () => {
     console.log(`[${new Date().toISOString()}] Frontend disconnected:`, socket.id);
   });
 });
+
 
 // Start Server
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
-
-// jhgfhjsgdfhjgsdfhjgsdfhjgsdhjfgsfhjgsfjhgsfhjgfhjsgfhjsfgsjhdfgdsjfgsdjhfgsjhdfgsdf
